@@ -44,9 +44,9 @@ const { content, category } = Astro.props;
       </div>
 
       <div class="field">
-        <label for="image">Image</label>
-        {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
-        <input id="image" type="file" accept="image/*" />
+        <label>Image</label>
+        {content.image && <img src={content.image} alt={content.title} />}
+        <p class="note">Image upload will be added later.</p>
       </div>
 
       <div class="actions">
@@ -64,26 +64,8 @@ const { content, category } = Astro.props;
 
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
-    const imageInput = document.querySelector("#image");
-    const imagePreview = document.querySelector("#image-preview");
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
-
-    imageInput?.addEventListener("change", () => {
-      const file = imageInput.files?.[0];
-
-      if (!file || !imagePreview) return;
-
-      const reader = new FileReader();
-
-      reader.addEventListener("load", () => {
-        if (typeof reader.result === "string") {
-          imagePreview.src = reader.result;
-        }
-      });
-
-      reader.readAsDataURL(file);
-    });
 
     saveButton?.addEventListener("click", async () => {
       if (!contentId || !titleInput || !bodyInput || !saveStatus) return;
@@ -190,12 +172,6 @@ textarea{
   line-height:1.8;
 }
 
-input[type="file"]{
-  border:none;
-  padding:0;
-  font-size:12px;
-}
-
 textarea{
   resize:vertical;
 }
@@ -204,6 +180,12 @@ img{
   display:block;
   width:min(100%,420px);
   height:auto;
+}
+
+.note{
+  margin:0;
+  font-size:11px;
+  color:#999;
 }
 
 .actions{

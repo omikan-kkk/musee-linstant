@@ -1,0 +1,44 @@
+---
+const {
+  image = "",
+  caption = "",
+  href = "",
+} = Astro.props;
+
+const hasImage = image !== "";
+const hasCaption = caption !== "";
+const tag = href ? "a" : "article";
+---
+
+<Fragment set:html={`<${tag} class="gallery-item"${href ? ` href="${href}"` : ""}>`} />
+
+  {hasImage && (
+    <img src={image} alt={caption} loading="lazy" />
+  )}
+
+  {hasCaption && (
+    <p>{caption}</p>
+  )}
+
+<Fragment set:html={`</${tag}>`} />
+
+<style>
+  .gallery-item {
+    display: block;
+    text-decoration: none;
+    color: #111;
+  }
+
+  .gallery-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .gallery-item p {
+    margin: 10px 0 0;
+    font-size: 11px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+</style>

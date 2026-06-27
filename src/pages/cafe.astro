@@ -1,0 +1,19 @@
+---
+import Layout from "../layouts/Layout.astro";
+import GalleryGrid from "../components/GalleryGrid.astro";
+import GalleryItem from "../components/GalleryItem.astro";
+
+const items = [];
+---
+
+<Layout title="Café | Musee L'Instant">
+  <GalleryGrid items={items}>
+    {items.map((item) => (
+      <GalleryItem
+        image={item.image}
+        caption={item.caption}
+        href={item.href}
+      />
+    ))}
+  </GalleryGrid>
+</Layout>

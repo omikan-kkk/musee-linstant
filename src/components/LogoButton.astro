@@ -1,0 +1,24 @@
+<a class="site-logo" href="/" aria-label="Back to top">
+  Musee L'Instant
+</a>
+
+<style>
+  .site-logo {
+    position: fixed;
+    top: 28px;
+    left: 32px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    text-decoration: none;
+    color: #111;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    transition: opacity 900ms ease;
+  }
+
+  :global(body.has-scrolled) .site-logo {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>

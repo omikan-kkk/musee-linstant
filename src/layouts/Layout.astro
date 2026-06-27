@@ -1,15 +1,9 @@
 ---
+import Header from "../components/Header.astro";
+
 const {
   title = "Musee L'Instant",
 } = Astro.props;
-
-const menuItems = [
-  { label: "Café", href: "/cafe" },
-  { label: "Roman", href: "/roman" },
-  { label: "Bonsaï", href: "/bonsai" },
-  { label: "Art", href: "/art" },
-  { label: "Musique", href: "/musique" },
-];
 ---
 
 <!doctype html>
@@ -21,39 +15,8 @@ const menuItems = [
   </head>
 
   <body>
-    <a class="site-logo" href="/" aria-label="Back to top">
-      Musee L'Instant
-    </a>
-
-    <button class="menu-button" type="button" aria-label="Open menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-
-    <nav class="menu-panel" aria-hidden="true">
-      <ul>
-        {menuItems.map((item) => (
-          <li><a href={item.href}>{item.label}</a></li>
-        ))}
-      </ul>
-    </nav>
-
+    <Header />
     <slot />
-
-    <script>
-      const menuButton = document.querySelector(".menu-button");
-      const menuPanel = document.querySelector(".menu-panel");
-
-      menuButton?.addEventListener("click", () => {
-        menuButton.classList.toggle("is-open");
-        menuPanel?.classList.toggle("is-open");
-      });
-
-      window.addEventListener("scroll", () => {
-        document.body.classList.toggle("has-scrolled", window.scrollY > 20);
-      });
-    </script>
   </body>
 </html>
 
@@ -68,97 +31,5 @@ const menuItems = [
 
   :global(*) {
     box-sizing: border-box;
-  }
-
-  .site-logo,
-  .menu-button {
-    position: fixed;
-    top: 28px;
-    z-index: 20;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 900ms ease;
-  }
-
-  :global(body.has-scrolled) .site-logo,
-  :global(body.has-scrolled) .menu-button {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .site-logo {
-    left: 32px;
-    text-decoration: none;
-    color: #111;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-  }
-
-  .menu-button {
-    right: 32px;
-    width: 32px;
-    height: 32px;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .menu-button span {
-    display: block;
-    width: 24px;
-    height: 1px;
-    margin: 6px auto;
-    background: #111;
-    transition:
-      transform 500ms ease,
-      opacity 500ms ease;
-  }
-
-  .menu-button.is-open span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-  }
-
-  .menu-button.is-open span:nth-child(2) {
-    opacity: 0;
-  }
-
-  .menu-button.is-open span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-  }
-
-  .menu-panel {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    display: grid;
-    place-items: center;
-    background: #fff;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 700ms ease;
-  }
-
-  .menu-panel.is-open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .menu-panel ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    text-align: center;
-  }
-
-  .menu-panel li + li {
-    margin-top: 22px;
-  }
-
-  .menu-panel a {
-    text-decoration: none;
-    color: #111;
-    font-size: 18px;
-    letter-spacing: 0.12em;
   }
 </style>

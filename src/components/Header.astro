@@ -1,0 +1,23 @@
+---
+import LogoButton from "./LogoButton.astro";
+import MenuButton from "./MenuButton.astro";
+import MenuPanel from "./MenuPanel.astro";
+---
+
+<LogoButton />
+<MenuButton />
+<MenuPanel />
+
+<script>
+  const menuButton = document.querySelector(".menu-button");
+  const menuPanel = document.querySelector(".menu-panel");
+
+  menuButton?.addEventListener("click", () => {
+    menuButton.classList.toggle("is-open");
+    menuPanel?.classList.toggle("is-open");
+  });
+
+  window.addEventListener("scroll", () => {
+    document.body.classList.toggle("has-scrolled", window.scrollY > 20);
+  });
+</script>

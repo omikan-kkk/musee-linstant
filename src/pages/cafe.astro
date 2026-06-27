@@ -2,8 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 import GalleryGrid from "../components/GalleryGrid.astro";
 import GalleryItem from "../components/GalleryItem.astro";
+import { GALLERY_ITEMS } from "../data/gallery";
 
-const items = [];
+const categoryId = "coffee";
+const items = GALLERY_ITEMS.filter((item) => item.categoryId === categoryId);
 ---
 
 <Layout title="Café | Musee L'Instant">
@@ -12,7 +14,6 @@ const items = [];
       <GalleryItem
         image={item.image}
         caption={item.caption}
-        href={item.href}
       />
     ))}
   </GalleryGrid>

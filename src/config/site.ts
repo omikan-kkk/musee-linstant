@@ -4,9 +4,39 @@ export const SITE = {
 };
 
 export const CATEGORIES = [
-  { id: "coffee", label: "Café", path: "/cafe" },
-  { id: "roman", label: "Roman", path: "/roman" },
-  { id: "bonsai", label: "Bonsaï", path: "/bonsai" },
-  { id: "art", label: "Art", path: "/art" },
-  { id: "music", label: "Musique", path: "/musique" },
+  {
+    id: "coffee",
+    title: "Café",
+    slug: "cafe",
+    visible: true,
+    order: 1,
+  },
+  {
+    id: "roman",
+    title: "Roman",
+    slug: "roman",
+    visible: true,
+    order: 2,
+  },
+  {
+    id: "bonsai",
+    title: "Bonsaï",
+    slug: "bonsai",
+    visible: true,
+    order: 3,
+  },
+  {
+    id: "art",
+    title: "Art",
+    slug: "art",
+    visible: true,
+    order: 4,
+  },
+  {
+    id: "music",
+    title: "Musique",
+    slug: "musique",
+    visible: true,
+    order: 5,
+  },
 ];

@@ -1,11 +1,15 @@
 ---
 import { CATEGORIES } from "../config/site";
+
+const visibleCategories = CATEGORIES
+  .filter((category) => category.visible)
+  .sort((a, b) => a.order - b.order);
 ---
 
 <nav class="menu-panel" aria-hidden="true">
   <ul>
-    {CATEGORIES.map((item) => (
-      <li><a href={item.path}>{item.label}</a></li>
+    {visibleCategories.map((category) => (
+      <li><a href={`/${category.slug}`}>{category.title}</a></li>
     ))}
   </ul>
 </nav>

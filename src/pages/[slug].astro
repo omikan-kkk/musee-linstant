@@ -1,0 +1,33 @@
+---
+import Layout from "../layouts/Layout.astro";
+import GalleryGrid from "../components/gallery/GalleryGrid.astro";
+import GalleryItem from "../components/gallery/GalleryItem.astro";
+import { CATEGORIES } from "../config/site";
+import { GALLERY_ITEMS } from "../data/gallery";
+
+export function getStaticPaths() {
+  return CATEGORIES
+    .filter((category) => category.visible)
+    .map((category) => ({
+      params: { slug: category.slug },
+      props: { category },
+    }));
+}
+
+const { category } = Astro.props;
+
+const items = GALLERY_ITEMS.filter(
+  (item) => item.categoryId === category.id
+);
+---
+
+<Layout title={`${category.title} | Musee L'Instant`} showHeader={true}>
+  <GalleryGrid items={items}>
+    {items.map((item) => (
+      <GalleryItem
+        image={item.image}
+        caption={item.caption}
+      />
+    ))}
+  </GalleryGrid>
+</Layout>

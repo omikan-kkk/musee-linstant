@@ -1,8 +1,9 @@
 ---
-import Header from "../components/Header.astro";
+import Header from "../components/header/Header.astro";
 
 const {
   title = "Musee L'Instant",
+  showHeader = false,
 } = Astro.props;
 ---
 
@@ -14,7 +15,7 @@ const {
     <title>{title}</title>
   </head>
 
-  <body>
+  <body class:list={[showHeader && "has-scrolled"]}>
     <Header />
     <slot />
   </body>

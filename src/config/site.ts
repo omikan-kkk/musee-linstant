@@ -5,35 +5,35 @@ export const SITE = {
 
 export const CATEGORIES = [
   {
-    id: "coffee",
+    id: "category001",
     title: "Café",
     slug: "cafe",
     visible: true,
     order: 1,
   },
   {
-    id: "roman",
+    id: "category002",
     title: "Roman",
     slug: "roman",
     visible: true,
     order: 2,
   },
   {
-    id: "bonsai",
+    id: "category003",
     title: "Bonsaï",
     slug: "bonsai",
     visible: true,
     order: 3,
   },
   {
-    id: "art",
+    id: "category004",
     title: "Art",
     slug: "art",
     visible: true,
     order: 4,
   },
   {
-    id: "music",
+    id: "category005",
     title: "Musique",
     slug: "musique",
     visible: true,

@@ -18,14 +18,14 @@ export function getStaticPaths() {
 const { category } = Astro.props;
 ---
 
-<Layout title={`New Content | Musée de l'Instant CMS`} showHeader={false}>
+<Layout title="New Content | Musée de l'Instant CMS" showHeader={false}>
   <main class="admin">
     <header>
       <a href={`/admin/${category.slug}`}>← {category.title}</a>
       <h1>New Content</h1>
     </header>
 
-    <section class="editor">
+    <section class="editor" data-category-id={category.id} data-category-slug={category.slug}>
       <div class="field">
         <label for="title">Title</label>
         <input id="title" type="text" />
@@ -36,35 +36,94 @@ const { category } = Astro.props;
         <textarea id="body" rows="8"></textarea>
       </div>
 
-      <div class="field">
-        <label for="image">Image</label>
-        <img id="image-preview" alt="" />
-        <input id="image" type="file" accept="image/*" />
+      <div class="actions">
+        <button type="button" id="save-button" class="save-button">Save</button>
+        <p id="save-status" aria-live="polite"></p>
       </div>
-
-      <button type="button" class="save-button">Save</button>
     </section>
   </main>
 
   <script>
-    const imageInput = document.querySelector("#image");
-    const imagePreview = document.querySelector("#image-preview");
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
 
-    imageInput?.addEventListener("change", () => {
-      const file = imageInput.files?.[0];
+    const editor = document.querySelector(".editor");
+    const categoryId = editor?.getAttribute("data-category-id");
+    const categorySlug = editor?.getAttribute("data-category-slug");
 
-      if (!file || !imagePreview) return;
+    const titleInput = document.querySelector("#title");
+    const bodyInput = document.querySelector("#body");
+    const saveButton = document.querySelector("#save-button");
+    const saveStatus = document.querySelector("#save-status");
 
-      const reader = new FileReader();
+    function getNextContentId(contents) {
+      const maxNumber = contents.reduce((max, content) => {
+        const match = content.id?.match(/^content(\d+)$/);
+        if (!match) return max;
 
-      reader.addEventListener("load", () => {
-        if (typeof reader.result === "string") {
-          imagePreview.src = reader.result;
-          imagePreview.classList.add("is-visible");
+        const number = Number(match[1]);
+        return Number.isFinite(number) ? Math.max(max, number) : max;
+      }, 0);
+
+      return `content${String(maxNumber + 1).padStart(6, "0")}`;
+    }
+
+    saveButton?.addEventListener("click", async () => {
+      if (!categoryId || !categorySlug || !titleInput || !bodyInput || !saveStatus) return;
+
+      saveStatus.textContent = "Saving...";
+
+      try {
+        const currentRes = await fetch(`${API_URL}/contents`);
+        const currentData = await currentRes.json();
+
+        if (!currentData.ok) {
+          throw new Error("Could not load contents.");
         }
-      });
 
-      reader.readAsDataURL(file);
+        const nextId = getNextContentId(currentData.contents);
+
+        const sameCategoryContents = currentData.contents.filter(
+          (content) => content.categoryId === categoryId
+        );
+
+        const nextOrder = sameCategoryContents.length + 1;
+
+        const newContent = {
+          id: nextId,
+          categoryId,
+          slug: nextId,
+          image: "",
+          title: titleInput.value,
+          body: bodyInput.value,
+          visible: true,
+          order: nextOrder,
+        };
+
+        const nextContents = [...currentData.contents, newContent];
+
+        const saveRes = await fetch(`${API_URL}/contents`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: nextContents,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error("Could not save contents.");
+        }
+
+        saveStatus.textContent = "Saved to GitHub";
+
+        window.location.href = `/admin/${categorySlug}/${nextId}`;
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
     });
   </script>
 </Layout>
@@ -126,33 +185,28 @@ textarea{
   line-height:1.8;
 }
 
-input[type="file"]{
-  border:none;
-  padding:0;
-  font-size:12px;
-}
-
 textarea{
   resize:vertical;
 }
 
-img{
-  display:none;
-  width:min(100%,420px);
-  height:auto;
-}
-
-img.is-visible{
-  display:block;
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
 }
 
 .save-button{
-  align-self:flex-start;
   border:none;
   background:#111;
   color:#fff;
   padding:12px 18px;
   cursor:pointer;
   font-size:12px;
+}
+
+#save-status{
+  margin:0;
+  font-size:12px;
+  color:#777;
 }
 </style>

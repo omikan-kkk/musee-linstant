@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import GalleryGrid from "../components/gallery/GalleryGrid.astro";
 import GalleryItem from "../components/gallery/GalleryItem.astro";
 import { CATEGORIES } from "../config/site";
-import { GALLERY_ITEMS } from "../data/gallery";
+import { CONTENTS } from "../data/contents";
 
 export function getStaticPaths() {
   return CATEGORIES
@@ -16,17 +16,19 @@ export function getStaticPaths() {
 
 const { category } = Astro.props;
 
-const items = GALLERY_ITEMS.filter(
+const items = CONTENTS.filter(
   (item) => item.categoryId === category.id
 );
 ---
 
-<Layout title={`${category.title} | Musee L'Instant`} showHeader={true}>
+<Layout title={`${category.title} | Musée de l'Instant`} showHeader={true}>
   <GalleryGrid items={items}>
     {items.map((item) => (
       <GalleryItem
         image={item.image}
-        caption={item.caption}
+        title={item.title}
+        body={item.body}
+        href={`/${category.slug}/${item.slug}`}
       />
     ))}
   </GalleryGrid>

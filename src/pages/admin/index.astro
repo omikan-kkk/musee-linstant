@@ -1,0 +1,96 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { CATEGORIES } from "../../config/site";
+
+const visibleCategories = CATEGORIES
+  .filter((category) => category.visible)
+  .sort((a, b) => a.order - b.order);
+---
+
+<Layout title="Musée de l'Instant CMS" showHeader={false}>
+  <main class="admin">
+    <header class="admin-header">
+      <h1>Musée de l'Instant CMS</h1>
+    </header>
+
+    <section class="admin-section">
+      <div class="section-heading">
+        <p>Category</p>
+        <button type="button">＋ Add Category</button>
+      </div>
+
+      <nav class="category-list">
+        {visibleCategories.map((category) => (
+          <a href={`/admin/${category.slug}`}>
+            {category.title}
+          </a>
+        ))}
+      </nav>
+    </section>
+  </main>
+</Layout>
+
+<style>
+.admin{
+  max-width:720px;
+  margin:120px auto;
+  padding:24px;
+  background:#fff;
+  color:#111;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.admin-header{
+  margin-bottom:64px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  font-weight:400;
+  letter-spacing:.04em;
+}
+
+.admin-section{
+  display:flex;
+  flex-direction:column;
+  gap:28px;
+}
+
+.section-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+}
+
+.section-heading p{
+  margin:0;
+  font-size:12px;
+  letter-spacing:.12em;
+  color:#777;
+}
+
+button{
+  border:none;
+  background:transparent;
+  color:#111;
+  font-size:12px;
+  letter-spacing:.08em;
+  cursor:pointer;
+  padding:0;
+}
+
+.category-list{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.category-list a{
+  color:#111;
+  text-decoration:none;
+  font-size:18px;
+  letter-spacing:.08em;
+}
+</style>

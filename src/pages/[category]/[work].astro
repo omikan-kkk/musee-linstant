@@ -1,0 +1,81 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { CATEGORIES } from "../../config/site";
+import { CONTENTS } from "../../data/contents";
+
+export function getStaticPaths() {
+  return CONTENTS.map((item) => {
+    const category = CATEGORIES.find(
+      (category) => category.id === item.categoryId
+    );
+
+    return {
+      params: {
+        category: category?.slug,
+        work: item.slug,
+      },
+      props: {
+        item,
+      },
+    };
+  });
+}
+
+const { item } = Astro.props;
+---
+
+<Layout title={`${item.title} | Musée de l'Instant`} showHeader={true}>
+  <main class="work-page">
+    {item.image && (
+      <img src={item.image} alt={item.title} />
+    )}
+
+    {(item.title || item.body) && (
+      <div class="work-caption">
+        {item.title && <p class="work-title">{item.title}</p>}
+        {item.body && <p class="work-body">{item.body}</p>}
+      </div>
+    )}
+  </main>
+</Layout>
+
+<style>
+.work-page{
+  min-height:100vh;
+  padding:120px 24px;
+  display:grid;
+  place-items:center;
+  background:#fff;
+}
+
+.work-page img{
+  display:block;
+  width:min(100%,900px);
+  height:auto;
+}
+
+.work-caption{
+  margin:24px 0 0;
+  width:min(100%,900px);
+  text-align:right;
+  color:#555;
+}
+
+.work-title,
+.work-body{
+  margin:0;
+  letter-spacing:.08em;
+  line-height:1.8;
+  white-space:pre-line;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.work-title{
+  font-size:10px;
+}
+
+.work-body{
+  margin-top:4px;
+  font-size:10px;
+}
+</style>

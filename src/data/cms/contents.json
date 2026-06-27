@@ -1,0 +1,12 @@
+[
+  {
+    "id": "content000001",
+    "categoryId": "category001",
+    "slug": "coffee-sample-001",
+    "image": "/images/coffee/coffee-01.jpg",
+    "title": "Coffee, sample.",
+    "body": "Osaka\n2026",
+    "visible": true,
+    "order": 1
+  }
+]

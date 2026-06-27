@@ -1,6 +1,6 @@
 export const SITE = {
-  name: "Musee L'Instant",
-  logoText: "Musee L'Instant",
+  name: "Musée de l'Instant",
+  logoText: "Musée de l'Instant",
 };
 
 export const CATEGORIES = [

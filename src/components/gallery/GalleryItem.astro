@@ -1,51 +1,104 @@
 ---
+import { THEME } from "../../config/theme";
+
 const {
   image = "",
-  caption = "",
+  title = "",
+  body = "",
   href = "",
 } = Astro.props;
 
 const hasImage = image !== "";
-const hasCaption = caption !== "";
-const tag = href ? "a" : "article";
+const hasTitle = title !== "";
+const hasBody = body !== "";
 ---
 
-<Fragment set:html={`<${tag} class="gallery-item"${href ? ` href="${href}"` : ""}>`} />
+{href ? (
+  <a class="gallery-item" href={href}>
+    {hasImage && (
+      <img src={image} alt={title} loading="lazy" />
+    )}
 
-  {hasImage && (
-    <img src={image} alt={caption} loading="lazy" />
-  )}
+    {(hasTitle || hasBody) && (
+      <div class="gallery-caption">
+        {hasTitle && (
+          <p
+            class="gallery-title"
+            style={`font-size:${THEME.typography.galleryTitleSize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {title}
+          </p>
+        )}
 
-  {hasCaption && (
-    <p>{caption}</p>
-  )}
+        {hasBody && (
+          <p
+            class="gallery-body"
+            style={`font-size:${THEME.typography.galleryBodySize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {body}
+          </p>
+        )}
+      </div>
+    )}
+  </a>
+) : (
+  <article class="gallery-item">
+    {hasImage && (
+      <img src={image} alt={title} loading="lazy" />
+    )}
 
-<Fragment set:html={`</${tag}>`} />
+    {(hasTitle || hasBody) && (
+      <div class="gallery-caption">
+        {hasTitle && (
+          <p
+            class="gallery-title"
+            style={`font-size:${THEME.typography.galleryTitleSize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {title}
+          </p>
+        )}
+
+        {hasBody && (
+          <p
+            class="gallery-body"
+            style={`font-size:${THEME.typography.galleryBodySize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {body}
+          </p>
+        )}
+      </div>
+    )}
+  </article>
+)}
 
 <style>
-  .gallery-item {
-    display: block;
-    text-decoration: none;
-    color: #111;
-  }
+.gallery-item{
+  display:block;
+  color:#111;
+  text-decoration:none;
+}
 
-  .gallery-item img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
+.gallery-item img{
+  display:block;
+  width:100%;
+  height:auto;
+}
 
-  .gallery-item p {
-  margin-top: 14px;
+.gallery-caption{
+  margin-top:14px;
+  text-align:right;
+  color:#555;
+}
 
-  text-align: right;
+.gallery-title,
+.gallery-body{
+  margin:0;
+  letter-spacing:.08em;
+  line-height:1.8;
+  white-space:pre-line;
+}
 
-  font-size: 10px;
-
-  letter-spacing: 0.08em;
-
-  line-height: 1.8;
-
-  color: #555;
+.gallery-body{
+  margin-top:4px;
 }
 </style>

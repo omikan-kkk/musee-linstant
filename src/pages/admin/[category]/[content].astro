@@ -45,25 +45,20 @@ const { content, category } = Astro.props;
 
       <div class="field">
         <label for="image">Image</label>
-
-        {content.image && (
-          <img id="image-preview" src={content.image} alt={content.title} />
-        )}
-
+        {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
         <input id="image" type="file" accept="image/*" />
       </div>
 
       <div class="actions">
-        <button type="button" id="save-button" class="save-button">
-          Save
-        </button>
-
+        <button type="button" id="save-button" class="save-button">Save</button>
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
   </main>
 
   <script>
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+
     const editor = document.querySelector(".editor");
     const contentId = editor?.getAttribute("data-content-id");
 
@@ -73,28 +68,6 @@ const { content, category } = Astro.props;
     const imagePreview = document.querySelector("#image-preview");
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
-
-    const storageKey = contentId ? `musee-cms-draft-${contentId}` : "";
-
-    const savedDraft = storageKey
-      ? localStorage.getItem(storageKey)
-      : null;
-
-    if (savedDraft) {
-      const draft = JSON.parse(savedDraft);
-
-      if (titleInput && typeof draft.title === "string") {
-        titleInput.value = draft.title;
-      }
-
-      if (bodyInput && typeof draft.body === "string") {
-        bodyInput.value = draft.body;
-      }
-
-      if (imagePreview && typeof draft.image === "string") {
-        imagePreview.src = draft.image;
-      }
-    }
 
     imageInput?.addEventListener("change", () => {
       const file = imageInput.files?.[0];
@@ -112,19 +85,50 @@ const { content, category } = Astro.props;
       reader.readAsDataURL(file);
     });
 
-    saveButton?.addEventListener("click", () => {
-      if (!storageKey || !titleInput || !bodyInput || !imagePreview) return;
+    saveButton?.addEventListener("click", async () => {
+      if (!contentId || !titleInput || !bodyInput || !imagePreview || !saveStatus) return;
 
-      const draft = {
-        title: titleInput.value,
-        body: bodyInput.value,
-        image: imagePreview.src,
-      };
+      saveStatus.textContent = "Saving...";
 
-      localStorage.setItem(storageKey, JSON.stringify(draft));
+      try {
+        const currentRes = await fetch(`${API_URL}/contents`);
+        const currentData = await currentRes.json();
 
-      if (saveStatus) {
-        saveStatus.textContent = "Saved";
+        if (!currentData.ok) {
+          throw new Error("Could not load contents.");
+        }
+
+        const nextContents = currentData.contents.map((content) => {
+          if (content.id !== contentId) return content;
+
+          return {
+            ...content,
+            title: titleInput.value,
+            body: bodyInput.value,
+            image: imagePreview.src,
+          };
+        });
+
+        const saveRes = await fetch(`${API_URL}/contents`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: nextContents,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error("Could not save contents.");
+        }
+
+        saveStatus.textContent = "Saved to GitHub";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
       }
     });
   </script>

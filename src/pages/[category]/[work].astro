@@ -12,7 +12,7 @@ export function getStaticPaths() {
     return {
       params: {
         category: category?.slug,
-        work: item.slug,
+        work: item.id,
       },
       props: {
         item,

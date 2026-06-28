@@ -7,7 +7,7 @@
     "title": "Coffee, sample.",
     "body": "Tokyo\n2027",
     "visible": true,
-    "order": 2
+    "order": 1
   },
   {
     "id": "content000003",
@@ -17,6 +17,6 @@
     "title": "test2",
     "body": "test_b2",
     "visible": true,
-    "order": 3
+    "order": 2
   }
 ]

@@ -44,9 +44,10 @@ const { content, category } = Astro.props;
       </div>
 
       <div class="field">
-        <label>Image</label>
-        {content.image && <img src={content.image} alt={content.title} />}
-        <p class="note">Image upload will be added later.</p>
+        <label for="image">Image</label>
+        {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
+        {!content.image && <img id="image-preview" class="is-hidden" alt="" />}
+        <input id="image" type="file" accept="image/*" />
       </div>
 
       <div class="field checkbox-field">
@@ -71,10 +72,14 @@ const { content, category } = Astro.props;
 
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
+    const imageInput = document.querySelector("#image");
+    const imagePreview = document.querySelector("#image-preview");
     const visibleInput = document.querySelector("#visible");
     const saveButton = document.querySelector("#save-button");
     const deleteButton = document.querySelector("#delete-button");
     const saveStatus = document.querySelector("#save-status");
+
+    let selectedImageFile = null;
 
     async function loadContents() {
       const currentRes = await fetch(`${API_URL}/contents`);
@@ -107,6 +112,37 @@ const { content, category } = Astro.props;
       return saveData;
     }
 
+    async function uploadImage(file, contentId) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentId", contentId);
+
+      const uploadRes = await fetch(`${API_URL}/upload-image`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+
+      if (!uploadData.ok) {
+        throw new Error("Could not upload image.");
+      }
+
+      return uploadData.image;
+    }
+
+    imageInput?.addEventListener("change", () => {
+      const file = imageInput.files?.[0];
+
+      if (!file || !imagePreview) return;
+
+      selectedImageFile = file;
+
+      const previewUrl = URL.createObjectURL(file);
+      imagePreview.src = previewUrl;
+      imagePreview.classList.remove("is-hidden");
+    });
+
     saveButton?.addEventListener("click", async () => {
       if (!contentId || !titleInput || !bodyInput || !visibleInput || !saveStatus) return;
 
@@ -114,6 +150,15 @@ const { content, category } = Astro.props;
 
       try {
         const currentContents = await loadContents();
+
+        let nextImagePath = null;
+
+        if (selectedImageFile) {
+          saveStatus.textContent = "Uploading image...";
+          nextImagePath = await uploadImage(selectedImageFile, contentId);
+        }
+
+        saveStatus.textContent = "Saving content...";
 
         const nextContents = currentContents.map((content) => {
           if (content.id !== contentId) return content;
@@ -123,14 +168,13 @@ const { content, category } = Astro.props;
             title: titleInput.value,
             body: bodyInput.value,
             visible: visibleInput.checked,
+            image: nextImagePath ?? content.image,
           };
         });
 
         await saveContents(nextContents);
 
-        saveStatus.textContent = visibleInput.checked
-          ? "Saved to GitHub"
-          : "Saved as hidden";
+        saveStatus.textContent = "Saved to GitHub";
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Save failed";
@@ -240,6 +284,12 @@ input[type="checkbox"]{
   width:auto;
 }
 
+input[type="file"]{
+  border:none;
+  padding:0;
+  font-size:12px;
+}
+
 textarea{
   resize:vertical;
 }
@@ -250,10 +300,8 @@ img{
   height:auto;
 }
 
-.note{
-  margin:0;
-  font-size:11px;
-  color:#999;
+img.is-hidden{
+  display:none;
 }
 
 .actions{

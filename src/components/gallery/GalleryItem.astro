@@ -17,18 +17,16 @@ const hasBody = body !== "";
   <a class="gallery-item" href={href}>
     <div
       class="artwork-frame"
-      style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
+      style={`--artwork-ratio:${THEME.gallery.artworkAspectRatio};`}
     >
-      <div class="image-area">
-        {hasImage && (
-          <img
-            src={image}
-            alt={title}
-            loading="lazy"
-            style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
-          />
-        )}
-      </div>
+      {hasImage && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+        />
+      )}
     </div>
 
     {(hasTitle || hasBody) && (
@@ -60,18 +58,16 @@ const hasBody = body !== "";
   <article class="gallery-item">
     <div
       class="artwork-frame"
-      style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
+      style={`--artwork-ratio:${THEME.gallery.artworkAspectRatio};`}
     >
-      <div class="image-area">
-        {hasImage && (
-          <img
-            src={image}
-            alt={title}
-            loading="lazy"
-            style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
-          />
-        )}
-      </div>
+      {hasImage && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+        />
+      )}
     </div>
 
     {(hasTitle || hasBody) && (
@@ -109,20 +105,24 @@ const hasBody = body !== "";
 }
 
 .artwork-frame{
+  position:relative;
   width:100%;
-  display:grid;
-  place-items:center;
+  height:auto;
+  overflow:hidden;
 }
 
-.image-area{
+.artwork-frame::before{
+  content:"";
+  display:block;
   width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  aspect-ratio:var(--artwork-ratio);
 }
 
-.image-area img{
+.artwork-frame img{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
   display:block;
   width:auto;
   height:auto;

@@ -33,5 +33,12 @@
     "slug": "musique",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "category006",
+    "title": "ﾏﾅﾋﾟﾖ",
+    "slug": "category",
+    "visible": true,
+    "order": 6
   }
 ]

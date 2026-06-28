@@ -6,7 +6,7 @@
     "image": "/images/coffee/coffee-01.jpg",
     "title": "Coffee, sample.",
     "body": "Tokyo\n2027",
-    "visible": false,
+    "visible": true,
     "order": 1
   },
   {

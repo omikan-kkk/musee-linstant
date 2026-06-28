@@ -1,7 +1,7 @@
 export const THEME = {
   typography: {
     fontFamily:
-      `"Helvetica Neue", Helvetica, Arial, sans-serif`,
+      `"Cormorant Garamond", "Noto Serif JP", serif`,
 
     galleryTitleSize: "10px",
     galleryBodySize: "10px",
@@ -16,6 +16,7 @@ export const THEME = {
     captionMarginTop: "14px",
 
     maxWidth: "1200px",
+
     mobileColumns: "2",
     desktopColumns: "3",
 

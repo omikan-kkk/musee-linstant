@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { CATEGORIES } from "../../config/site";
 import { CONTENTS } from "../../data/contents";
+import { THEME } from "../../config/theme";
 
 export function getStaticPaths() {
   return CONTENTS
@@ -32,8 +33,23 @@ const { item } = Astro.props;
 
     {(item.title || item.body) && (
       <div class="work-caption">
-        {item.title && <p class="work-title">{item.title}</p>}
-        {item.body && <p class="work-body">{item.body}</p>}
+        {item.title && (
+          <p
+            class="work-title"
+            style={`font-size:${THEME.typography.workTitleSize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {item.title}
+          </p>
+        )}
+
+        {item.body && (
+          <p
+            class="work-body"
+            style={`font-size:${THEME.typography.workBodySize};font-family:${THEME.typography.fontFamily};`}
+          >
+            {item.body}
+          </p>
+        )}
       </div>
     )}
   </main>
@@ -67,15 +83,9 @@ const { item } = Astro.props;
   letter-spacing:.08em;
   line-height:1.8;
   white-space:pre-line;
-  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.work-title{
-  font-size:10px;
 }
 
 .work-body{
   margin-top:4px;
-  font-size:10px;
 }
 </style>

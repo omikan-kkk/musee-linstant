@@ -33,12 +33,5 @@
     "slug": "musique",
     "visible": true,
     "order": 5
-  },
-  {
-    "id": "category007",
-    "title": "けろpy",
-    "slug": "py",
-    "visible": true,
-    "order": 7
   }
 ]

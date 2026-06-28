@@ -11,14 +11,14 @@
     "title": "Roman",
     "slug": "roman",
     "visible": true,
-    "order": 2
+    "order": 3
   },
   {
     "id": "category003",
     "title": "Bonsaï",
     "slug": "bonsai",
     "visible": true,
-    "order": 3
+    "order": 2
   },
   {
     "id": "category004",

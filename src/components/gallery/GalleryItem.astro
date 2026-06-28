@@ -16,17 +16,19 @@ const hasBody = body !== "";
 {href ? (
   <a class="gallery-item" href={href}>
     <div
-      class="image-area"
+      class="artwork-frame"
       style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
     >
-      {hasImage && (
-        <img
-          src={image}
-          alt={title}
-          loading="lazy"
-          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
-        />
-      )}
+      <div class="image-area">
+        {hasImage && (
+          <img
+            src={image}
+            alt={title}
+            loading="lazy"
+            style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+          />
+        )}
+      </div>
     </div>
 
     {(hasTitle || hasBody) && (
@@ -57,17 +59,19 @@ const hasBody = body !== "";
 ) : (
   <article class="gallery-item">
     <div
-      class="image-area"
+      class="artwork-frame"
       style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
     >
-      {hasImage && (
-        <img
-          src={image}
-          alt={title}
-          loading="lazy"
-          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
-        />
-      )}
+      <div class="image-area">
+        {hasImage && (
+          <img
+            src={image}
+            alt={title}
+            loading="lazy"
+            style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+          />
+        )}
+      </div>
     </div>
 
     {(hasTitle || hasBody) && (
@@ -104,8 +108,15 @@ const hasBody = body !== "";
   text-decoration:none;
 }
 
+.artwork-frame{
+  width:100%;
+  display:grid;
+  place-items:center;
+}
+
 .image-area{
   width:100%;
+  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -115,6 +126,7 @@ const hasBody = body !== "";
   display:block;
   width:auto;
   height:auto;
+  object-fit:contain;
 }
 
 .gallery-caption{

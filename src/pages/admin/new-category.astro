@@ -21,6 +21,93 @@ import Layout from "../../layouts/Layout.astro";
       </div>
     </section>
   </main>
+
+  <script>
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+
+    const titleInput = document.querySelector("#title");
+    const saveButton = document.querySelector("#save-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    function getNextCategoryId(categories) {
+      const maxNumber = categories.reduce((max, category) => {
+        const match = category.id?.match(/^category(\d+)$/);
+        if (!match) return max;
+
+        const number = Number(match[1]);
+        return Number.isFinite(number) ? Math.max(max, number) : max;
+      }, 0);
+
+      return `category${String(maxNumber + 1).padStart(3, "0")}`;
+    }
+
+    function createSlug(title) {
+      return title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "category";
+    }
+
+    saveButton?.addEventListener("click", async () => {
+      if (!titleInput || !saveStatus) return;
+
+      const title = titleInput.value.trim();
+
+      if (!title) {
+        saveStatus.textContent = "Title is required";
+        return;
+      }
+
+      saveStatus.textContent = "Saving...";
+
+      try {
+        const currentRes = await fetch(`${API_URL}/categories`);
+        const currentData = await currentRes.json();
+
+        if (!currentData.ok) {
+          throw new Error("Could not load categories.");
+        }
+
+        const nextId = getNextCategoryId(currentData.categories);
+        const nextOrder = currentData.categories.length + 1;
+
+        const newCategory = {
+          id: nextId,
+          title,
+          slug: createSlug(title),
+          visible: true,
+          order: nextOrder,
+        };
+
+        const nextCategories = [...currentData.categories, newCategory];
+
+        const saveRes = await fetch(`${API_URL}/categories`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            categories: nextCategories,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error("Could not save categories.");
+        }
+
+        saveStatus.textContent = "Saved to GitHub. Redirecting...";
+
+        window.location.href = "/admin";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
+    });
+  </script>
 </Layout>
 
 <style>

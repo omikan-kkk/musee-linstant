@@ -35,13 +35,6 @@
     "order": 5
   },
   {
-    "id": "category006",
-    "title": "ﾏﾅﾋﾟﾖ",
-    "slug": "category",
-    "visible": true,
-    "order": 6
-  },
-  {
     "id": "category007",
     "title": "けろpy",
     "slug": "py",

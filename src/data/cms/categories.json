@@ -40,5 +40,12 @@
     "slug": "category",
     "visible": true,
     "order": 6
+  },
+  {
+    "id": "category007",
+    "title": "けろpy",
+    "slug": "py",
+    "visible": true,
+    "order": 7
   }
 ]

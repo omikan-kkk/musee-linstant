@@ -21,9 +21,15 @@ const categories = CATEGORIES
         </a>
       </div>
 
-      <nav class="category-list">
+      <nav class="category-list" id="category-list">
         {categories.map((category) => (
-          <div class="category-row">
+          <div
+            class="category-row"
+            draggable="true"
+            data-category-id={category.id}
+          >
+            <span class="drag-handle">☰</span>
+
             <a class="category-title" href={`/admin/${category.slug}`}>
               {category.title}
               {!category.visible && <span class="hidden-label">Hidden</span>}
@@ -35,8 +41,113 @@ const categories = CATEGORIES
           </div>
         ))}
       </nav>
+
+      <div class="actions">
+        <button type="button" id="save-order-button" class="save-order-button">
+          Save Order
+        </button>
+
+        <p id="save-status" aria-live="polite"></p>
+      </div>
     </section>
   </main>
+
+  <script>
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+
+    const list = document.querySelector("#category-list");
+    const saveButton = document.querySelector("#save-order-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    let draggedRow = null;
+
+    list?.addEventListener("dragstart", (event) => {
+      const row = event.target.closest(".category-row");
+      if (!row) return;
+
+      draggedRow = row;
+      row.classList.add("is-dragging");
+    });
+
+    list?.addEventListener("dragend", () => {
+      if (draggedRow) {
+        draggedRow.classList.remove("is-dragging");
+      }
+
+      draggedRow = null;
+    });
+
+    list?.addEventListener("dragover", (event) => {
+      event.preventDefault();
+
+      const dragging = document.querySelector(".is-dragging");
+      const rows = [...list.querySelectorAll(".category-row:not(.is-dragging)")];
+
+      const nextRow = rows.find((row) => {
+        const box = row.getBoundingClientRect();
+        return event.clientY < box.top + box.height / 2;
+      });
+
+      if (!dragging) return;
+
+      if (nextRow) {
+        list.insertBefore(dragging, nextRow);
+      } else {
+        list.appendChild(dragging);
+      }
+    });
+
+    saveButton?.addEventListener("click", async () => {
+      if (!list || !saveStatus) return;
+
+      saveStatus.textContent = "Saving...";
+
+      const orderedIds = [...list.querySelectorAll(".category-row")]
+        .map((row) => row.getAttribute("data-category-id"))
+        .filter(Boolean);
+
+      try {
+        const currentRes = await fetch(`${API_URL}/categories`);
+        const currentData = await currentRes.json();
+
+        if (!currentData.ok) {
+          throw new Error("Could not load categories.");
+        }
+
+        const nextCategories = currentData.categories.map((category) => {
+          const index = orderedIds.indexOf(category.id);
+
+          if (index === -1) return category;
+
+          return {
+            ...category,
+            order: index + 1,
+          };
+        });
+
+        const saveRes = await fetch(`${API_URL}/categories`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            categories: nextCategories,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error("Could not save order.");
+        }
+
+        saveStatus.textContent = "Order saved";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
+    });
+  </script>
 </Layout>
 
 <style>
@@ -94,10 +205,21 @@ h1{
 }
 
 .category-row{
-  display:flex;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
   align-items:center;
-  justify-content:space-between;
-  gap:24px;
+  gap:14px;
+  cursor:grab;
+}
+
+.category-row.is-dragging{
+  opacity:.35;
+}
+
+.drag-handle{
+  color:#999;
+  font-size:14px;
+  user-select:none;
 }
 
 .category-title{
@@ -119,5 +241,26 @@ h1{
   color:#999;
   font-size:11px;
   letter-spacing:.08em;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.save-order-button{
+  border:none;
+  background:#111;
+  color:#fff;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+#save-status{
+  margin:0;
+  font-size:12px;
+  color:#777;
 }
 </style>

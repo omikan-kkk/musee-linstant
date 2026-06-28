@@ -10,16 +10,6 @@
     "order": 2
   },
   {
-    "id": "content000002",
-    "categoryId": "category001",
-    "slug": "content000002",
-    "image": "",
-    "title": "Test",
-    "body": "test.",
-    "visible": true,
-    "order": 1
-  },
-  {
     "id": "content000003",
     "categoryId": "category001",
     "slug": "content000003",

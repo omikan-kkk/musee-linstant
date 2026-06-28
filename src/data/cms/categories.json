@@ -38,7 +38,7 @@
     "id": "category006",
     "title": "Test Cat",
     "slug": "test-cat",
-    "visible": true,
+    "visible": false,
     "order": 6
   }
 ]

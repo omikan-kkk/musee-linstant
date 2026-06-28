@@ -1,30 +1,48 @@
 ---
+import { THEME } from "../../config/theme";
+
 const {
   items = [],
 } = Astro.props;
 ---
 
 {items.length > 0 && (
-  <section class="gallery-grid">
+  <section
+    class="gallery-grid"
+    style={`
+      --gallery-max-width:${THEME.gallery.maxWidth};
+      --gallery-mobile-columns:${THEME.gallery.mobileColumns};
+      --gallery-desktop-columns:${THEME.gallery.desktopColumns};
+      --gallery-mobile-gap-row:${THEME.gallery.mobileGapRow};
+      --gallery-mobile-gap-column:${THEME.gallery.mobileGapColumn};
+      --gallery-desktop-gap-row:${THEME.gallery.desktopGapRow};
+      --gallery-desktop-gap-column:${THEME.gallery.desktopGapColumn};
+      --gallery-mobile-padding:${THEME.gallery.mobilePadding};
+      --gallery-desktop-padding:${THEME.gallery.desktopPadding};
+    `}
+  >
     <slot />
   </section>
 )}
 
 <style>
-  .gallery-grid {
-    width: min(100%, 1200px);
-    margin: 0 auto;
-    padding: 120px 24px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 90px 40px;
-  }
+.gallery-grid{
+  width:min(100%, var(--gallery-max-width));
+  margin:0 auto;
+  padding:var(--gallery-mobile-padding);
+  display:grid;
+  grid-template-columns:repeat(var(--gallery-mobile-columns), minmax(0, 1fr));
+  column-gap:var(--gallery-mobile-gap-column);
+  row-gap:var(--gallery-mobile-gap-row);
+  align-items:start;
+}
 
-  @media (min-width: 768px) {
-    .gallery-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 110px 48px;
-      padding: 140px 32px;
-    }
+@media (min-width:768px){
+  .gallery-grid{
+    padding:var(--gallery-desktop-padding);
+    grid-template-columns:repeat(var(--gallery-desktop-columns), minmax(0, 1fr));
+    column-gap:var(--gallery-desktop-gap-column);
+    row-gap:var(--gallery-desktop-gap-row);
   }
+}
 </style>

@@ -15,12 +15,25 @@ const hasBody = body !== "";
 
 {href ? (
   <a class="gallery-item" href={href}>
-    {hasImage && (
-      <img src={image} alt={title} loading="lazy" />
-    )}
+    <div
+      class="image-area"
+      style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
+    >
+      {hasImage && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+        />
+      )}
+    </div>
 
     {(hasTitle || hasBody) && (
-      <div class="gallery-caption">
+      <div
+        class="gallery-caption"
+        style={`margin-top:${THEME.gallery.captionMarginTop};`}
+      >
         {hasTitle && (
           <p
             class="gallery-title"
@@ -43,12 +56,25 @@ const hasBody = body !== "";
   </a>
 ) : (
   <article class="gallery-item">
-    {hasImage && (
-      <img src={image} alt={title} loading="lazy" />
-    )}
+    <div
+      class="image-area"
+      style={`aspect-ratio:${THEME.gallery.artworkAspectRatio};`}
+    >
+      {hasImage && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
+        />
+      )}
+    </div>
 
     {(hasTitle || hasBody) && (
-      <div class="gallery-caption">
+      <div
+        class="gallery-caption"
+        style={`margin-top:${THEME.gallery.captionMarginTop};`}
+      >
         {hasTitle && (
           <p
             class="gallery-title"
@@ -78,14 +104,20 @@ const hasBody = body !== "";
   text-decoration:none;
 }
 
-.gallery-item img{
-  display:block;
+.image-area{
   width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.image-area img{
+  display:block;
+  width:auto;
   height:auto;
 }
 
 .gallery-caption{
-  margin-top:14px;
   text-align:right;
   color:#555;
 }

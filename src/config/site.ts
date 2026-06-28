@@ -1,42 +1,8 @@
+import categories from "../data/cms/categories.json";
+
 export const SITE = {
   name: "Musée de l'Instant",
   logoText: "Musée de l'Instant",
 };
 
-export const CATEGORIES = [
-  {
-    id: "category001",
-    title: "Café",
-    slug: "cafe",
-    visible: true,
-    order: 1,
-  },
-  {
-    id: "category002",
-    title: "Roman",
-    slug: "roman",
-    visible: true,
-    order: 2,
-  },
-  {
-    id: "category003",
-    title: "Bonsaï",
-    slug: "bonsai",
-    visible: true,
-    order: 3,
-  },
-  {
-    id: "category004",
-    title: "Art",
-    slug: "art",
-    visible: true,
-    order: 4,
-  },
-  {
-    id: "category005",
-    title: "Musique",
-    slug: "musique",
-    visible: true,
-    order: 5,
-  },
-];
+export const CATEGORIES = categories;

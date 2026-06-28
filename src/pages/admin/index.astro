@@ -16,7 +16,10 @@ const visibleCategories = CATEGORIES
     <section class="admin-section">
       <div class="section-heading">
         <p>Category</p>
-        <button type="button">＋ Add Category</button>
+
+        <a class="add-category" href="/admin/new-category">
+          ＋ Add Category
+        </a>
       </div>
 
       <nav class="category-list">
@@ -71,14 +74,11 @@ h1{
   color:#777;
 }
 
-button{
-  border:none;
-  background:transparent;
+.add-category{
   color:#111;
+  text-decoration:none;
   font-size:12px;
   letter-spacing:.08em;
-  cursor:pointer;
-  padding:0;
 }
 
 .category-list{

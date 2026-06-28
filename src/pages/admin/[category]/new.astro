@@ -117,9 +117,9 @@ const { category } = Astro.props;
           throw new Error("Could not save contents.");
         }
 
-        saveStatus.textContent = "Saved to GitHub";
+        saveStatus.textContent = "Saved to GitHub. Redirecting...";
 
-        window.location.href = `/admin/${categorySlug}/${nextId}`;
+        window.location.href = `/admin/${categorySlug}`;
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Save failed";

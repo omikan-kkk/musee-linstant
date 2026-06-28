@@ -2,8 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { CATEGORIES } from "../../config/site";
 
-const visibleCategories = CATEGORIES
-  .filter((category) => category.visible)
+const categories = CATEGORIES
   .sort((a, b) => a.order - b.order);
 ---
 
@@ -23,10 +22,17 @@ const visibleCategories = CATEGORIES
       </div>
 
       <nav class="category-list">
-        {visibleCategories.map((category) => (
-          <a href={`/admin/${category.slug}`}>
-            {category.title}
-          </a>
+        {categories.map((category) => (
+          <div class="category-row">
+            <a class="category-title" href={`/admin/${category.slug}`}>
+              {category.title}
+              {!category.visible && <span class="hidden-label">Hidden</span>}
+            </a>
+
+            <a class="edit-link" href={`/admin/category/${category.id}`}>
+              Edit
+            </a>
+          </div>
         ))}
       </nav>
     </section>
@@ -87,10 +93,31 @@ h1{
   gap:22px;
 }
 
-.category-list a{
+.category-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+}
+
+.category-title{
   color:#111;
   text-decoration:none;
   font-size:18px;
+  letter-spacing:.08em;
+}
+
+.edit-link{
+  color:#777;
+  text-decoration:none;
+  font-size:12px;
+  letter-spacing:.08em;
+}
+
+.hidden-label{
+  margin-left:10px;
+  color:#999;
+  font-size:11px;
   letter-spacing:.08em;
 }
 </style>

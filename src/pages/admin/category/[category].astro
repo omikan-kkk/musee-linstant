@@ -1,0 +1,261 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { CATEGORIES } from "../../../config/site";
+
+export function getStaticPaths() {
+  return CATEGORIES.map((category) => ({
+    params: {
+      category: category.id,
+    },
+    props: {
+      category,
+    },
+  }));
+}
+
+const { category } = Astro.props;
+---
+
+<Layout title={`${category.title} | Musée de l'Instant CMS`} showHeader={false}>
+  <main class="admin">
+    <header>
+      <a href="/admin">← Categories</a>
+      <h1>Edit Category</h1>
+    </header>
+
+    <section class="editor" data-category-id={category.id}>
+      <div class="field">
+        <label for="title">Title</label>
+        <input id="title" type="text" value={category.title} />
+      </div>
+
+      <div class="field">
+        <label for="slug">Slug</label>
+        <input id="slug" type="text" value={category.slug} readonly />
+        <p class="note">Slug is generated automatically when the category is created.</p>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="visible" type="checkbox" checked={category.visible} />
+        <label for="visible">Visible</label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="save-button" class="save-button">Save</button>
+        <button type="button" id="delete-button" class="delete-button">Delete Category</button>
+        <p id="save-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+
+    const editor = document.querySelector(".editor");
+    const categoryId = editor?.getAttribute("data-category-id");
+
+    const titleInput = document.querySelector("#title");
+    const visibleInput = document.querySelector("#visible");
+    const saveButton = document.querySelector("#save-button");
+    const deleteButton = document.querySelector("#delete-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    async function loadCategories() {
+      const currentRes = await fetch(`${API_URL}/categories`);
+      const currentData = await currentRes.json();
+
+      if (!currentData.ok) {
+        throw new Error("Could not load categories.");
+      }
+
+      return currentData.categories;
+    }
+
+    async function saveCategories(categories) {
+      const saveRes = await fetch(`${API_URL}/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          categories,
+        }),
+      });
+
+      const saveData = await saveRes.json();
+
+      if (!saveData.ok) {
+        throw new Error("Could not save categories.");
+      }
+
+      return saveData;
+    }
+
+    saveButton?.addEventListener("click", async () => {
+      if (!categoryId || !titleInput || !visibleInput || !saveStatus) return;
+
+      saveStatus.textContent = "Saving...";
+
+      try {
+        const currentCategories = await loadCategories();
+
+        const nextCategories = currentCategories.map((category) => {
+          if (category.id !== categoryId) return category;
+
+          return {
+            ...category,
+            title: titleInput.value,
+            visible: visibleInput.checked,
+          };
+        });
+
+        await saveCategories(nextCategories);
+
+        saveStatus.textContent = visibleInput.checked
+          ? "Saved to GitHub"
+          : "Saved as hidden";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
+    });
+
+    deleteButton?.addEventListener("click", async () => {
+      if (!categoryId || !saveStatus) return;
+
+      const confirmed = window.confirm(
+        "Delete this category? This cannot be undone."
+      );
+
+      if (!confirmed) return;
+
+      saveStatus.textContent = "Deleting...";
+
+      try {
+        const currentCategories = await loadCategories();
+
+        const nextCategories = currentCategories.filter(
+          (category) => category.id !== categoryId
+        );
+
+        await saveCategories(nextCategories);
+
+        saveStatus.textContent = "Deleted";
+
+        window.location.href = "/admin";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Delete failed";
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+.admin{
+  max-width:720px;
+  margin:120px auto;
+  padding:24px;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+  color:#111;
+}
+
+header{
+  margin-bottom:56px;
+}
+
+header a{
+  display:inline-block;
+  margin-bottom:24px;
+  color:#777;
+  text-decoration:none;
+  font-size:12px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  font-weight:400;
+}
+
+.editor{
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.checkbox-field{
+  flex-direction:row;
+  align-items:center;
+  gap:10px;
+}
+
+label{
+  font-size:11px;
+  letter-spacing:.12em;
+  color:#777;
+}
+
+.checkbox-field label{
+  color:#111;
+  letter-spacing:.08em;
+}
+
+input{
+  width:100%;
+  border:1px solid #ddd;
+  background:#fff;
+  color:#111;
+  padding:12px;
+  font:inherit;
+  font-size:14px;
+  line-height:1.8;
+}
+
+input[type="checkbox"]{
+  width:auto;
+}
+
+.note{
+  margin:0;
+  font-size:11px;
+  color:#999;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.save-button{
+  border:none;
+  background:#111;
+  color:#fff;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.delete-button{
+  border:none;
+  background:transparent;
+  color:#999;
+  padding:12px 0;
+  cursor:pointer;
+  font-size:12px;
+}
+
+#save-status{
+  margin:0;
+  font-size:12px;
+  color:#777;
+}
+</style>

@@ -33,12 +33,5 @@
     "slug": "musique",
     "visible": true,
     "order": 5
-  },
-  {
-    "id": "category006",
-    "title": "Test Cat",
-    "slug": "test-cat",
-    "visible": false,
-    "order": 6
   }
 ]

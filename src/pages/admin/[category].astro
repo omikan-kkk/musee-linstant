@@ -7,28 +7,22 @@ export function getStaticPaths() {
   return CATEGORIES
     .filter(category => category.visible)
     .map(category => ({
-      params: {
-        category: category.slug,
-      },
-      props: {
-        category,
-      },
+      params: { category: category.slug },
+      props: { category },
     }));
 }
 
 const { category } = Astro.props;
 
-const contents = CONTENTS.filter(
-  content => content.categoryId === category.id
-);
+const contents = CONTENTS
+  .filter(content => content.categoryId === category.id)
+  .sort((a, b) => a.order - b.order);
 ---
 
 <Layout title={`${category.title} | Musée de l'Instant CMS`} showHeader={false}>
-  <main class="admin">
-
+  <main class="admin" data-category-id={category.id}>
     <header>
       <a href="/admin">← Categories</a>
-
       <h1>{category.title}</h1>
 
       <a class="add-button" href={`/admin/${category.slug}/new`}>
@@ -36,17 +30,128 @@ const contents = CONTENTS.filter(
       </a>
     </header>
 
-    <section class="content-list">
-
+    <section class="content-list" id="content-list">
       {contents.map(content => (
-        <a href={`/admin/${category.slug}/${content.id}`}>
-          {content.title}
-        </a>
-      ))}
+        <div class="content-row" draggable="true" data-content-id={content.id}>
+          <span class="drag-handle">☰</span>
 
+          <a href={`/admin/${category.slug}/${content.id}`}>
+            {content.title || "Untitled"}
+          </a>
+        </div>
+      ))}
     </section>
 
+    <div class="actions">
+      <button type="button" id="save-order-button" class="save-order-button">
+        Save Order
+      </button>
+
+      <p id="save-status" aria-live="polite"></p>
+    </div>
   </main>
+
+  <script>
+    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+
+    const admin = document.querySelector(".admin");
+    const categoryId = admin?.getAttribute("data-category-id");
+
+    const list = document.querySelector("#content-list");
+    const saveButton = document.querySelector("#save-order-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    let draggedRow = null;
+
+    list?.addEventListener("dragstart", (event) => {
+      const row = event.target.closest(".content-row");
+      if (!row) return;
+
+      draggedRow = row;
+      row.classList.add("is-dragging");
+    });
+
+    list?.addEventListener("dragend", () => {
+      if (draggedRow) {
+        draggedRow.classList.remove("is-dragging");
+      }
+
+      draggedRow = null;
+    });
+
+    list?.addEventListener("dragover", (event) => {
+      event.preventDefault();
+
+      const dragging = document.querySelector(".is-dragging");
+      const rows = [...list.querySelectorAll(".content-row:not(.is-dragging)")];
+
+      const nextRow = rows.find((row) => {
+        const box = row.getBoundingClientRect();
+        return event.clientY < box.top + box.height / 2;
+      });
+
+      if (!dragging) return;
+
+      if (nextRow) {
+        list.insertBefore(dragging, nextRow);
+      } else {
+        list.appendChild(dragging);
+      }
+    });
+
+    saveButton?.addEventListener("click", async () => {
+      if (!categoryId || !list || !saveStatus) return;
+
+      saveStatus.textContent = "Saving...";
+
+      const orderedIds = [...list.querySelectorAll(".content-row")]
+        .map((row) => row.getAttribute("data-content-id"))
+        .filter(Boolean);
+
+      try {
+        const currentRes = await fetch(`${API_URL}/contents`);
+        const currentData = await currentRes.json();
+
+        if (!currentData.ok) {
+          throw new Error("Could not load contents.");
+        }
+
+        const nextContents = currentData.contents.map((content) => {
+          if (content.categoryId !== categoryId) return content;
+
+          const index = orderedIds.indexOf(content.id);
+
+          if (index === -1) return content;
+
+          return {
+            ...content,
+            order: index + 1,
+          };
+        });
+
+        const saveRes = await fetch(`${API_URL}/contents`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: nextContents,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error("Could not save order.");
+        }
+
+        saveStatus.textContent = "Order saved";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
+    });
+  </script>
 </Layout>
 
 <style>
@@ -84,12 +189,51 @@ h1{
 .content-list{
   display:flex;
   flex-direction:column;
-  gap:22px;
+  gap:18px;
+  margin-bottom:40px;
 }
 
-.content-list a{
+.content-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  cursor:grab;
+}
+
+.content-row.is-dragging{
+  opacity:.35;
+}
+
+.drag-handle{
+  color:#999;
+  font-size:14px;
+  user-select:none;
+}
+
+.content-row a{
   color:#111;
   text-decoration:none;
   font-size:18px;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.save-order-button{
+  border:none;
+  background:#111;
+  color:#fff;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+#save-status{
+  margin:0;
+  font-size:12px;
+  color:#777;
 }
 </style>

@@ -4,21 +4,23 @@ import { CATEGORIES } from "../../config/site";
 import { CONTENTS } from "../../data/contents";
 
 export function getStaticPaths() {
-  return CONTENTS.map((item) => {
-    const category = CATEGORIES.find(
-      (category) => category.id === item.categoryId
-    );
+  return CONTENTS
+    .filter((item) => item.visible)
+    .map((item) => {
+      const category = CATEGORIES.find(
+        (category) => category.id === item.categoryId
+      );
 
-    return {
-      params: {
-        category: category?.slug,
-        work: item.id,
-      },
-      props: {
-        item,
-      },
-    };
-  });
+      return {
+        params: {
+          category: category?.slug,
+          work: item.id,
+        },
+        props: {
+          item,
+        },
+      };
+    });
 }
 
 const { item } = Astro.props;
@@ -26,9 +28,7 @@ const { item } = Astro.props;
 
 <Layout title={`${item.title} | Musée de l'Instant`} showHeader={true}>
   <main class="work-page">
-    {item.image && (
-      <img src={item.image} alt={item.title} />
-    )}
+    {item.image && <img src={item.image} alt={item.title} />}
 
     {(item.title || item.body) && (
       <div class="work-caption">

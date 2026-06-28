@@ -16,9 +16,10 @@ export function getStaticPaths() {
 
 const { category } = Astro.props;
 
-const items = CONTENTS.filter(
-  (item) => item.categoryId === category.id
-);
+const items = CONTENTS
+  .filter((item) => item.categoryId === category.id)
+  .filter((item) => item.visible)
+  .sort((a, b) => a.order - b.order);
 ---
 
 <Layout title={`${category.title} | Musée de l'Instant`} showHeader={true}>

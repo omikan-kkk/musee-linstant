@@ -49,6 +49,11 @@ const { content, category } = Astro.props;
         <p class="note">Image upload will be added later.</p>
       </div>
 
+      <div class="field checkbox-field">
+        <input id="visible" type="checkbox" checked={content.visible} />
+        <label for="visible">Visible</label>
+      </div>
+
       <div class="actions">
         <button type="button" id="save-button" class="save-button">Save</button>
         <p id="save-status" aria-live="polite"></p>
@@ -64,11 +69,12 @@ const { content, category } = Astro.props;
 
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
+    const visibleInput = document.querySelector("#visible");
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
 
     saveButton?.addEventListener("click", async () => {
-      if (!contentId || !titleInput || !bodyInput || !saveStatus) return;
+      if (!contentId || !titleInput || !bodyInput || !visibleInput || !saveStatus) return;
 
       saveStatus.textContent = "Saving...";
 
@@ -87,6 +93,7 @@ const { content, category } = Astro.props;
             ...content,
             title: titleInput.value,
             body: bodyInput.value,
+            visible: visibleInput.checked,
           };
         });
 
@@ -106,7 +113,9 @@ const { content, category } = Astro.props;
           throw new Error("Could not save contents.");
         }
 
-        saveStatus.textContent = "Saved to GitHub";
+        saveStatus.textContent = visibleInput.checked
+          ? "Saved to GitHub"
+          : "Saved as hidden";
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Save failed";
@@ -154,10 +163,21 @@ h1{
   gap:10px;
 }
 
+.checkbox-field{
+  flex-direction:row;
+  align-items:center;
+  gap:10px;
+}
+
 label{
   font-size:11px;
   letter-spacing:.12em;
   color:#777;
+}
+
+.checkbox-field label{
+  color:#111;
+  letter-spacing:.08em;
 }
 
 input,
@@ -170,6 +190,10 @@ textarea{
   font:inherit;
   font-size:14px;
   line-height:1.8;
+}
+
+input[type="checkbox"]{
+  width:auto;
 }
 
 textarea{

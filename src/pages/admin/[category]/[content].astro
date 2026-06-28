@@ -32,7 +32,7 @@ const { content, category } = Astro.props;
       <h1>Edit Content</h1>
     </header>
 
-    <section class="editor" data-content-id={content.id}>
+    <section class="editor" data-content-id={content.id} data-category-slug={category.slug}>
       <div class="field">
         <label for="title">Title</label>
         <input id="title" type="text" value={content.title} />
@@ -56,6 +56,7 @@ const { content, category } = Astro.props;
 
       <div class="actions">
         <button type="button" id="save-button" class="save-button">Save</button>
+        <button type="button" id="delete-button" class="delete-button">Delete Content</button>
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
@@ -66,12 +67,45 @@ const { content, category } = Astro.props;
 
     const editor = document.querySelector(".editor");
     const contentId = editor?.getAttribute("data-content-id");
+    const categorySlug = editor?.getAttribute("data-category-slug");
 
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
     const visibleInput = document.querySelector("#visible");
     const saveButton = document.querySelector("#save-button");
+    const deleteButton = document.querySelector("#delete-button");
     const saveStatus = document.querySelector("#save-status");
+
+    async function loadContents() {
+      const currentRes = await fetch(`${API_URL}/contents`);
+      const currentData = await currentRes.json();
+
+      if (!currentData.ok) {
+        throw new Error("Could not load contents.");
+      }
+
+      return currentData.contents;
+    }
+
+    async function saveContents(contents) {
+      const saveRes = await fetch(`${API_URL}/contents`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents,
+        }),
+      });
+
+      const saveData = await saveRes.json();
+
+      if (!saveData.ok) {
+        throw new Error("Could not save contents.");
+      }
+
+      return saveData;
+    }
 
     saveButton?.addEventListener("click", async () => {
       if (!contentId || !titleInput || !bodyInput || !visibleInput || !saveStatus) return;
@@ -79,14 +113,9 @@ const { content, category } = Astro.props;
       saveStatus.textContent = "Saving...";
 
       try {
-        const currentRes = await fetch(`${API_URL}/contents`);
-        const currentData = await currentRes.json();
+        const currentContents = await loadContents();
 
-        if (!currentData.ok) {
-          throw new Error("Could not load contents.");
-        }
-
-        const nextContents = currentData.contents.map((content) => {
+        const nextContents = currentContents.map((content) => {
           if (content.id !== contentId) return content;
 
           return {
@@ -97,21 +126,7 @@ const { content, category } = Astro.props;
           };
         });
 
-        const saveRes = await fetch(`${API_URL}/contents`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: nextContents,
-          }),
-        });
-
-        const saveData = await saveRes.json();
-
-        if (!saveData.ok) {
-          throw new Error("Could not save contents.");
-        }
+        await saveContents(nextContents);
 
         saveStatus.textContent = visibleInput.checked
           ? "Saved to GitHub"
@@ -119,6 +134,35 @@ const { content, category } = Astro.props;
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Save failed";
+      }
+    });
+
+    deleteButton?.addEventListener("click", async () => {
+      if (!contentId || !categorySlug || !saveStatus) return;
+
+      const confirmed = window.confirm(
+        "Delete this content? This cannot be undone."
+      );
+
+      if (!confirmed) return;
+
+      saveStatus.textContent = "Deleting...";
+
+      try {
+        const currentContents = await loadContents();
+
+        const nextContents = currentContents.filter(
+          (content) => content.id !== contentId
+        );
+
+        await saveContents(nextContents);
+
+        saveStatus.textContent = "Deleted";
+
+        window.location.href = `/admin/${categorySlug}`;
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Delete failed";
       }
     });
   </script>
@@ -216,6 +260,7 @@ img{
   display:flex;
   align-items:center;
   gap:16px;
+  flex-wrap:wrap;
 }
 
 .save-button{
@@ -223,6 +268,15 @@ img{
   background:#111;
   color:#fff;
   padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.delete-button{
+  border:none;
+  background:transparent;
+  color:#999;
+  padding:12px 0;
   cursor:pointer;
   font-size:12px;
 }

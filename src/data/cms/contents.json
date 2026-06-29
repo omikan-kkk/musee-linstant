@@ -48,5 +48,15 @@
     "body": "Genévrier du Japon de Kishū",
     "visible": true,
     "order": 1
+  },
+  {
+    "id": "content000007",
+    "categoryId": "category003",
+    "slug": "content000007",
+    "image": "",
+    "title": "赤松",
+    "body": "Pin rouge du Japon",
+    "visible": true,
+    "order": 2
   }
 ]

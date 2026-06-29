@@ -78,5 +78,15 @@
     "body": "Genévrier du Japon panaché",
     "visible": true,
     "order": 4
+  },
+  {
+    "id": "content000010",
+    "categoryId": "category003",
+    "slug": "content000010",
+    "image": "",
+    "title": "銀性八房五葉松",
+    "body": "Pin blanc du Japon ‘Ginshō Yatsubusa’",
+    "visible": true,
+    "order": 5
   }
 ]

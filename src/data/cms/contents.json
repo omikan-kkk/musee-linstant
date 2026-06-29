@@ -58,5 +58,15 @@
     "body": "Pin rouge du Japon",
     "visible": true,
     "order": 2
+  },
+  {
+    "id": "content000008",
+    "categoryId": "category003",
+    "slug": "content000008",
+    "image": "",
+    "title": "黒松",
+    "body": "Pin noir du Japon",
+    "visible": true,
+    "order": 3
   }
 ]

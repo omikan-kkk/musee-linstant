@@ -98,5 +98,15 @@
     "body": "Cyprès du Japon ‘Renzan’",
     "visible": true,
     "order": 6
+  },
+  {
+    "id": "content000012",
+    "categoryId": "category003",
+    "slug": "content000012",
+    "image": "",
+    "title": "",
+    "body": "Éléagnus du Japon",
+    "visible": true,
+    "order": 7
   }
 ]

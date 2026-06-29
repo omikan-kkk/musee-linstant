@@ -128,5 +128,15 @@
     "body": "Pommier d’ornement japonais",
     "visible": true,
     "order": 9
+  },
+  {
+    "id": "content000015",
+    "categoryId": "category003",
+    "slug": "content000015",
+    "image": "",
+    "title": "香丁木",
+    "body": "Serissa du Japon",
+    "visible": true,
+    "order": 10
   }
 ]

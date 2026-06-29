@@ -108,5 +108,15 @@
     "body": "Éléagnus du Japon",
     "visible": true,
     "order": 7
+  },
+  {
+    "id": "content000013",
+    "categoryId": "category003",
+    "slug": "content000013",
+    "image": "",
+    "title": "山紅葉",
+    "body": "Érable du Japon",
+    "visible": true,
+    "order": 8
   }
 ]

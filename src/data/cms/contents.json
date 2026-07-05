@@ -1,15 +1,5 @@
 [
   {
-    "id": "content000001",
-    "categoryId": "category001",
-    "slug": "coffee-sample-001",
-    "image": "/images/contents/content000001.jpg",
-    "title": "真柏",
-    "body": "班入り真柏",
-    "visible": true,
-    "order": 1
-  },
-  {
     "id": "content000003",
     "categoryId": "category001",
     "slug": "content000003",

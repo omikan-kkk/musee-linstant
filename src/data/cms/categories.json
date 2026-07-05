@@ -46,5 +46,13 @@
     "type": "gallery",
     "visible": true,
     "order": 6
+  },
+  {
+    "id": "category007",
+    "title": "Books",
+    "slug": "books",
+    "type": "book",
+    "visible": true,
+    "order": 7
   }
 ]

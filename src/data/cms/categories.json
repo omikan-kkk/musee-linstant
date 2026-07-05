@@ -4,7 +4,7 @@
     "title": "Grains",
     "slug": "cafe",
     "visible": true,
-    "order": 1
+    "order": 2
   },
   {
     "id": "category002",
@@ -18,7 +18,7 @@
     "title": "Bonsaï",
     "slug": "bonsai",
     "visible": true,
-    "order": 2
+    "order": 1
   },
   {
     "id": "category004",
@@ -33,5 +33,12 @@
     "slug": "musique",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "category006",
+    "title": "test",
+    "slug": "test",
+    "visible": true,
+    "order": 6
   }
 ]

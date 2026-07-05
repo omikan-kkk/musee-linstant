@@ -14,6 +14,9 @@ export function getStaticPaths() {
 
 const { category } = Astro.props;
 
+const categoryType = category.type || "gallery";
+const isBook = categoryType === "book";
+
 const contents = CONTENTS
   .filter(content => content.categoryId === category.id)
   .sort((a, b) => a.order - b.order);
@@ -36,7 +39,9 @@ const contents = CONTENTS
           <span class="drag-handle">☰</span>
 
           <a href={`/admin/${category.slug}/${content.id}`}>
-            {content.title || "Untitled"}
+            {isBook
+              ? `${content.author || "Unknown"} / ${content.title || "Untitled"}`
+              : content.title || "Untitled"}
           </a>
         </div>
       ))}

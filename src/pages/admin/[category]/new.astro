@@ -16,6 +16,8 @@ export function getStaticPaths() {
 }
 
 const { category } = Astro.props;
+const categoryType = category.type || "gallery";
+const isBook = categoryType === "book";
 ---
 
 <Layout title="New Content | Musée de l'Instant CMS" showHeader={false}>
@@ -25,16 +27,30 @@ const { category } = Astro.props;
       <h1>New Content</h1>
     </header>
 
-    <section class="editor" data-category-id={category.id} data-category-slug={category.slug}>
+    <section
+      class="editor"
+      data-category-id={category.id}
+      data-category-slug={category.slug}
+      data-category-type={categoryType}
+    >
+      {isBook && (
+        <div class="field">
+          <label for="author">Author</label>
+          <input id="author" type="text" />
+        </div>
+      )}
+
       <div class="field">
-        <label for="title">Title</label>
+        <label for="title">{isBook ? "Work Title" : "Title"}</label>
         <input id="title" type="text" />
       </div>
 
-      <div class="field">
-        <label for="body">Body</label>
-        <textarea id="body" rows="8"></textarea>
-      </div>
+      {!isBook && (
+        <div class="field">
+          <label for="body">Body</label>
+          <textarea id="body" rows="8"></textarea>
+        </div>
+      )}
 
       <div class="actions">
         <button type="button" id="save-button" class="save-button">Save</button>
@@ -51,7 +67,9 @@ const { category } = Astro.props;
     const editor = document.querySelector(".editor");
     const categoryId = editor?.getAttribute("data-category-id");
     const categorySlug = editor?.getAttribute("data-category-slug");
+    const categoryType = editor?.getAttribute("data-category-type") || "gallery";
 
+    const authorInput = document.querySelector("#author");
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
     const saveButton = document.querySelector("#save-button");
@@ -70,7 +88,20 @@ const { category } = Astro.props;
     }
 
     saveButton?.addEventListener("click", async () => {
-      if (!categoryId || !categorySlug || !titleInput || !bodyInput || !saveStatus) return;
+      if (!categoryId || !categorySlug || !titleInput || !saveStatus) return;
+
+      const title = titleInput.value.trim();
+      const author = authorInput?.value.trim() || "";
+
+      if (!title) {
+        saveStatus.textContent = "Title is required";
+        return;
+      }
+
+      if (categoryType === "book" && !author) {
+        saveStatus.textContent = "Author is required";
+        return;
+      }
 
       saveStatus.textContent = "Saving...";
 
@@ -90,16 +121,26 @@ const { category } = Astro.props;
 
         const nextOrder = sameCategoryContents.length + 1;
 
-        const newContent = {
-          id: nextId,
-          categoryId,
-          slug: nextId,
-          image: "",
-          title: titleInput.value,
-          body: bodyInput.value,
-          visible: true,
-          order: nextOrder,
-        };
+        const newContent = categoryType === "book"
+          ? {
+              id: nextId,
+              categoryId,
+              slug: nextId,
+              author,
+              title,
+              visible: true,
+              order: nextOrder,
+            }
+          : {
+              id: nextId,
+              categoryId,
+              slug: nextId,
+              image: "",
+              title,
+              body: bodyInput?.value || "",
+              visible: true,
+              order: nextOrder,
+            };
 
         const nextContents = [...currentData.contents, newContent];
 

@@ -23,6 +23,8 @@ export function getStaticPaths() {
 }
 
 const { content, category } = Astro.props;
+const categoryType = category.type || "gallery";
+const isBook = categoryType === "book";
 ---
 
 <Layout title={`${content.title} | Musée de l'Instant CMS`} showHeader={false}>
@@ -32,23 +34,39 @@ const { content, category } = Astro.props;
       <h1>Edit Content</h1>
     </header>
 
-    <section class="editor" data-content-id={content.id} data-category-slug={category.slug}>
+    <section
+      class="editor"
+      data-content-id={content.id}
+      data-category-slug={category.slug}
+      data-category-type={categoryType}
+    >
+      {isBook && (
+        <div class="field">
+          <label for="author">Author</label>
+          <input id="author" type="text" value={content.author || ""} />
+        </div>
+      )}
+
       <div class="field">
-        <label for="title">Title</label>
+        <label for="title">{isBook ? "Work Title" : "Title"}</label>
         <input id="title" type="text" value={content.title} />
       </div>
 
-      <div class="field">
-        <label for="body">Body</label>
-        <textarea id="body" rows="8">{content.body}</textarea>
-      </div>
+      {!isBook && (
+        <>
+          <div class="field">
+            <label for="body">Body</label>
+            <textarea id="body" rows="8">{content.body}</textarea>
+          </div>
 
-      <div class="field">
-        <label for="image">Image</label>
-        {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
-        {!content.image && <img id="image-preview" class="is-hidden" alt="" />}
-        <input id="image" type="file" accept="image/*" />
-      </div>
+          <div class="field">
+            <label for="image">Image</label>
+            {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
+            {!content.image && <img id="image-preview" class="is-hidden" alt="" />}
+            <input id="image" type="file" accept="image/*" />
+          </div>
+        </>
+      )}
 
       <div class="field checkbox-field">
         <input id="visible" type="checkbox" checked={content.visible} />
@@ -71,7 +89,9 @@ const { content, category } = Astro.props;
     const editor = document.querySelector(".editor");
     const contentId = editor?.getAttribute("data-content-id");
     const categorySlug = editor?.getAttribute("data-category-slug");
+    const categoryType = editor?.getAttribute("data-category-type") || "gallery";
 
+    const authorInput = document.querySelector("#author");
     const titleInput = document.querySelector("#title");
     const bodyInput = document.querySelector("#body");
     const imageInput = document.querySelector("#image");
@@ -146,7 +166,20 @@ const { content, category } = Astro.props;
     });
 
     saveButton?.addEventListener("click", async () => {
-      if (!contentId || !titleInput || !bodyInput || !visibleInput || !saveStatus) return;
+      if (!contentId || !titleInput || !visibleInput || !saveStatus) return;
+
+      const title = titleInput.value.trim();
+      const author = authorInput?.value.trim() || "";
+
+      if (!title) {
+        saveStatus.textContent = "Title is required";
+        return;
+      }
+
+      if (categoryType === "book" && !author) {
+        saveStatus.textContent = "Author is required";
+        return;
+      }
 
       saveStatus.textContent = "Saving...";
 
@@ -165,10 +198,19 @@ const { content, category } = Astro.props;
         const nextContents = currentContents.map((content) => {
           if (content.id !== contentId) return content;
 
+          if (categoryType === "book") {
+            return {
+              ...content,
+              author,
+              title,
+              visible: visibleInput.checked,
+            };
+          }
+
           return {
             ...content,
-            title: titleInput.value,
-            body: bodyInput.value,
+            title,
+            body: bodyInput?.value || "",
             visible: visibleInput.checked,
             image: nextImagePath ?? content.image,
           };

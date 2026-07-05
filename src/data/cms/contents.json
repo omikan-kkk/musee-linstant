@@ -148,5 +148,16 @@
     "author": "中村文則",
     "visible": true,
     "order": 2
+  },
+  {
+    "id": "content000018",
+    "categoryId": "category007",
+    "slug": "content000018",
+    "image": "",
+    "title": "銃",
+    "body": "",
+    "author": "中村文則",
+    "visible": true,
+    "order": 3
   }
 ]

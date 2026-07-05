@@ -121,26 +121,17 @@ const isBook = categoryType === "book";
 
         const nextOrder = sameCategoryContents.length + 1;
 
-        const newContent = categoryType === "book"
-          ? {
-              id: nextId,
-              categoryId,
-              slug: nextId,
-              author,
-              title,
-              visible: true,
-              order: nextOrder,
-            }
-          : {
-              id: nextId,
-              categoryId,
-              slug: nextId,
-              image: "",
-              title,
-              body: bodyInput?.value || "",
-              visible: true,
-              order: nextOrder,
-            };
+        const newContent = {
+          id: nextId,
+          categoryId,
+          slug: nextId,
+          image: "",
+          title,
+          body: categoryType === "book" ? "" : bodyInput?.value || "",
+          author: categoryType === "book" ? author : "",
+          visible: true,
+          order: nextOrder,
+        };
 
         const nextContents = [...currentData.contents, newContent];
 

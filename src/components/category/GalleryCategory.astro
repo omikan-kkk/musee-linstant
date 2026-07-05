@@ -1,0 +1,20 @@
+---
+import GalleryGrid from "../gallery/GalleryGrid.astro";
+import GalleryItem from "../gallery/GalleryItem.astro";
+
+const {
+  category,
+  items = [],
+} = Astro.props;
+---
+
+<GalleryGrid items={items}>
+  {items.map((item) => (
+    <GalleryItem
+      image={item.image}
+      title={item.title}
+      body={item.body}
+      href={`/${category.slug}/${item.id}`}
+    />
+  ))}
+</GalleryGrid>

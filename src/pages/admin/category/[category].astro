@@ -14,6 +14,8 @@ export function getStaticPaths() {
 }
 
 const { category } = Astro.props;
+
+const categoryType = category.type || "gallery";
 ---
 
 <Layout title={`${category.title} | Musée de l'Instant CMS`} showHeader={false}>
@@ -33,6 +35,12 @@ const { category } = Astro.props;
         <label for="slug">Slug</label>
         <input id="slug" type="text" value={category.slug} readonly />
         <p class="note">Slug is generated automatically when the category is created.</p>
+      </div>
+
+      <div class="field">
+        <label for="type">Type</label>
+        <input id="type" type="text" value={categoryType} readonly />
+        <p class="note">Type cannot be changed after the category is created.</p>
       </div>
 
       <div class="field checkbox-field">
@@ -218,6 +226,11 @@ input{
   font:inherit;
   font-size:14px;
   line-height:1.8;
+}
+
+input[readonly]{
+  color:#777;
+  background:#fafafa;
 }
 
 input[type="checkbox"]{

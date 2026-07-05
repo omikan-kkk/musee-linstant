@@ -1,7 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import GalleryGrid from "../components/gallery/GalleryGrid.astro";
-import GalleryItem from "../components/gallery/GalleryItem.astro";
+import GalleryCategory from "../components/category/GalleryCategory.astro";
 import { CATEGORIES } from "../config/site";
 import { CONTENTS } from "../data/contents";
 
@@ -20,17 +19,20 @@ const items = CONTENTS
   .filter((item) => item.categoryId === category.id)
   .filter((item) => item.visible)
   .sort((a, b) => a.order - b.order);
+
+const categoryType = category.type || "gallery";
 ---
 
 <Layout title={`${category.title} | Musée de l'Instant`} showHeader={true}>
-  <GalleryGrid items={items}>
-    {items.map((item) => (
-      <GalleryItem
-        image={item.image}
-        title={item.title}
-        body={item.body}
-        href={`/${category.slug}/${item.id}`}
-      />
-    ))}
-  </GalleryGrid>
+  {(categoryType === "gallery" || categoryType === "coffee") && (
+    <GalleryCategory category={category} items={items} />
+  )}
+
+  {categoryType === "book" && (
+    <GalleryCategory category={category} items={items} />
+  )}
+
+  {categoryType === "music" && (
+    <GalleryCategory category={category} items={items} />
+  )}
 </Layout>

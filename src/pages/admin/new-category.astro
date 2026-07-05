@@ -15,6 +15,17 @@ import Layout from "../../layouts/Layout.astro";
         <input id="title" type="text" />
       </div>
 
+      <div class="field">
+        <label for="type">Type</label>
+        <select id="type">
+          <option value="gallery">Gallery</option>
+          <option value="book">Book</option>
+          <option value="music">Music</option>
+          <option value="coffee">Coffee</option>
+        </select>
+        <p class="note">Type cannot be changed after the category is created.</p>
+      </div>
+
       <div class="actions">
         <button type="button" id="save-button" class="save-button">Save</button>
         <p id="save-status" aria-live="polite"></p>
@@ -28,6 +39,7 @@ import Layout from "../../layouts/Layout.astro";
     requireLogin();
 
     const titleInput = document.querySelector("#title");
+    const typeInput = document.querySelector("#type");
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
 
@@ -53,9 +65,10 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     saveButton?.addEventListener("click", async () => {
-      if (!titleInput || !saveStatus) return;
+      if (!titleInput || !typeInput || !saveStatus) return;
 
       const title = titleInput.value.trim();
+      const type = typeInput.value;
 
       if (!title) {
         saveStatus.textContent = "Title is required";
@@ -79,6 +92,7 @@ import Layout from "../../layouts/Layout.astro";
           id: nextId,
           title,
           slug: createSlug(title),
+          type,
           visible: true,
           order: nextOrder,
         };
@@ -157,7 +171,8 @@ label{
   color:#777;
 }
 
-input{
+input,
+select{
   width:100%;
   border:1px solid #ddd;
   background:#fff;
@@ -166,6 +181,12 @@ input{
   font:inherit;
   font-size:14px;
   line-height:1.8;
+}
+
+.note{
+  margin:0;
+  font-size:11px;
+  color:#999;
 }
 
 .actions{

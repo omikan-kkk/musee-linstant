@@ -33,5 +33,12 @@
     "slug": "musique",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "category006",
+    "title": "test",
+    "slug": "test",
+    "visible": true,
+    "order": 6
   }
 ]

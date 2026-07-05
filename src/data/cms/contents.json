@@ -137,5 +137,16 @@
     "title": "遮光",
     "visible": true,
     "order": 1
+  },
+  {
+    "id": "content000017",
+    "categoryId": "category007",
+    "slug": "content000017",
+    "image": "",
+    "title": "銃",
+    "body": "",
+    "author": "中村文則",
+    "visible": true,
+    "order": 2
   }
 ]

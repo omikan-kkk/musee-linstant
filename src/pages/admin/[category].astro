@@ -51,8 +51,10 @@ const contents = CONTENTS
     </div>
   </main>
 
-  <script>
-    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+  <script type="module">
+    import { requireLogin, authFetch } from "../../lib/auth";
+
+    requireLogin();
 
     const admin = document.querySelector(".admin");
     const categoryId = admin?.getAttribute("data-category-id");
@@ -109,7 +111,7 @@ const contents = CONTENTS
         .filter(Boolean);
 
       try {
-        const currentRes = await fetch(`${API_URL}/contents`);
+        const currentRes = await authFetch("/contents");
         const currentData = await currentRes.json();
 
         if (!currentData.ok) {
@@ -129,7 +131,7 @@ const contents = CONTENTS
           };
         });
 
-        const saveRes = await fetch(`${API_URL}/contents`, {
+        const saveRes = await authFetch("/contents", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

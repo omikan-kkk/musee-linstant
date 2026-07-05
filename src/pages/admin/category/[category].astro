@@ -48,8 +48,10 @@ const { category } = Astro.props;
     </section>
   </main>
 
-  <script>
-    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+  <script type="module">
+    import { requireLogin, authFetch } from "../../../lib/auth";
+
+    requireLogin();
 
     const editor = document.querySelector(".editor");
     const categoryId = editor?.getAttribute("data-category-id");
@@ -61,7 +63,7 @@ const { category } = Astro.props;
     const saveStatus = document.querySelector("#save-status");
 
     async function loadCategories() {
-      const currentRes = await fetch(`${API_URL}/categories`);
+      const currentRes = await authFetch("/categories");
       const currentData = await currentRes.json();
 
       if (!currentData.ok) {
@@ -72,7 +74,7 @@ const { category } = Astro.props;
     }
 
     async function saveCategories(categories) {
-      const saveRes = await fetch(`${API_URL}/categories`, {
+      const saveRes = await authFetch("/categories", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

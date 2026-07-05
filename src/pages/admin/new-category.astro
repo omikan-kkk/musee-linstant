@@ -22,8 +22,10 @@ import Layout from "../../layouts/Layout.astro";
     </section>
   </main>
 
-  <script>
-    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+  <script type="module">
+    import { requireLogin, authFetch } from "../../lib/auth";
+
+    requireLogin();
 
     const titleInput = document.querySelector("#title");
     const saveButton = document.querySelector("#save-button");
@@ -63,7 +65,7 @@ import Layout from "../../layouts/Layout.astro";
       saveStatus.textContent = "Saving...";
 
       try {
-        const currentRes = await fetch(`${API_URL}/categories`);
+        const currentRes = await authFetch("/categories");
         const currentData = await currentRes.json();
 
         if (!currentData.ok) {
@@ -83,7 +85,7 @@ import Layout from "../../layouts/Layout.astro";
 
         const nextCategories = [...currentData.categories, newCategory];
 
-        const saveRes = await fetch(`${API_URL}/categories`, {
+        const saveRes = await authFetch("/categories", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

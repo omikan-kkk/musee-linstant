@@ -63,8 +63,10 @@ const { content, category } = Astro.props;
     </section>
   </main>
 
-  <script>
-    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+  <script type="module">
+    import { requireLogin, authFetch } from "../../../lib/auth";
+
+    requireLogin();
 
     const editor = document.querySelector(".editor");
     const contentId = editor?.getAttribute("data-content-id");
@@ -82,7 +84,7 @@ const { content, category } = Astro.props;
     let selectedImageFile = null;
 
     async function loadContents() {
-      const currentRes = await fetch(`${API_URL}/contents`);
+      const currentRes = await authFetch("/contents");
       const currentData = await currentRes.json();
 
       if (!currentData.ok) {
@@ -93,7 +95,7 @@ const { content, category } = Astro.props;
     }
 
     async function saveContents(contents) {
-      const saveRes = await fetch(`${API_URL}/contents`, {
+      const saveRes = await authFetch("/contents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +119,7 @@ const { content, category } = Astro.props;
       formData.append("file", file);
       formData.append("contentId", contentId);
 
-      const uploadRes = await fetch(`${API_URL}/upload-image`, {
+      const uploadRes = await authFetch("/upload-image", {
         method: "POST",
         body: formData,
       });

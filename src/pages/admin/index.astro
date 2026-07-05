@@ -10,6 +10,10 @@ const categories = CATEGORIES
   <main class="admin">
     <header class="admin-header">
       <h1>Musée de l'Instant CMS</h1>
+
+      <button type="button" id="logout-button" class="logout-button">
+        Logout
+      </button>
     </header>
 
     <section class="admin-section">
@@ -52,12 +56,19 @@ const categories = CATEGORIES
     </section>
   </main>
 
-  <script>
-    const API_URL = "https://musee-cms-api.azamisound.workers.dev";
+  <script type="module">
+    import { requireLogin, logout, authFetch } from "../../lib/auth";
+
+    requireLogin();
 
     const list = document.querySelector("#category-list");
     const saveButton = document.querySelector("#save-order-button");
     const saveStatus = document.querySelector("#save-status");
+    const logoutButton = document.querySelector("#logout-button");
+
+    logoutButton?.addEventListener("click", () => {
+      logout();
+    });
 
     let draggedRow = null;
 
@@ -107,7 +118,7 @@ const categories = CATEGORIES
         .filter(Boolean);
 
       try {
-        const currentRes = await fetch(`${API_URL}/categories`);
+        const currentRes = await authFetch("/categories");
         const currentData = await currentRes.json();
 
         if (!currentData.ok) {
@@ -125,7 +136,7 @@ const categories = CATEGORIES
           };
         });
 
-        const saveRes = await fetch(`${API_URL}/categories`, {
+        const saveRes = await authFetch("/categories", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -161,6 +172,10 @@ const categories = CATEGORIES
 }
 
 .admin-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
   margin-bottom:64px;
 }
 
@@ -169,6 +184,16 @@ h1{
   font-size:24px;
   font-weight:400;
   letter-spacing:.04em;
+}
+
+.logout-button{
+  border:none;
+  background:transparent;
+  color:#777;
+  font-size:12px;
+  letter-spacing:.08em;
+  cursor:pointer;
+  padding:0;
 }
 
 .admin-section{

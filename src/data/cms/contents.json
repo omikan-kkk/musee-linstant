@@ -151,7 +151,9 @@
     "body": "",
     "author": "中村文則",
     "visible": true,
-    "order": 2
+    "order": 2,
+    "authorSort": "なかむら",
+    "titleSort": "じゅう"
   },
   {
     "id": "content000018",

@@ -73,6 +73,9 @@ grouped.forEach(group => {
 
 <style>
 .book-section{
+  --author-height:220px;
+  --author-gap:36px;
+
   min-height:100vh;
   background:#fff;
   color:#111;
@@ -98,7 +101,6 @@ grouped.forEach(group => {
   display:flex;
   flex-direction:column;
   align-items:flex-end;
-  gap:36px;
 }
 
 .author,
@@ -111,6 +113,9 @@ grouped.forEach(group => {
 }
 
 .author{
+  height:var(--author-height);
+  margin:0 0 var(--author-gap) 0;
+
   font-size:13px;
   color:#111;
   white-space:nowrap;

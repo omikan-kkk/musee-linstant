@@ -136,7 +136,11 @@
     "author": "中村文則",
     "title": "遮光",
     "visible": true,
-    "order": 1
+    "order": 1,
+    "body": "",
+    "image": "",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "しゃこう"
   },
   {
     "id": "content000017",

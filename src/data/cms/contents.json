@@ -170,5 +170,16 @@
     "author": "吉田修一",
     "visible": true,
     "order": 4
+  },
+  {
+    "id": "content000020",
+    "categoryId": "category007",
+    "slug": "content000020",
+    "image": "",
+    "title": "国宝",
+    "body": "",
+    "author": "吉田修一",
+    "visible": true,
+    "order": 5
   }
 ]

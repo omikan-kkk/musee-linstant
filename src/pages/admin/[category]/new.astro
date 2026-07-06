@@ -34,16 +34,30 @@ const isBook = categoryType === "book";
       data-category-type={categoryType}
     >
       {isBook && (
-        <div class="field">
-          <label for="author">Author</label>
-          <input id="author" type="text" />
-        </div>
+        <>
+          <div class="field">
+            <label for="author">Author</label>
+            <input id="author" type="text" />
+          </div>
+
+          <div class="field">
+            <label for="author-sort">Author Sort</label>
+            <input id="author-sort" type="text" />
+          </div>
+        </>
       )}
 
       <div class="field">
         <label for="title">{isBook ? "Work Title" : "Title"}</label>
         <input id="title" type="text" />
       </div>
+
+      {isBook && (
+        <div class="field">
+          <label for="title-sort">Title Sort</label>
+          <input id="title-sort" type="text" />
+        </div>
+      )}
 
       {!isBook && (
         <div class="field">
@@ -70,7 +84,9 @@ const isBook = categoryType === "book";
     const categoryType = editor?.getAttribute("data-category-type") || "gallery";
 
     const authorInput = document.querySelector("#author");
+    const authorSortInput = document.querySelector("#author-sort");
     const titleInput = document.querySelector("#title");
+    const titleSortInput = document.querySelector("#title-sort");
     const bodyInput = document.querySelector("#body");
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
@@ -92,6 +108,8 @@ const isBook = categoryType === "book";
 
       const title = titleInput.value.trim();
       const author = authorInput?.value.trim() || "";
+      const authorSort = authorSortInput?.value.trim() || author;
+      const titleSort = titleSortInput?.value.trim() || title;
 
       if (!title) {
         saveStatus.textContent = "Title is required";
@@ -100,6 +118,16 @@ const isBook = categoryType === "book";
 
       if (categoryType === "book" && !author) {
         saveStatus.textContent = "Author is required";
+        return;
+      }
+
+      if (categoryType === "book" && !authorSort) {
+        saveStatus.textContent = "Author Sort is required";
+        return;
+      }
+
+      if (categoryType === "book" && !titleSort) {
+        saveStatus.textContent = "Title Sort is required";
         return;
       }
 
@@ -129,6 +157,8 @@ const isBook = categoryType === "book";
           title,
           body: categoryType === "book" ? "" : bodyInput?.value || "",
           author: categoryType === "book" ? author : "",
+          authorSort: categoryType === "book" ? authorSort : "",
+          titleSort: categoryType === "book" ? titleSort : "",
           visible: true,
           order: nextOrder,
         };

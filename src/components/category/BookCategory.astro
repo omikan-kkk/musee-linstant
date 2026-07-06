@@ -4,10 +4,12 @@ const { items = [] } = Astro.props;
 const grouped = Object.values(
   items.reduce((groups, item) => {
     const author = item.author || "Unknown";
+    const authorSort = item.authorSort || author;
 
     if (!groups[author]) {
       groups[author] = {
         author,
+        authorSort,
         books: [],
       };
     }
@@ -19,12 +21,12 @@ const grouped = Object.values(
 );
 
 grouped.sort((a, b) =>
-  a.author.localeCompare(b.author, "ja")
+  a.authorSort.localeCompare(b.authorSort, "ja")
 );
 
 grouped.forEach(group => {
   group.books.sort((a, b) =>
-    a.title.localeCompare(b.title, "ja")
+    (a.titleSort || a.title).localeCompare(b.titleSort || b.title, "ja")
   );
 });
 ---
@@ -93,10 +95,10 @@ grouped.forEach(group => {
 }
 
 .author-group{
-  display:grid;
-  grid-template-rows:120px 1fr;
-  justify-items:center;
-  align-items:start;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:24px;
 }
 
 .author,
@@ -110,7 +112,8 @@ grouped.forEach(group => {
 
 .author{
   font-size:13px;
-  color:#777;
+  color:#111;
+  white-space:nowrap;
 }
 
 .book-list{

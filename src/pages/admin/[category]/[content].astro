@@ -23,6 +23,7 @@ export function getStaticPaths() {
 }
 
 const { content, category } = Astro.props;
+
 const categoryType = category.type || "gallery";
 const isBook = categoryType === "book";
 ---
@@ -41,16 +42,38 @@ const isBook = categoryType === "book";
       data-category-type={categoryType}
     >
       {isBook && (
-        <div class="field">
-          <label for="author">Author</label>
-          <input id="author" type="text" value={content.author || ""} />
-        </div>
+        <>
+          <div class="field">
+            <label for="author">Author</label>
+            <input id="author" type="text" value={content.author || ""} />
+          </div>
+
+          <div class="field">
+            <label for="author-sort">Author Sort</label>
+            <input
+              id="author-sort"
+              type="text"
+              value={content.authorSort || content.author || ""}
+            />
+          </div>
+        </>
       )}
 
       <div class="field">
         <label for="title">{isBook ? "Work Title" : "Title"}</label>
-        <input id="title" type="text" value={content.title} />
+        <input id="title" type="text" value={content.title || ""} />
       </div>
+
+      {isBook && (
+        <div class="field">
+          <label for="title-sort">Title Sort</label>
+          <input
+            id="title-sort"
+            type="text"
+            value={content.titleSort || content.title || ""}
+          />
+        </div>
+      )}
 
       {!isBook && (
         <>
@@ -61,8 +84,19 @@ const isBook = categoryType === "book";
 
           <div class="field">
             <label for="image">Image</label>
-            {content.image && <img id="image-preview" src={content.image} alt={content.title} />}
-            {!content.image && <img id="image-preview" class="is-hidden" alt="" />}
+
+            {content.image && (
+              <img
+                id="image-preview"
+                src={content.image}
+                alt={content.title}
+              />
+            )}
+
+            {!content.image && (
+              <img id="image-preview" class="is-hidden" alt="" />
+            )}
+
             <input id="image" type="file" accept="image/*" />
           </div>
         </>
@@ -92,7 +126,9 @@ const isBook = categoryType === "book";
     const categoryType = editor?.getAttribute("data-category-type") || "gallery";
 
     const authorInput = document.querySelector("#author");
+    const authorSortInput = document.querySelector("#author-sort");
     const titleInput = document.querySelector("#title");
+    const titleSortInput = document.querySelector("#title-sort");
     const bodyInput = document.querySelector("#body");
     const imageInput = document.querySelector("#image");
     const imagePreview = document.querySelector("#image-preview");
@@ -170,6 +206,8 @@ const isBook = categoryType === "book";
 
       const title = titleInput.value.trim();
       const author = authorInput?.value.trim() || "";
+      const authorSort = authorSortInput?.value.trim() || author;
+      const titleSort = titleSortInput?.value.trim() || title;
 
       if (!title) {
         saveStatus.textContent = "Title is required";
@@ -178,6 +216,16 @@ const isBook = categoryType === "book";
 
       if (categoryType === "book" && !author) {
         saveStatus.textContent = "Author is required";
+        return;
+      }
+
+      if (categoryType === "book" && !authorSort) {
+        saveStatus.textContent = "Author Sort is required";
+        return;
+      }
+
+      if (categoryType === "book" && !titleSort) {
+        saveStatus.textContent = "Title Sort is required";
         return;
       }
 
@@ -201,8 +249,12 @@ const isBook = categoryType === "book";
           if (categoryType === "book") {
             return {
               ...content,
-              author,
               title,
+              body: "",
+              image: "",
+              author,
+              authorSort,
+              titleSort,
               visible: visibleInput.checked,
             };
           }

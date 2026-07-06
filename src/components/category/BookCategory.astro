@@ -1,0 +1,128 @@
+---
+const { items = [] } = Astro.props;
+
+const grouped = Object.values(
+  items.reduce((groups, item) => {
+    const author = item.author || "Unknown";
+
+    if (!groups[author]) {
+      groups[author] = {
+        author,
+        books: [],
+      };
+    }
+
+    groups[author].books.push(item);
+
+    return groups;
+  }, {})
+);
+
+grouped.sort((a, b) =>
+  a.author.localeCompare(b.author, "ja")
+);
+
+grouped.forEach(group => {
+  group.books.sort((a, b) =>
+    a.title.localeCompare(b.title, "ja")
+  );
+});
+---
+
+<section class="book-section">
+  <div class="book-scroll" id="book-scroll">
+    <div class="bookshelf">
+      {grouped.map(group => (
+        <div class="author-group">
+          <p class="author">{group.author}</p>
+
+          <div class="book-list">
+            {group.books.map(book => (
+              <p class="book" data-book-item>{book.title}</p>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <script>
+    const scrollArea = document.querySelector("#book-scroll");
+    const books = [...document.querySelectorAll("[data-book-item]")];
+
+    if (scrollArea && books.length > 0) {
+      requestAnimationFrame(() => {
+        const randomBook = books[Math.floor(Math.random() * books.length)];
+
+        const scrollBox = scrollArea.getBoundingClientRect();
+        const bookBox = randomBook.getBoundingClientRect();
+
+        const bookCenter =
+          bookBox.left - scrollBox.left + scrollArea.scrollLeft + bookBox.width / 2;
+
+        const targetScroll =
+          bookCenter - scrollArea.clientWidth / 2;
+
+        scrollArea.scrollLeft = Math.max(0, targetScroll);
+      });
+    }
+  </script>
+</section>
+
+<style>
+.book-section{
+  min-height:100vh;
+  background:#fff;
+  color:#111;
+}
+
+.book-scroll{
+  width:100vw;
+  min-height:100vh;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:120px 50vw;
+}
+
+.bookshelf{
+  display:flex;
+  flex-direction:row-reverse;
+  align-items:flex-start;
+  gap:72px;
+  min-width:max-content;
+}
+
+.author-group{
+  display:grid;
+  grid-template-rows:120px 1fr;
+  justify-items:center;
+  align-items:start;
+}
+
+.author,
+.book{
+  margin:0;
+  writing-mode:vertical-rl;
+  text-orientation:mixed;
+  line-height:1.8;
+  letter-spacing:.08em;
+}
+
+.author{
+  font-size:13px;
+  color:#777;
+}
+
+.book-list{
+  display:flex;
+  flex-direction:row-reverse;
+  gap:28px;
+  align-items:flex-start;
+}
+
+.book{
+  font-size:18px;
+  color:#111;
+  white-space:nowrap;
+}
+</style>

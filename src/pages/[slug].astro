@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import GalleryCategory from "../components/category/GalleryCategory.astro";
+import BookCategory from "../components/category/BookCategory.astro";
 import { CATEGORIES } from "../config/site";
 import { CONTENTS } from "../data/contents";
 
@@ -29,7 +30,7 @@ const categoryType = category.type || "gallery";
   )}
 
   {categoryType === "book" && (
-    <GalleryCategory category={category} items={items} />
+    <BookCategory items={items} />
   )}
 
   {categoryType === "music" && (

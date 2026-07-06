@@ -176,5 +176,18 @@
     "author": "吉田修一",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "content000021",
+    "categoryId": "category007",
+    "slug": "content000021",
+    "image": "",
+    "title": "白夜",
+    "body": "",
+    "author": "ドストエフスキー",
+    "authorSort": "どすとえふすきー",
+    "titleSort": "びゃくや",
+    "visible": true,
+    "order": 5
   }
 ]

@@ -159,5 +159,27 @@
     "author": "中村文則",
     "visible": true,
     "order": 3
+  },
+  {
+    "id": "content000019",
+    "categoryId": "category007",
+    "slug": "content000019",
+    "image": "",
+    "title": "初恋温泉",
+    "body": "",
+    "author": "吉田修一",
+    "visible": true,
+    "order": 4
+  },
+  {
+    "id": "content000020",
+    "categoryId": "category007",
+    "slug": "content000020",
+    "image": "",
+    "title": "国宝",
+    "body": "",
+    "author": "吉田修一",
+    "visible": true,
+    "order": 5
   }
 ]

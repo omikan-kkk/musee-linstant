@@ -136,7 +136,11 @@
     "author": "中村文則",
     "title": "遮光",
     "visible": true,
-    "order": 1
+    "order": 1,
+    "body": "",
+    "image": "",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "しゃこう"
   },
   {
     "id": "content000017",
@@ -147,18 +151,9 @@
     "body": "",
     "author": "中村文則",
     "visible": true,
-    "order": 2
-  },
-  {
-    "id": "content000018",
-    "categoryId": "category007",
-    "slug": "content000018",
-    "image": "",
-    "title": "銃",
-    "body": "",
-    "author": "中村文則",
-    "visible": true,
-    "order": 3
+    "order": 2,
+    "authorSort": "なかむら",
+    "titleSort": "じゅう"
   },
   {
     "id": "content000019",

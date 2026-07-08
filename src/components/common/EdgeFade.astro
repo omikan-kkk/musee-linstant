@@ -4,82 +4,94 @@ const {
 } = Astro.props;
 ---
 
-<div class:list={["edge-fade", horizontal && "has-horizontal"]} aria-hidden="true"></div>
+<div class:list={["edge-fade", horizontal && "has-horizontal"]} aria-hidden="true">
+  <span class="edge-fade-top"></span>
+  <span class="edge-fade-bottom"></span>
+  <span class="edge-fade-left"></span>
+  <span class="edge-fade-right"></span>
+</div>
 
 <style>
 .edge-fade{
   --edge-fade-size-y:80px;
   --edge-fade-size-x:32px;
-  --edge-fade-bleed:80px;
 
-  position:fixed;
-  top:calc(-1 * var(--edge-fade-bleed));
-  right:0;
-  bottom:calc(-1 * var(--edge-fade-bleed));
-  left:0;
   pointer-events:none;
   z-index:900;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #fff 0%,
-      #fff var(--edge-fade-bleed),
-      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
-      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
-      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
-      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
-    ) top / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
-
-    linear-gradient(
-      to top,
-      #fff 0%,
-      #fff var(--edge-fade-bleed),
-      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
-      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
-      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
-      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
-    ) bottom / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat;
 }
 
-.edge-fade.has-horizontal{
-  background:
-    linear-gradient(
-      to bottom,
-      #fff 0%,
-      #fff var(--edge-fade-bleed),
-      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
-      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
-      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
-      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
-    ) top / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
+.edge-fade span{
+  position:fixed;
+  pointer-events:none;
+  z-index:900;
+}
 
-    linear-gradient(
-      to top,
-      #fff 0%,
-      #fff var(--edge-fade-bleed),
-      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
-      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
-      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
-      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
-    ) bottom / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
+.edge-fade-top{
+  top:0;
+  left:0;
+  right:0;
+  height:calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-y));
+  background:linear-gradient(
+    to bottom,
+    #fff 0,
+    #fff env(safe-area-inset-top, 0px),
+    rgba(255,255,255,.98) calc(env(safe-area-inset-top, 0px) + 12px),
+    rgba(255,255,255,.88) calc(env(safe-area-inset-top, 0px) + 28px),
+    rgba(255,255,255,.55) calc(env(safe-area-inset-top, 0px) + 58px),
+    rgba(255,255,255,0) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-y))
+  );
+}
 
-    linear-gradient(
-      to right,
-      #fff 0%,
-      rgba(255,255,255,.98) 12%,
-      rgba(255,255,255,.88) 28%,
-      rgba(255,255,255,.55) 58%,
-      rgba(255,255,255,0) 100%
-    ) left / var(--edge-fade-size-x) 100% no-repeat,
+.edge-fade-bottom{
+  bottom:0;
+  left:0;
+  right:0;
+  height:calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-y));
+  background:linear-gradient(
+    to top,
+    #fff 0,
+    #fff env(safe-area-inset-bottom, 0px),
+    rgba(255,255,255,.98) calc(env(safe-area-inset-bottom, 0px) + 12px),
+    rgba(255,255,255,.88) calc(env(safe-area-inset-bottom, 0px) + 28px),
+    rgba(255,255,255,.55) calc(env(safe-area-inset-bottom, 0px) + 58px),
+    rgba(255,255,255,0) calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-y))
+  );
+}
 
-    linear-gradient(
-      to left,
-      #fff 0%,
-      rgba(255,255,255,.98) 12%,
-      rgba(255,255,255,.88) 28%,
-      rgba(255,255,255,.55) 58%,
-      rgba(255,255,255,0) 100%
-    ) right / var(--edge-fade-size-x) 100% no-repeat;
+.edge-fade-left,
+.edge-fade-right{
+  display:none;
+}
+
+.edge-fade.has-horizontal .edge-fade-left{
+  display:block;
+  top:0;
+  bottom:0;
+  left:0;
+  width:var(--edge-fade-size-x);
+  background:linear-gradient(
+    to right,
+    #fff 0%,
+    rgba(255,255,255,.98) 12%,
+    rgba(255,255,255,.88) 28%,
+    rgba(255,255,255,.55) 58%,
+    rgba(255,255,255,0) 100%
+  );
+}
+
+.edge-fade.has-horizontal .edge-fade-right{
+  display:block;
+  top:0;
+  bottom:0;
+  right:0;
+  width:var(--edge-fade-size-x);
+  background:linear-gradient(
+    to left,
+    #fff 0%,
+    rgba(255,255,255,.98) 12%,
+    rgba(255,255,255,.88) 28%,
+    rgba(255,255,255,.55) 58%,
+    rgba(255,255,255,0) 100%
+  );
 }
 </style>

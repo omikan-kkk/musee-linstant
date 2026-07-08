@@ -14,14 +14,27 @@ const {
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>{title}</title>
   </head>
 
-  <body class:list={[showHeader && "has-scrolled"]}>
+  <body class:list={[showHeader && "has-scrolled", showEdgeFade && "has-edge-fade"]}>
+    {showEdgeFade ? (
+      <div class="fade-viewport">
+        <div class="fade-scroll" data-scroll-root>
+          <slot />
+        </div>
+
+        <EdgeFade horizontal={edgeFadeHorizontal} />
+      </div>
+    ) : (
+      <slot />
+    )}
+
     <Header />
-    <slot />
-    {showEdgeFade && <EdgeFade horizontal={edgeFadeHorizontal} />}
   </body>
 </html>
 
@@ -34,7 +47,29 @@ const {
     font-family: serif;
   }
 
+  :global(body.has-edge-fade) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   :global(*) {
     box-sizing: border-box;
+  }
+
+  .fade-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #fff;
+    z-index: 0;
+  }
+
+  .fade-scroll {
+    width: 100%;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
   }
 </style>

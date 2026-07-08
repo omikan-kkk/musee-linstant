@@ -17,7 +17,23 @@ import MenuPanel from "./MenuPanel.astro";
     menuPanel?.classList.toggle("is-open");
   });
 
-  window.addEventListener("scroll", () => {
-    document.body.classList.toggle("has-scrolled", window.scrollY > 20);
-  });
+  function updateScrolledState(scrollTop) {
+    document.body.classList.toggle("has-scrolled", scrollTop > 20);
+  }
+
+  const scrollRoot = document.querySelector("[data-scroll-root]");
+
+  if (scrollRoot) {
+    updateScrolledState(scrollRoot.scrollTop);
+
+    scrollRoot.addEventListener("scroll", () => {
+      updateScrolledState(scrollRoot.scrollTop);
+    });
+  } else {
+    updateScrolledState(window.scrollY);
+
+    window.addEventListener("scroll", () => {
+      updateScrolledState(window.scrollY);
+    });
+  }
 </script>

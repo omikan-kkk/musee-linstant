@@ -24,7 +24,11 @@ const items = CONTENTS
 const categoryType = category.type || "gallery";
 ---
 
-<Layout title={`${category.title} | Musée de l'Instant`} showHeader={true}>
+<Layout
+  title={`${category.title} | Musée de l'Instant`}
+  showHeader={true}
+  showEdgeFade={true}
+>
   {(categoryType === "gallery" || categoryType === "coffee") && (
     <GalleryCategory category={category} items={items} />
   )}

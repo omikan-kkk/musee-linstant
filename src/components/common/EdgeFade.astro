@@ -1,0 +1,55 @@
+<div class="edge-fade" aria-hidden="true"></div>
+
+<style>
+.edge-fade{
+  --edge-fade-size:80px;
+
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+
+  /*
+    Headerより下に置く。
+    Header側がたぶん z-index:1000 以上なら、
+    EdgeFadeはそれより下。
+  */
+  z-index:900;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #fff 0%,
+      rgba(255,255,255,.98) 12%,
+      rgba(255,255,255,.88) 28%,
+      rgba(255,255,255,.55) 58%,
+      rgba(255,255,255,0) 100%
+    ) top / 100% var(--edge-fade-size) no-repeat,
+
+    linear-gradient(
+      to top,
+      #fff 0%,
+      rgba(255,255,255,.98) 12%,
+      rgba(255,255,255,.88) 28%,
+      rgba(255,255,255,.55) 58%,
+      rgba(255,255,255,0) 100%
+    ) bottom / 100% var(--edge-fade-size) no-repeat,
+
+    linear-gradient(
+      to right,
+      #fff 0%,
+      rgba(255,255,255,.98) 12%,
+      rgba(255,255,255,.88) 28%,
+      rgba(255,255,255,.55) 58%,
+      rgba(255,255,255,0) 100%
+    ) left / var(--edge-fade-size) 100% no-repeat,
+
+    linear-gradient(
+      to left,
+      #fff 0%,
+      rgba(255,255,255,.98) 12%,
+      rgba(255,255,255,.88) 28%,
+      rgba(255,255,255,.55) 58%,
+      rgba(255,255,255,0) 100%
+    ) right / var(--edge-fade-size) 100% no-repeat;
+}
+</style>

@@ -28,6 +28,7 @@ const categoryType = category.type || "gallery";
   title={`${category.title} | Musée de l'Instant`}
   showHeader={true}
   showEdgeFade={true}
+  edgeFadeHorizontal={categoryType === "book"}
 >
   {(categoryType === "gallery" || categoryType === "coffee") && (
     <GalleryCategory category={category} items={items} />

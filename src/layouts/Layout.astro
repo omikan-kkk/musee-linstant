@@ -6,6 +6,7 @@ const {
   title = "Musée de l'Instant",
   showHeader = false,
   showEdgeFade = false,
+  edgeFadeHorizontal = false,
 } = Astro.props;
 ---
 
@@ -20,7 +21,7 @@ const {
   <body class:list={[showHeader && "has-scrolled"]}>
     <Header />
     <slot />
-    {showEdgeFade && <EdgeFade />}
+    {showEdgeFade && <EdgeFade horizontal={edgeFadeHorizontal} />}
   </body>
 </html>
 

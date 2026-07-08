@@ -1,38 +1,68 @@
-<div class="edge-fade" aria-hidden="true"></div>
+---
+const {
+  horizontal = false,
+} = Astro.props;
+---
+
+<div class:list={["edge-fade", horizontal && "has-horizontal"]} aria-hidden="true"></div>
 
 <style>
 .edge-fade{
-  --edge-fade-size:80px;
+  --edge-fade-size-y:80px;
+  --edge-fade-size-x:32px;
+  --edge-fade-bleed:80px;
 
   position:fixed;
-  inset:0;
+  top:calc(-1 * var(--edge-fade-bleed));
+  right:0;
+  bottom:calc(-1 * var(--edge-fade-bleed));
+  left:0;
   pointer-events:none;
-
-  /*
-    Headerより下に置く。
-    Header側がたぶん z-index:1000 以上なら、
-    EdgeFadeはそれより下。
-  */
   z-index:900;
 
   background:
     linear-gradient(
       to bottom,
       #fff 0%,
-      rgba(255,255,255,.98) 12%,
-      rgba(255,255,255,.88) 28%,
-      rgba(255,255,255,.55) 58%,
-      rgba(255,255,255,0) 100%
-    ) top / 100% var(--edge-fade-size) no-repeat,
+      #fff var(--edge-fade-bleed),
+      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
+      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
+      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
+      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
+    ) top / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
 
     linear-gradient(
       to top,
       #fff 0%,
-      rgba(255,255,255,.98) 12%,
-      rgba(255,255,255,.88) 28%,
-      rgba(255,255,255,.55) 58%,
-      rgba(255,255,255,0) 100%
-    ) bottom / 100% var(--edge-fade-size) no-repeat,
+      #fff var(--edge-fade-bleed),
+      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
+      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
+      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
+      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
+    ) bottom / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat;
+}
+
+.edge-fade.has-horizontal{
+  background:
+    linear-gradient(
+      to bottom,
+      #fff 0%,
+      #fff var(--edge-fade-bleed),
+      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
+      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
+      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
+      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
+    ) top / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
+
+    linear-gradient(
+      to top,
+      #fff 0%,
+      #fff var(--edge-fade-bleed),
+      rgba(255,255,255,.98) calc(var(--edge-fade-bleed) + 12px),
+      rgba(255,255,255,.88) calc(var(--edge-fade-bleed) + 28px),
+      rgba(255,255,255,.55) calc(var(--edge-fade-bleed) + 58px),
+      rgba(255,255,255,0) calc(var(--edge-fade-bleed) + var(--edge-fade-size-y))
+    ) bottom / 100% calc(var(--edge-fade-bleed) + var(--edge-fade-size-y)) no-repeat,
 
     linear-gradient(
       to right,
@@ -41,7 +71,7 @@
       rgba(255,255,255,.88) 28%,
       rgba(255,255,255,.55) 58%,
       rgba(255,255,255,0) 100%
-    ) left / var(--edge-fade-size) 100% no-repeat,
+    ) left / var(--edge-fade-size-x) 100% no-repeat,
 
     linear-gradient(
       to left,
@@ -50,6 +80,6 @@
       rgba(255,255,255,.88) 28%,
       rgba(255,255,255,.55) 58%,
       rgba(255,255,255,0) 100%
-    ) right / var(--edge-fade-size) 100% no-repeat;
+    ) right / var(--edge-fade-size-x) 100% no-repeat;
 }
 </style>

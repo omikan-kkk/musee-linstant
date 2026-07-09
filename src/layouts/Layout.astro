@@ -7,6 +7,7 @@ const {
   showHeader = false,
   showEdgeFade = false,
   edgeFadeHorizontal = false,
+  lockVerticalScroll = false,
 } = Astro.props;
 ---
 
@@ -24,7 +25,10 @@ const {
   <body class:list={[showHeader && "has-scrolled", showEdgeFade && "has-edge-fade"]}>
     {showEdgeFade ? (
       <div class="fade-viewport">
-        <div class="fade-scroll" data-scroll-root>
+        <div
+          class:list={["fade-scroll", lockVerticalScroll && "is-y-locked"]}
+          data-scroll-root
+        >
           <slot />
         </div>
 
@@ -71,5 +75,9 @@ const {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
+  }
+
+  .fade-scroll.is-y-locked {
+    overflow-y: hidden;
   }
 </style>

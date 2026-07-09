@@ -1,6 +1,7 @@
 ---
 import Header from "../components/header/Header.astro";
 import EdgeFade from "../components/common/EdgeFade.astro";
+import { THEME } from "../config/site";
 
 const {
   title = "Musée de l'Instant",
@@ -22,7 +23,29 @@ const {
     <title>{title}</title>
   </head>
 
-  <body class:list={[showHeader && "has-scrolled", showEdgeFade && "has-edge-fade"]}>
+  <body
+    class:list={[showHeader && "has-scrolled", showEdgeFade && "has-edge-fade"]}
+    style={`
+      --font-latin:${THEME.fontFamilyLatin};
+      --font-japanese:${THEME.fontFamilyJapanese};
+
+      --navigation-size:${THEME.fontSizes.navigation}px;
+      --gallery-list-title-size:${THEME.fontSizes.galleryListTitle}px;
+      --gallery-list-caption-size:${THEME.fontSizes.galleryListCaption}px;
+      --gallery-detail-title-size:${THEME.fontSizes.galleryDetailTitle}px;
+      --gallery-detail-caption-size:${THEME.fontSizes.galleryDetailCaption}px;
+      --book-list-size:${THEME.fontSizes.bookList}px;
+      --coffee-list-size:${THEME.fontSizes.coffeeList}px;
+
+      --navigation-color:${THEME.colors.navigation};
+      --gallery-list-title-color:${THEME.colors.galleryListTitle};
+      --gallery-list-caption-color:${THEME.colors.galleryListCaption};
+      --gallery-detail-title-color:${THEME.colors.galleryDetailTitle};
+      --gallery-detail-caption-color:${THEME.colors.galleryDetailCaption};
+      --book-list-color:${THEME.colors.bookList};
+      --coffee-list-color:${THEME.colors.coffeeList};
+    `}
+  >
     {showEdgeFade ? (
       <div class="fade-viewport">
         <div

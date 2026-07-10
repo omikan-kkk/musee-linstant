@@ -4,8 +4,8 @@ import { CATEGORIES } from "../../../config/site";
 
 export function getStaticPaths() {
   return CATEGORIES
-    .filter(category => category.visible)
-    .map(category => ({
+    .filter((category) => category.visible)
+    .map((category) => ({
       params: {
         category: category.slug,
       },
@@ -18,6 +18,8 @@ export function getStaticPaths() {
 const { category } = Astro.props;
 const categoryType = category.type || "gallery";
 const isBook = categoryType === "book";
+const isCoffee = categoryType === "coffee";
+const isGalleryLike = !isBook && !isCoffee;
 ---
 
 <Layout title="New Content | Musée de l'Instant CMS" showHeader={false}>
@@ -44,30 +46,65 @@ const isBook = categoryType === "book";
             <label for="author-sort">Author Sort</label>
             <input id="author-sort" type="text" />
           </div>
+
+          <div class="field">
+            <label for="title">Work Title</label>
+            <input id="title" type="text" />
+          </div>
+
+          <div class="field">
+            <label for="title-sort">Title Sort</label>
+            <input id="title-sort" type="text" />
+          </div>
         </>
       )}
 
-      <div class="field">
-        <label for="title">{isBook ? "Work Title" : "Title"}</label>
-        <input id="title" type="text" />
-      </div>
+      {isCoffee && (
+        <>
+          <div class="field">
+            <label for="coffee-date">Date</label>
+            <input id="coffee-date" type="date" />
+            <p class="note">
+              Saved as YYYY-MM-DD and displayed as YYYY/MM/DD.
+            </p>
+          </div>
 
-      {isBook && (
-        <div class="field">
-          <label for="title-sort">Title Sort</label>
-          <input id="title-sort" type="text" />
-        </div>
+          <div class="field">
+            <label for="coffee-brand">Brand</label>
+            <input id="coffee-brand" type="text" />
+          </div>
+
+          <div class="field">
+            <label for="coffee-name">Name</label>
+            <input id="coffee-name" type="text" />
+          </div>
+
+          <div class="field">
+            <label for="coffee-notes">Notes</label>
+            <input id="coffee-notes" type="text" />
+          </div>
+        </>
       )}
 
-      {!isBook && (
-        <div class="field">
-          <label for="body">Body</label>
-          <textarea id="body" rows="8"></textarea>
-        </div>
+      {isGalleryLike && (
+        <>
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" type="text" />
+          </div>
+
+          <div class="field">
+            <label for="body">Body</label>
+            <textarea id="body" rows="8"></textarea>
+          </div>
+        </>
       )}
 
       <div class="actions">
-        <button type="button" id="save-button" class="save-button">Save</button>
+        <button type="button" id="save-button" class="save-button">
+          Save
+        </button>
+
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
@@ -81,53 +118,110 @@ const isBook = categoryType === "book";
     const editor = document.querySelector(".editor");
     const categoryId = editor?.getAttribute("data-category-id");
     const categorySlug = editor?.getAttribute("data-category-slug");
-    const categoryType = editor?.getAttribute("data-category-type") || "gallery";
+    const categoryType =
+      editor?.getAttribute("data-category-type") || "gallery";
 
     const authorInput = document.querySelector("#author");
     const authorSortInput = document.querySelector("#author-sort");
     const titleInput = document.querySelector("#title");
     const titleSortInput = document.querySelector("#title-sort");
     const bodyInput = document.querySelector("#body");
+
+    const coffeeDateInput = document.querySelector("#coffee-date");
+    const coffeeBrandInput = document.querySelector("#coffee-brand");
+    const coffeeNameInput = document.querySelector("#coffee-name");
+    const coffeeNotesInput = document.querySelector("#coffee-notes");
+
     const saveButton = document.querySelector("#save-button");
     const saveStatus = document.querySelector("#save-status");
 
     function getNextContentId(contents) {
       const maxNumber = contents.reduce((max, content) => {
         const match = content.id?.match(/^content(\d+)$/);
-        if (!match) return max;
+
+        if (!match) {
+          return max;
+        }
 
         const number = Number(match[1]);
-        return Number.isFinite(number) ? Math.max(max, number) : max;
+
+        return Number.isFinite(number)
+          ? Math.max(max, number)
+          : max;
       }, 0);
 
       return `content${String(maxNumber + 1).padStart(6, "0")}`;
     }
 
     saveButton?.addEventListener("click", async () => {
-      if (!categoryId || !categorySlug || !titleInput || !saveStatus) return;
+      if (
+        !categoryId ||
+        !categorySlug ||
+        !saveStatus
+      ) {
+        return;
+      }
 
-      const title = titleInput.value.trim();
+      const title = titleInput?.value.trim() || "";
+      const body = bodyInput?.value || "";
+
       const author = authorInput?.value.trim() || "";
-      const authorSort = authorSortInput?.value.trim() || author;
-      const titleSort = titleSortInput?.value.trim() || title;
+      const authorSort =
+        authorSortInput?.value.trim() || author;
+      const titleSort =
+        titleSortInput?.value.trim() || title;
 
-      if (!title) {
+      const coffeeDate =
+        coffeeDateInput?.value.trim() || "";
+      const coffeeBrand =
+        coffeeBrandInput?.value.trim() || "";
+      const coffeeName =
+        coffeeNameInput?.value.trim() || "";
+      const coffeeNotes =
+        coffeeNotesInput?.value.trim() || "";
+
+      if (categoryType === "book") {
+        if (!author) {
+          saveStatus.textContent = "Author is required";
+          return;
+        }
+
+        if (!authorSort) {
+          saveStatus.textContent = "Author Sort is required";
+          return;
+        }
+
+        if (!title) {
+          saveStatus.textContent = "Work Title is required";
+          return;
+        }
+
+        if (!titleSort) {
+          saveStatus.textContent = "Title Sort is required";
+          return;
+        }
+      } else if (categoryType === "coffee") {
+        if (!coffeeDate) {
+          saveStatus.textContent = "Date is required";
+          return;
+        }
+
+        if (!coffeeBrand) {
+          saveStatus.textContent = "Brand is required";
+          return;
+        }
+
+        if (!coffeeName) {
+          saveStatus.textContent = "Name is required";
+          return;
+        }
+
+        if (!coffeeNotes) {
+          saveStatus.textContent = "Notes are required";
+          return;
+        }
+      } else if (!title) {
         saveStatus.textContent = "Title is required";
-        return;
-      }
-
-      if (categoryType === "book" && !author) {
-        saveStatus.textContent = "Author is required";
-        return;
-      }
-
-      if (categoryType === "book" && !authorSort) {
-        saveStatus.textContent = "Author Sort is required";
-        return;
-      }
-
-      if (categoryType === "book" && !titleSort) {
-        saveStatus.textContent = "Title Sort is required";
         return;
       }
 
@@ -141,29 +235,67 @@ const isBook = categoryType === "book";
           throw new Error("Could not load contents.");
         }
 
-        const nextId = getNextContentId(currentData.contents);
-
-        const sameCategoryContents = currentData.contents.filter(
-          (content) => content.categoryId === categoryId
+        const nextId = getNextContentId(
+          currentData.contents
         );
 
-        const nextOrder = sameCategoryContents.length + 1;
+        const sameCategoryContents =
+          currentData.contents.filter(
+            (content) =>
+              content.categoryId === categoryId
+          );
 
-        const newContent = {
-          id: nextId,
-          categoryId,
-          slug: nextId,
-          image: "",
-          title,
-          body: categoryType === "book" ? "" : bodyInput?.value || "",
-          author: categoryType === "book" ? author : "",
-          authorSort: categoryType === "book" ? authorSort : "",
-          titleSort: categoryType === "book" ? titleSort : "",
-          visible: true,
-          order: nextOrder,
-        };
+        const nextOrder =
+          sameCategoryContents.length + 1;
 
-        const nextContents = [...currentData.contents, newContent];
+        let newContent;
+
+        if (categoryType === "book") {
+          newContent = {
+            id: nextId,
+            categoryId,
+            slug: nextId,
+            image: "",
+            title,
+            body: "",
+            author,
+            authorSort,
+            titleSort,
+            visible: true,
+            order: nextOrder,
+          };
+        } else if (categoryType === "coffee") {
+          newContent = {
+            id: nextId,
+            categoryId,
+            slug: nextId,
+            image: "",
+            title: "",
+            body: "",
+            date: coffeeDate,
+            brand: coffeeBrand,
+            coffeeName,
+            notes: coffeeNotes,
+            visible: true,
+            order: nextOrder,
+          };
+        } else {
+          newContent = {
+            id: nextId,
+            categoryId,
+            slug: nextId,
+            image: "",
+            title,
+            body,
+            visible: true,
+            order: nextOrder,
+          };
+        }
+
+        const nextContents = [
+          ...currentData.contents,
+          newContent,
+        ];
 
         const saveRes = await authFetch("/contents", {
           method: "POST",
@@ -178,12 +310,16 @@ const isBook = categoryType === "book";
         const saveData = await saveRes.json();
 
         if (!saveData.ok) {
-          throw new Error("Could not save contents.");
+          throw new Error(
+            "Could not save contents."
+          );
         }
 
-        saveStatus.textContent = "Saved to GitHub. Redirecting...";
+        saveStatus.textContent =
+          "Saved to GitHub. Redirecting...";
 
-        window.location.href = `/admin/${categorySlug}`;
+        window.location.href =
+          `/admin/${categorySlug}`;
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Save failed";
@@ -251,6 +387,13 @@ textarea{
 
 textarea{
   resize:vertical;
+}
+
+.note{
+  margin:0;
+  color:#999;
+  font-size:11px;
+  line-height:1.6;
 }
 
 .actions{

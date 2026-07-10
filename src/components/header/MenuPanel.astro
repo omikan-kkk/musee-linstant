@@ -9,7 +9,11 @@ const visibleCategories = CATEGORIES
 <nav class="menu-panel" aria-hidden="true">
   <ul>
     {visibleCategories.map((category) => (
-      <li><a href={`/${category.slug}`}>{category.title}</a></li>
+      <li>
+        <a href={`/${category.slug}`}>
+          {category.title}
+        </a>
+      </li>
     ))}
   </ul>
 </nav>
@@ -45,8 +49,10 @@ const visibleCategories = CATEGORIES
 
   .menu-panel a {
     text-decoration: none;
-    color: #111;
-    font-size: 18px;
-    letter-spacing: 0.12em;
+    color: var(--navigation-color);
+    font-family: var(--site-font-family);
+    font-size: var(--navigation-size);
+    letter-spacing: .12em;
+    font-weight: 400;
   }
 </style>

@@ -2,7 +2,6 @@
 import Layout from "../../layouts/Layout.astro";
 import { CATEGORIES } from "../../config/site";
 import { CONTENTS } from "../../data/contents";
-import { THEME } from "../../config/theme";
 
 export function getStaticPaths() {
   return CONTENTS
@@ -34,19 +33,13 @@ const { item } = Astro.props;
     {(item.title || item.body) && (
       <div class="work-caption">
         {item.title && (
-          <p
-            class="work-title"
-            style={`font-size:${THEME.typography.workTitleSize};font-family:${THEME.typography.fontFamily};`}
-          >
+          <p class="work-title">
             {item.title}
           </p>
         )}
 
         {item.body && (
-          <p
-            class="work-body"
-            style={`font-size:${THEME.typography.workBodySize};font-family:${THEME.typography.fontFamily};`}
-          >
+          <p class="work-body">
             {item.body}
           </p>
         )}
@@ -74,18 +67,25 @@ const { item } = Astro.props;
   margin:24px 0 0;
   width:min(100%,900px);
   text-align:right;
-  color:#555;
 }
 
 .work-title,
 .work-body{
   margin:0;
+  font-family:var(--site-font-family);
   letter-spacing:.08em;
   line-height:1.8;
   white-space:pre-line;
 }
 
+.work-title{
+  color:var(--gallery-detail-title-color);
+  font-size:var(--gallery-detail-title-size);
+}
+
 .work-body{
   margin-top:4px;
+  color:var(--gallery-detail-caption-color);
+  font-size:var(--gallery-detail-caption-size);
 }
 </style>

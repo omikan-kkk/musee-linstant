@@ -10,6 +10,33 @@ const {
   edgeFadeHorizontal = false,
   lockVerticalScroll = false,
 } = Astro.props;
+
+const latinFontFamilies = {
+  helvetica: '"Helvetica Neue", Helvetica, Arial',
+  "system-sans": '-apple-system, BlinkMacSystemFont, "Segoe UI"',
+  georgia: 'Georgia, "Times New Roman"',
+  times: '"Times New Roman", Times',
+  "system-serif": 'ui-serif, Georgia, "Times New Roman"',
+};
+
+const japaneseFontFamilies = {
+  sans: '"Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", Meiryo, sans-serif',
+  "yu-gothic": '"Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif',
+  "hiragino-sans": '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif',
+  serif: '"Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif',
+  "yu-mincho": '"Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif',
+  "hiragino-mincho": '"Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif',
+};
+
+const latinFontFamily =
+  latinFontFamilies[THEME.fontFamilyLatin] ??
+  latinFontFamilies.helvetica;
+
+const japaneseFontFamily =
+  japaneseFontFamilies[THEME.fontFamilyJapanese] ??
+  japaneseFontFamilies.sans;
+
+const siteFontFamily = `${latinFontFamily}, ${japaneseFontFamily}`;
 ---
 
 <!doctype html>
@@ -24,10 +51,12 @@ const {
   </head>
 
   <body
-    class:list={[showHeader && "has-scrolled", showEdgeFade && "has-edge-fade"]}
+    class:list={[
+      showHeader && "has-scrolled",
+      showEdgeFade && "has-edge-fade",
+    ]}
     style={`
-      --font-latin:${THEME.fontFamilyLatin};
-      --font-japanese:${THEME.fontFamilyJapanese};
+      --site-font-family:${siteFontFamily};
 
       --navigation-size:${THEME.fontSizes.navigation}px;
       --gallery-list-title-size:${THEME.fontSizes.galleryListTitle}px;
@@ -71,7 +100,7 @@ const {
     margin: 0;
     background: #fff;
     color: #111;
-    font-family: serif;
+    font-family: var(--site-font-family);
   }
 
   :global(body.has-edge-fade) {

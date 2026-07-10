@@ -26,7 +26,10 @@ grouped.sort((a, b) =>
 
 grouped.forEach(group => {
   group.books.sort((a, b) =>
-    (a.titleSort || a.title).localeCompare(b.titleSort || b.title, "ja")
+    (a.titleSort || a.title).localeCompare(
+      b.titleSort || b.title,
+      "ja"
+    )
   );
 });
 ---
@@ -40,7 +43,9 @@ grouped.forEach(group => {
 
           <div class="book-list">
             {group.books.map(book => (
-              <p class="book" data-book-item>{book.title}</p>
+              <p class="book" data-book-item>
+                {book.title}
+              </p>
             ))}
           </div>
         </div>
@@ -54,13 +59,17 @@ grouped.forEach(group => {
 
     if (scrollArea && books.length > 0) {
       requestAnimationFrame(() => {
-        const randomBook = books[Math.floor(Math.random() * books.length)];
+        const randomBook =
+          books[Math.floor(Math.random() * books.length)];
 
         const scrollBox = scrollArea.getBoundingClientRect();
         const bookBox = randomBook.getBoundingClientRect();
 
         const bookCenter =
-          bookBox.left - scrollBox.left + scrollArea.scrollLeft + bookBox.width / 2;
+          bookBox.left -
+          scrollBox.left +
+          scrollArea.scrollLeft +
+          bookBox.width / 2;
 
         const targetScroll =
           bookCenter - scrollArea.clientWidth / 2;
@@ -78,7 +87,8 @@ grouped.forEach(group => {
 
   min-height:100vh;
   background:#fff;
-  color:#111;
+  color:var(--book-list-color, #111);
+  font-family:var(--site-font-family);
 }
 
 .book-scroll{
@@ -108,6 +118,9 @@ grouped.forEach(group => {
   margin:0;
   writing-mode:vertical-rl;
   text-orientation:mixed;
+  font-family:var(--site-font-family);
+  font-size:var(--book-list-size, 13px);
+  color:var(--book-list-color, #111);
   line-height:1.8;
   letter-spacing:.08em;
 }
@@ -115,9 +128,6 @@ grouped.forEach(group => {
 .author{
   height:var(--author-height);
   margin:0 0 var(--author-gap) 0;
-
-  font-size:13px;
-  color:#111;
   white-space:nowrap;
 }
 
@@ -129,8 +139,6 @@ grouped.forEach(group => {
 }
 
 .book{
-  font-size:13px;
-  color:#111;
   white-space:nowrap;
 }
 </style>

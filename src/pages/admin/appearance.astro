@@ -1,0 +1,522 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { THEME } from "../../config/site";
+
+const sizeSettings = [
+  {
+    key: "navigation",
+    label: "Category / Top Logo",
+    value: THEME.fontSizes.navigation,
+  },
+  {
+    key: "galleryListTitle",
+    label: "Gallery List — Title",
+    value: THEME.fontSizes.galleryListTitle,
+  },
+  {
+    key: "galleryListCaption",
+    label: "Gallery List — Caption",
+    value: THEME.fontSizes.galleryListCaption,
+  },
+  {
+    key: "galleryDetailTitle",
+    label: "Gallery Detail — Title",
+    value: THEME.fontSizes.galleryDetailTitle,
+  },
+  {
+    key: "galleryDetailCaption",
+    label: "Gallery Detail — Caption",
+    value: THEME.fontSizes.galleryDetailCaption,
+  },
+  {
+    key: "bookList",
+    label: "Book List — All Text",
+    value: THEME.fontSizes.bookList,
+  },
+  {
+    key: "coffeeList",
+    label: "Coffee List — All Text",
+    value: THEME.fontSizes.coffeeList,
+  },
+];
+
+const colorSettings = [
+  {
+    key: "navigation",
+    label: "Category / Top Logo",
+    value: THEME.colors.navigation,
+  },
+  {
+    key: "galleryListTitle",
+    label: "Gallery List — Title",
+    value: THEME.colors.galleryListTitle,
+  },
+  {
+    key: "galleryListCaption",
+    label: "Gallery List — Caption",
+    value: THEME.colors.galleryListCaption,
+  },
+  {
+    key: "galleryDetailTitle",
+    label: "Gallery Detail — Title",
+    value: THEME.colors.galleryDetailTitle,
+  },
+  {
+    key: "galleryDetailCaption",
+    label: "Gallery Detail — Caption",
+    value: THEME.colors.galleryDetailCaption,
+  },
+  {
+    key: "bookList",
+    label: "Book List — All Text",
+    value: THEME.colors.bookList,
+  },
+  {
+    key: "coffeeList",
+    label: "Coffee List — All Text",
+    value: THEME.colors.coffeeList,
+  },
+];
+---
+
+<Layout title="Appearance | Musée de l'Instant CMS" showHeader={false}>
+  <main class="admin">
+    <header>
+      <a href="/admin">← CMS</a>
+      <h1>Appearance</h1>
+    </header>
+
+    <section class="appearance-editor">
+      <div class="settings-group">
+        <div class="group-heading">
+          <h2>Fonts</h2>
+          <p>English settings also apply to numbers.</p>
+        </div>
+
+        <div class="field">
+          <label for="font-latin">English / Numbers</label>
+
+          <select id="font-latin">
+            <option value="helvetica" selected={THEME.fontFamilyLatin === "helvetica"}>
+              Helvetica / Arial
+            </option>
+
+            <option value="system-sans" selected={THEME.fontFamilyLatin === "system-sans"}>
+              System Sans
+            </option>
+
+            <option value="georgia" selected={THEME.fontFamilyLatin === "georgia"}>
+              Georgia
+            </option>
+
+            <option value="times" selected={THEME.fontFamilyLatin === "times"}>
+              Times New Roman
+            </option>
+
+            <option value="system-serif" selected={THEME.fontFamilyLatin === "system-serif"}>
+              System Serif
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="font-japanese">Japanese</label>
+
+          <select id="font-japanese">
+            <option value="sans" selected={THEME.fontFamilyJapanese === "sans"}>
+              System Sans
+            </option>
+
+            <option value="yu-gothic" selected={THEME.fontFamilyJapanese === "yu-gothic"}>
+              Yu Gothic
+            </option>
+
+            <option value="hiragino-sans" selected={THEME.fontFamilyJapanese === "hiragino-sans"}>
+              Hiragino Sans
+            </option>
+
+            <option value="serif" selected={THEME.fontFamilyJapanese === "serif"}>
+              System Serif
+            </option>
+
+            <option value="yu-mincho" selected={THEME.fontFamilyJapanese === "yu-mincho"}>
+              Yu Mincho
+            </option>
+
+            <option value="hiragino-mincho" selected={THEME.fontFamilyJapanese === "hiragino-mincho"}>
+              Hiragino Mincho
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="group-heading">
+          <h2>Font Sizes</h2>
+          <p>Values are saved in pixels.</p>
+        </div>
+
+        <div class="settings-list">
+          {sizeSettings.map((setting) => (
+            <div class="setting-row">
+              <label for={`size-${setting.key}`}>{setting.label}</label>
+
+              <div class="number-field">
+                <input
+                  id={`size-${setting.key}`}
+                  data-size-key={setting.key}
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={setting.value}
+                />
+
+                <span>px</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="group-heading">
+          <h2>Colors</h2>
+          <p>HEX format, for example #555555.</p>
+        </div>
+
+        <div class="settings-list">
+          {colorSettings.map((setting) => (
+            <div class="setting-row">
+              <label for={`color-text-${setting.key}`}>{setting.label}</label>
+
+              <div class="color-field">
+                <input
+                  class="color-picker"
+                  data-color-picker={setting.key}
+                  type="color"
+                  value={setting.value}
+                  aria-label={`${setting.label} color picker`}
+                />
+
+                <input
+                  id={`color-text-${setting.key}`}
+                  class="color-text"
+                  data-color-text={setting.key}
+                  type="text"
+                  value={setting.value}
+                  maxlength="7"
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="save-button" class="save-button">
+          Save
+        </button>
+
+        <p id="save-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { requireLogin, authFetch } from "../../lib/auth";
+
+    requireLogin();
+
+    const fontLatinInput = document.querySelector("#font-latin");
+    const fontJapaneseInput = document.querySelector("#font-japanese");
+
+    const sizeInputs = [
+      ...document.querySelectorAll("[data-size-key]"),
+    ];
+
+    const colorPickers = [
+      ...document.querySelectorAll("[data-color-picker]"),
+    ];
+
+    const colorTextInputs = [
+      ...document.querySelectorAll("[data-color-text]"),
+    ];
+
+    const saveButton = document.querySelector("#save-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    function normalizeHex(value) {
+      const trimmed = value.trim();
+
+      if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+        return trimmed.toUpperCase();
+      }
+
+      return null;
+    }
+
+    colorPickers.forEach((picker) => {
+      picker.addEventListener("input", () => {
+        const key = picker.getAttribute("data-color-picker");
+
+        const textInput = document.querySelector(
+          `[data-color-text="${key}"]`
+        );
+
+        if (textInput) {
+          textInput.value = picker.value.toUpperCase();
+        }
+      });
+    });
+
+    colorTextInputs.forEach((textInput) => {
+      textInput.addEventListener("input", () => {
+        const normalized = normalizeHex(textInput.value);
+
+        if (!normalized) return;
+
+        const key = textInput.getAttribute("data-color-text");
+
+        const picker = document.querySelector(
+          `[data-color-picker="${key}"]`
+        );
+
+        if (picker) {
+          picker.value = normalized;
+        }
+      });
+    });
+
+    saveButton?.addEventListener("click", async () => {
+      if (
+        !fontLatinInput ||
+        !fontJapaneseInput ||
+        !saveStatus
+      ) {
+        return;
+      }
+
+      const fontSizes = {};
+
+      for (const input of sizeInputs) {
+        const key = input.getAttribute("data-size-key");
+        const value = Number(input.value);
+
+        if (!key || !Number.isFinite(value) || value <= 0) {
+          saveStatus.textContent = "Font sizes must be positive numbers.";
+          return;
+        }
+
+        fontSizes[key] = value;
+      }
+
+      const colors = {};
+
+      for (const input of colorTextInputs) {
+        const key = input.getAttribute("data-color-text");
+        const value = normalizeHex(input.value);
+
+        if (!key || !value) {
+          saveStatus.textContent = "Use six-digit HEX colors such as #555555.";
+          return;
+        }
+
+        colors[key] = value;
+      }
+
+      const nextTheme = {
+        fontFamilyLatin: fontLatinInput.value,
+        fontFamilyJapanese: fontJapaneseInput.value,
+        fontSizes,
+        colors,
+      };
+
+      saveStatus.textContent = "Saving...";
+
+      try {
+        const saveRes = await authFetch("/theme", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            theme: nextTheme,
+          }),
+        });
+
+        const saveData = await saveRes.json();
+
+        if (!saveData.ok) {
+          throw new Error(saveData.error || "Could not save theme.");
+        }
+
+        saveStatus.textContent = "Saved to GitHub";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+.admin{
+  max-width:720px;
+  margin:120px auto;
+  padding:24px;
+  color:#111;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+header{
+  margin-bottom:56px;
+}
+
+header a{
+  display:inline-block;
+  margin-bottom:24px;
+  color:#777;
+  text-decoration:none;
+  font-size:12px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  font-weight:400;
+  letter-spacing:.04em;
+}
+
+.appearance-editor{
+  display:flex;
+  flex-direction:column;
+  gap:64px;
+}
+
+.settings-group{
+  display:flex;
+  flex-direction:column;
+  gap:28px;
+}
+
+.group-heading{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.group-heading h2{
+  margin:0;
+  font-size:14px;
+  font-weight:400;
+  letter-spacing:.08em;
+}
+
+.group-heading p{
+  margin:0;
+  color:#999;
+  font-size:11px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.settings-list{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.setting-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 180px;
+  align-items:center;
+  gap:24px;
+}
+
+label{
+  color:#777;
+  font-size:11px;
+  letter-spacing:.08em;
+}
+
+select,
+input{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:0;
+  background:#fff;
+  color:#111;
+  padding:12px;
+  font:inherit;
+  font-size:14px;
+}
+
+.number-field{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:10px;
+}
+
+.number-field span{
+  color:#777;
+  font-size:12px;
+}
+
+.color-field{
+  display:grid;
+  grid-template-columns:44px 1fr;
+  align-items:center;
+  gap:10px;
+}
+
+.color-picker{
+  width:44px;
+  height:44px;
+  padding:3px;
+  cursor:pointer;
+}
+
+.color-text{
+  text-transform:uppercase;
+  font-family:monospace;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.save-button{
+  border:none;
+  background:#111;
+  color:#fff;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+#save-status{
+  margin:0;
+  color:#777;
+  font-size:12px;
+}
+
+@media (max-width:600px){
+  .admin{
+    margin:72px auto;
+    padding:20px;
+  }
+
+  .setting-row{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+}
+</style>

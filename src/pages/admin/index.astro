@@ -54,6 +54,17 @@ const categories = CATEGORIES
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
+
+    <section class="admin-section appearance-section">
+      <div class="section-heading">
+        <p>Appearance</p>
+      </div>
+
+      <a class="appearance-link" href="/admin/appearance">
+        Fonts, sizes and colors
+        <span aria-hidden="true">→</span>
+      </a>
+    </section>
   </main>
 
   <script type="module">
@@ -202,6 +213,10 @@ h1{
   gap:28px;
 }
 
+.appearance-section{
+  margin-top:72px;
+}
+
 .section-heading{
   display:flex;
   align-items:center;
@@ -287,5 +302,21 @@ h1{
   margin:0;
   font-size:12px;
   color:#777;
+}
+
+.appearance-link{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  color:#111;
+  text-decoration:none;
+  font-size:18px;
+  letter-spacing:.04em;
+}
+
+.appearance-link span{
+  color:#777;
+  font-size:14px;
 }
 </style>

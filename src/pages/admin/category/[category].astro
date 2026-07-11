@@ -34,13 +34,17 @@ const categoryType = category.type || "gallery";
       <div class="field">
         <label for="slug">Slug</label>
         <input id="slug" type="text" value={category.slug} readonly />
-        <p class="note">Slug is generated automatically when the category is created.</p>
+        <p class="note">
+          Slug is generated automatically when the category is created.
+        </p>
       </div>
 
       <div class="field">
         <label for="type">Type</label>
         <input id="type" type="text" value={categoryType} readonly />
-        <p class="note">Type cannot be changed after the category is created.</p>
+        <p class="note">
+          Type cannot be changed after the category is created.
+        </p>
       </div>
 
       <div class="field checkbox-field">
@@ -49,8 +53,14 @@ const categoryType = category.type || "gallery";
       </div>
 
       <div class="actions">
-        <button type="button" id="save-button" class="save-button">Save</button>
-        <button type="button" id="delete-button" class="delete-button">Delete Category</button>
+        <button type="button" id="save-button" class="save-button">
+          Save
+        </button>
+
+        <button type="button" id="delete-button" class="delete-button">
+          Delete Category
+        </button>
+
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
@@ -101,8 +111,46 @@ const categoryType = category.type || "gallery";
       return saveData;
     }
 
+    async function loadContents() {
+      const currentRes = await authFetch("/contents");
+      const currentData = await currentRes.json();
+
+      if (!currentData.ok) {
+        throw new Error("Could not load contents.");
+      }
+
+      return currentData.contents;
+    }
+
+    async function saveContents(contents) {
+      const saveRes = await authFetch("/contents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents,
+        }),
+      });
+
+      const saveData = await saveRes.json();
+
+      if (!saveData.ok) {
+        throw new Error("Could not save contents.");
+      }
+
+      return saveData;
+    }
+
     saveButton?.addEventListener("click", async () => {
-      if (!categoryId || !titleInput || !visibleInput || !saveStatus) return;
+      if (
+        !categoryId ||
+        !titleInput ||
+        !visibleInput ||
+        !saveStatus
+      ) {
+        return;
+      }
 
       saveStatus.textContent = "Saving...";
 
@@ -110,7 +158,9 @@ const categoryType = category.type || "gallery";
         const currentCategories = await loadCategories();
 
         const nextCategories = currentCategories.map((category) => {
-          if (category.id !== categoryId) return category;
+          if (category.id !== categoryId) {
+            return category;
+          }
 
           return {
             ...category,
@@ -131,17 +181,31 @@ const categoryType = category.type || "gallery";
     });
 
     deleteButton?.addEventListener("click", async () => {
-      if (!categoryId || !saveStatus) return;
+      if (!categoryId || !saveStatus) {
+        return;
+      }
 
       const confirmed = window.confirm(
-        "Delete this category? This cannot be undone."
+        "Delete this category and all of its contents? This cannot be undone."
       );
 
-      if (!confirmed) return;
+      if (!confirmed) {
+        return;
+      }
 
-      saveStatus.textContent = "Deleting...";
+      saveStatus.textContent = "Deleting contents...";
 
       try {
+        const currentContents = await loadContents();
+
+        const nextContents = currentContents.filter(
+          (content) => content.categoryId !== categoryId
+        );
+
+        await saveContents(nextContents);
+
+        saveStatus.textContent = "Deleting category...";
+
         const currentCategories = await loadCategories();
 
         const nextCategories = currentCategories.filter(

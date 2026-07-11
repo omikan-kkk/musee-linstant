@@ -1,8 +1,8 @@
 {
-  "fontFamilyLatin": "helvetica",
-  "fontFamilyJapanese": "sans",
+  "fontFamilyLatin": "times",
+  "fontFamilyJapanese": "yu-gothic",
   "fontSizes": {
-    "navigation": 18,
+    "navigation": 10,
     "galleryListTitle": 14,
     "galleryListCaption": 12,
     "galleryDetailTitle": 22,
@@ -11,7 +11,7 @@
     "coffeeList": 14
   },
   "colors": {
-    "navigation": "#555555",
+    "navigation": "#FCF16E",
     "galleryListTitle": "#555555",
     "galleryListCaption": "#777777",
     "galleryDetailTitle": "#555555",

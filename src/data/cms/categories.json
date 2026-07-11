@@ -24,14 +24,6 @@
     "order": 4
   },
   {
-    "id": "category005",
-    "title": "Musique",
-    "slug": "musique",
-    "type": "gallery",
-    "visible": true,
-    "order": 5
-  },
-  {
     "id": "category006",
     "title": "test",
     "slug": "test",

@@ -1,13 +1,5 @@
 [
   {
-    "id": "category002",
-    "title": "Roman",
-    "slug": "roman",
-    "type": "gallery",
-    "visible": true,
-    "order": 3
-  },
-  {
     "id": "category003",
     "title": "Bonsaï",
     "slug": "bonsai",

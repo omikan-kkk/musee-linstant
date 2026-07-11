@@ -1,13 +1,5 @@
 [
   {
-    "id": "category001",
-    "title": "Grains",
-    "slug": "cafe",
-    "type": "gallery",
-    "visible": true,
-    "order": 2
-  },
-  {
     "id": "category002",
     "title": "Roman",
     "slug": "roman",
@@ -25,31 +17,15 @@
   },
   {
     "id": "category004",
-    "title": "Art",
+    "title": "Expositions",
     "slug": "art",
     "type": "gallery",
     "visible": true,
     "order": 4
   },
   {
-    "id": "category005",
-    "title": "Musique",
-    "slug": "musique",
-    "type": "gallery",
-    "visible": true,
-    "order": 5
-  },
-  {
-    "id": "category006",
-    "title": "test",
-    "slug": "test",
-    "type": "gallery",
-    "visible": true,
-    "order": 6
-  },
-  {
     "id": "category007",
-    "title": "Books",
+    "title": "Romans",
     "slug": "books",
     "type": "book",
     "visible": true,
@@ -57,7 +33,7 @@
   },
   {
     "id": "category008",
-    "title": "coffee",
+    "title": "Café",
     "slug": "coffee",
     "type": "coffee",
     "visible": true,

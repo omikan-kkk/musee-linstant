@@ -24,14 +24,6 @@
     "order": 4
   },
   {
-    "id": "category006",
-    "title": "test",
-    "slug": "test",
-    "type": "gallery",
-    "visible": true,
-    "order": 6
-  },
-  {
     "id": "category007",
     "title": "Romans",
     "slug": "books",

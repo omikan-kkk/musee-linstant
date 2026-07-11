@@ -54,5 +54,13 @@
     "type": "book",
     "visible": true,
     "order": 7
+  },
+  {
+    "id": "category008",
+    "title": "coffee",
+    "slug": "coffee",
+    "type": "coffee",
+    "visible": true,
+    "order": 8
   }
 ]

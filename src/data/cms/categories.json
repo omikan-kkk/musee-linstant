@@ -1,13 +1,5 @@
 [
   {
-    "id": "category001",
-    "title": "Grains",
-    "slug": "cafe",
-    "type": "gallery",
-    "visible": true,
-    "order": 2
-  },
-  {
     "id": "category002",
     "title": "Roman",
     "slug": "roman",

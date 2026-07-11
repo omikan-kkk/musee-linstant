@@ -217,18 +217,5 @@
     "notes": "Lemon, Jasmine, Pineapple",
     "visible": true,
     "order": 2
-  },
-  {
-    "id": "content000024",
-    "categoryId": "category009",
-    "slug": "content000024",
-    "image": "",
-    "title": "あ",
-    "body": "",
-    "author": "展示",
-    "authorSort": "どすとえふすきー",
-    "titleSort": "あ",
-    "visible": true,
-    "order": 1
   }
 ]

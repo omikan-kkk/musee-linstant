@@ -203,5 +203,19 @@
     "notes": "Tea, Flower",
     "visible": true,
     "order": 1
+  },
+  {
+    "id": "content000023",
+    "categoryId": "category008",
+    "slug": "content000023",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-07-11",
+    "brand": "Lilo",
+    "coffeeName": "Ethiopia",
+    "notes": "Lemon, Jasmine",
+    "visible": true,
+    "order": 2
   }
 ]

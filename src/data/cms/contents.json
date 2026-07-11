@@ -189,5 +189,19 @@
     "titleSort": "びゃくや",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "content000022",
+    "categoryId": "category008",
+    "slug": "content000022",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-07-09",
+    "brand": "Lilo",
+    "coffeeName": "Colombia",
+    "notes": "Tea, Flower",
+    "visible": true,
+    "order": 1
   }
 ]

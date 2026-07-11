@@ -4,22 +4,28 @@ import { CATEGORIES } from "../../../config/site";
 import { CONTENTS } from "../../../data/contents";
 
 export function getStaticPaths() {
-  return CONTENTS.map((content) => {
-    const category = CATEGORIES.find(
-      (category) => category.id === content.categoryId
-    );
+  return CONTENTS
+    .map((content) => {
+      const category = CATEGORIES.find(
+        (category) => category.id === content.categoryId
+      );
 
-    return {
+      return {
+        content,
+        category,
+      };
+    })
+    .filter(({ category }) => Boolean(category))
+    .map(({ content, category }) => ({
       params: {
-        category: category?.slug,
+        category: category.slug,
         content: content.id,
       },
       props: {
         content,
         category,
       },
-    };
-  });
+    }));
 }
 
 const { content, category } = Astro.props;

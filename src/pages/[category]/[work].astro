@@ -6,28 +6,30 @@ import { CONTENTS } from "../../data/contents";
 export function getStaticPaths() {
   return CONTENTS
     .filter((item) => item.visible)
-    .filter((item) => {
-      const category = CATEGORIES.find(
-        (category) => category.id === item.categoryId
-      );
-
-      return (category?.type || "gallery") === "gallery";
-    })
     .map((item) => {
       const category = CATEGORIES.find(
         (category) => category.id === item.categoryId
       );
 
       return {
-        params: {
-          category: category?.slug,
-          work: item.id,
-        },
-        props: {
-          item,
-        },
+        item,
+        category,
       };
-    });
+    })
+    .filter(({ category }) => {
+      if (!category) return false;
+
+      return (category.type || "gallery") === "gallery";
+    })
+    .map(({ item, category }) => ({
+      params: {
+        category: category.slug,
+        work: item.id,
+      },
+      props: {
+        item,
+      },
+    }));
 }
 
 const { item } = Astro.props;

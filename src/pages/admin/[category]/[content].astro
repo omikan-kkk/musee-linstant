@@ -26,9 +26,16 @@ const { content, category } = Astro.props;
 
 const categoryType = category.type || "gallery";
 const isBook = categoryType === "book";
+const isCoffee = categoryType === "coffee";
+const isGalleryLike = !isBook && !isCoffee;
+
+const displayTitle =
+  content.title ||
+  content.coffeeName ||
+  "Content";
 ---
 
-<Layout title={`${content.title} | Musée de l'Instant CMS`} showHeader={false}>
+<Layout title={`${displayTitle} | Musée de l'Instant CMS`} showHeader={false}>
   <main class="admin">
     <header>
       <a href={`/admin/${category.slug}`}>← {category.title}</a>
@@ -45,7 +52,11 @@ const isBook = categoryType === "book";
         <>
           <div class="field">
             <label for="author">Author</label>
-            <input id="author" type="text" value={content.author || ""} />
+            <input
+              id="author"
+              type="text"
+              value={content.author || ""}
+            />
           </div>
 
           <div class="field">
@@ -56,27 +67,81 @@ const isBook = categoryType === "book";
               value={content.authorSort || content.author || ""}
             />
           </div>
+
+          <div class="field">
+            <label for="title">Work Title</label>
+            <input
+              id="title"
+              type="text"
+              value={content.title || ""}
+            />
+          </div>
+
+          <div class="field">
+            <label for="title-sort">Title Sort</label>
+            <input
+              id="title-sort"
+              type="text"
+              value={content.titleSort || content.title || ""}
+            />
+          </div>
         </>
       )}
 
-      <div class="field">
-        <label for="title">{isBook ? "Work Title" : "Title"}</label>
-        <input id="title" type="text" value={content.title || ""} />
-      </div>
+      {isCoffee && (
+        <>
+          <div class="field">
+            <label for="coffee-date">Date</label>
+            <input
+              id="coffee-date"
+              type="date"
+              value={content.date || ""}
+            />
+            <p class="note">
+              Saved as YYYY-MM-DD and displayed as YYYY/MM/DD.
+            </p>
+          </div>
 
-      {isBook && (
-        <div class="field">
-          <label for="title-sort">Title Sort</label>
-          <input
-            id="title-sort"
-            type="text"
-            value={content.titleSort || content.title || ""}
-          />
-        </div>
+          <div class="field">
+            <label for="coffee-brand">Brand</label>
+            <input
+              id="coffee-brand"
+              type="text"
+              value={content.brand || ""}
+            />
+          </div>
+
+          <div class="field">
+            <label for="coffee-name">Name</label>
+            <input
+              id="coffee-name"
+              type="text"
+              value={content.coffeeName || ""}
+            />
+          </div>
+
+          <div class="field">
+            <label for="coffee-notes">Notes</label>
+            <input
+              id="coffee-notes"
+              type="text"
+              value={content.notes || ""}
+            />
+          </div>
+        </>
       )}
 
-      {!isBook && (
+      {isGalleryLike && (
         <>
+          <div class="field">
+            <label for="title">Title</label>
+            <input
+              id="title"
+              type="text"
+              value={content.title || ""}
+            />
+          </div>
+
           <div class="field">
             <label for="body">Body</label>
             <textarea id="body" rows="8">{content.body}</textarea>
@@ -94,22 +159,48 @@ const isBook = categoryType === "book";
             )}
 
             {!content.image && (
-              <img id="image-preview" class="is-hidden" alt="" />
+              <img
+                id="image-preview"
+                class="is-hidden"
+                alt=""
+              />
             )}
 
-            <input id="image" type="file" accept="image/*" />
+            <input
+              id="image"
+              type="file"
+              accept="image/*"
+            />
           </div>
         </>
       )}
 
       <div class="field checkbox-field">
-        <input id="visible" type="checkbox" checked={content.visible} />
+        <input
+          id="visible"
+          type="checkbox"
+          checked={content.visible}
+        />
         <label for="visible">Visible</label>
       </div>
 
       <div class="actions">
-        <button type="button" id="save-button" class="save-button">Save</button>
-        <button type="button" id="delete-button" class="delete-button">Delete Content</button>
+        <button
+          type="button"
+          id="save-button"
+          class="save-button"
+        >
+          Save
+        </button>
+
+        <button
+          type="button"
+          id="delete-button"
+          class="delete-button"
+        >
+          Delete Content
+        </button>
+
         <p id="save-status" aria-live="polite"></p>
       </div>
     </section>
@@ -123,13 +214,20 @@ const isBook = categoryType === "book";
     const editor = document.querySelector(".editor");
     const contentId = editor?.getAttribute("data-content-id");
     const categorySlug = editor?.getAttribute("data-category-slug");
-    const categoryType = editor?.getAttribute("data-category-type") || "gallery";
+    const categoryType =
+      editor?.getAttribute("data-category-type") || "gallery";
 
     const authorInput = document.querySelector("#author");
     const authorSortInput = document.querySelector("#author-sort");
     const titleInput = document.querySelector("#title");
     const titleSortInput = document.querySelector("#title-sort");
     const bodyInput = document.querySelector("#body");
+
+    const coffeeDateInput = document.querySelector("#coffee-date");
+    const coffeeBrandInput = document.querySelector("#coffee-brand");
+    const coffeeNameInput = document.querySelector("#coffee-name");
+    const coffeeNotesInput = document.querySelector("#coffee-notes");
+
     const imageInput = document.querySelector("#image");
     const imagePreview = document.querySelector("#image-preview");
     const visibleInput = document.querySelector("#visible");
@@ -202,30 +300,74 @@ const isBook = categoryType === "book";
     });
 
     saveButton?.addEventListener("click", async () => {
-      if (!contentId || !titleInput || !visibleInput || !saveStatus) return;
+      if (
+        !contentId ||
+        !visibleInput ||
+        !saveStatus
+      ) {
+        return;
+      }
 
-      const title = titleInput.value.trim();
+      const title = titleInput?.value.trim() || "";
+      const body = bodyInput?.value || "";
+
       const author = authorInput?.value.trim() || "";
-      const authorSort = authorSortInput?.value.trim() || author;
-      const titleSort = titleSortInput?.value.trim() || title;
+      const authorSort =
+        authorSortInput?.value.trim() || author;
+      const titleSort =
+        titleSortInput?.value.trim() || title;
 
-      if (!title) {
+      const coffeeDate =
+        coffeeDateInput?.value.trim() || "";
+      const coffeeBrand =
+        coffeeBrandInput?.value.trim() || "";
+      const coffeeName =
+        coffeeNameInput?.value.trim() || "";
+      const coffeeNotes =
+        coffeeNotesInput?.value.trim() || "";
+
+      if (categoryType === "book") {
+        if (!author) {
+          saveStatus.textContent = "Author is required";
+          return;
+        }
+
+        if (!authorSort) {
+          saveStatus.textContent = "Author Sort is required";
+          return;
+        }
+
+        if (!title) {
+          saveStatus.textContent = "Work Title is required";
+          return;
+        }
+
+        if (!titleSort) {
+          saveStatus.textContent = "Title Sort is required";
+          return;
+        }
+      } else if (categoryType === "coffee") {
+        if (!coffeeDate) {
+          saveStatus.textContent = "Date is required";
+          return;
+        }
+
+        if (!coffeeBrand) {
+          saveStatus.textContent = "Brand is required";
+          return;
+        }
+
+        if (!coffeeName) {
+          saveStatus.textContent = "Name is required";
+          return;
+        }
+
+        if (!coffeeNotes) {
+          saveStatus.textContent = "Notes are required";
+          return;
+        }
+      } else if (!title) {
         saveStatus.textContent = "Title is required";
-        return;
-      }
-
-      if (categoryType === "book" && !author) {
-        saveStatus.textContent = "Author is required";
-        return;
-      }
-
-      if (categoryType === "book" && !authorSort) {
-        saveStatus.textContent = "Author Sort is required";
-        return;
-      }
-
-      if (categoryType === "book" && !titleSort) {
-        saveStatus.textContent = "Title Sort is required";
         return;
       }
 
@@ -236,15 +378,25 @@ const isBook = categoryType === "book";
 
         let nextImagePath = null;
 
-        if (selectedImageFile) {
+        if (
+          categoryType !== "book" &&
+          categoryType !== "coffee" &&
+          selectedImageFile
+        ) {
           saveStatus.textContent = "Uploading image...";
-          nextImagePath = await uploadImage(selectedImageFile, contentId);
+
+          nextImagePath = await uploadImage(
+            selectedImageFile,
+            contentId
+          );
         }
 
         saveStatus.textContent = "Saving content...";
 
         const nextContents = currentContents.map((content) => {
-          if (content.id !== contentId) return content;
+          if (content.id !== contentId) {
+            return content;
+          }
 
           if (categoryType === "book") {
             return {
@@ -259,10 +411,24 @@ const isBook = categoryType === "book";
             };
           }
 
+          if (categoryType === "coffee") {
+            return {
+              ...content,
+              title: "",
+              body: "",
+              image: "",
+              date: coffeeDate,
+              brand: coffeeBrand,
+              coffeeName,
+              notes: coffeeNotes,
+              visible: visibleInput.checked,
+            };
+          }
+
           return {
             ...content,
             title,
-            body: bodyInput?.value || "",
+            body,
             visible: visibleInput.checked,
             image: nextImagePath ?? content.image,
           };
@@ -276,15 +442,22 @@ const isBook = categoryType === "book";
         saveStatus.textContent = "Save failed";
       }
     });
-
-    deleteButton?.addEventListener("click", async () => {
-      if (!contentId || !categorySlug || !saveStatus) return;
+        deleteButton?.addEventListener("click", async () => {
+      if (
+        !contentId ||
+        !categorySlug ||
+        !saveStatus
+      ) {
+        return;
+      }
 
       const confirmed = window.confirm(
         "Delete this content? This cannot be undone."
       );
 
-      if (!confirmed) return;
+      if (!confirmed) {
+        return;
+      }
 
       saveStatus.textContent = "Deleting...";
 
@@ -299,7 +472,8 @@ const isBook = categoryType === "book";
 
         saveStatus.textContent = "Deleted";
 
-        window.location.href = `/admin/${categorySlug}`;
+        window.location.href =
+          `/admin/${categorySlug}`;
       } catch (error) {
         console.error(error);
         saveStatus.textContent = "Delete failed";
@@ -390,6 +564,13 @@ textarea{
   resize:vertical;
 }
 
+.note{
+  margin:0;
+  color:#999;
+  font-size:11px;
+  line-height:1.6;
+}
+
 img{
   display:block;
   width:min(100%,420px);
@@ -430,4 +611,4 @@ img.is-hidden{
   font-size:12px;
   color:#777;
 }
-</style>
+</style>    

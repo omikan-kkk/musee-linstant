@@ -5,8 +5,8 @@ import { CONTENTS } from "../../data/contents";
 
 export function getStaticPaths() {
   return CATEGORIES
-    .filter(category => category.visible)
-    .map(category => ({
+    .filter((category) => category.visible)
+    .map((category) => ({
       params: { category: category.slug },
       props: { category },
     }));
@@ -16,10 +16,21 @@ const { category } = Astro.props;
 
 const categoryType = category.type || "gallery";
 const isBook = categoryType === "book";
+const isCoffee = categoryType === "coffee";
 
-const contents = CONTENTS
-  .filter(content => content.categoryId === category.id)
-  .sort((a, b) => a.order - b.order);
+function formatCoffeeDate(date = "") {
+  return date.replaceAll("-", "/");
+}
+
+const categoryContents = CONTENTS.filter(
+  (content) => content.categoryId === category.id
+);
+
+const contents = isCoffee
+  ? categoryContents.sort((a, b) =>
+      (b.date || "").localeCompare(a.date || "")
+    )
+  : categoryContents.sort((a, b) => a.order - b.order);
 ---
 
 <Layout title={`${category.title} | Musée de l'Instant CMS`} showHeader={false}>
@@ -33,27 +44,44 @@ const contents = CONTENTS
       </a>
     </header>
 
-    <section class="content-list" id="content-list">
-      {contents.map(content => (
-        <div class="content-row" draggable="true" data-content-id={content.id}>
-          <span class="drag-handle">☰</span>
+    <section
+      class:list={["content-list", isCoffee && "is-coffee"]}
+      id="content-list"
+    >
+      {contents.map((content) => (
+        <div
+          class="content-row"
+          draggable={!isCoffee}
+          data-content-id={content.id}
+        >
+          {!isCoffee && (
+            <span class="drag-handle">☰</span>
+          )}
 
           <a href={`/admin/${category.slug}/${content.id}`}>
             {isBook
               ? `${content.author || "Unknown"} / ${content.title || "Untitled"}`
-              : content.title || "Untitled"}
+              : isCoffee
+                ? `${formatCoffeeDate(content.date)} / ${content.brand || "Unknown"} / ${content.coffeeName || "Untitled"}`
+                : content.title || "Untitled"}
           </a>
         </div>
       ))}
     </section>
 
-    <div class="actions">
-      <button type="button" id="save-order-button" class="save-order-button">
-        Save Order
-      </button>
+    {!isCoffee && (
+      <div class="actions">
+        <button
+          type="button"
+          id="save-order-button"
+          class="save-order-button"
+        >
+          Save Order
+        </button>
 
-      <p id="save-status" aria-live="polite"></p>
-    </div>
+        <p id="save-status" aria-live="polite"></p>
+      </div>
+    )}
   </main>
 
   <script type="module">
@@ -72,7 +100,10 @@ const contents = CONTENTS
 
     list?.addEventListener("dragstart", (event) => {
       const row = event.target.closest(".content-row");
-      if (!row) return;
+
+      if (!row || row.getAttribute("draggable") !== "true") {
+        return;
+      }
 
       draggedRow = row;
       row.classList.add("is-dragging");
@@ -87,17 +118,25 @@ const contents = CONTENTS
     });
 
     list?.addEventListener("dragover", (event) => {
+      const dragging = document.querySelector(".is-dragging");
+
+      if (!dragging) {
+        return;
+      }
+
       event.preventDefault();
 
-      const dragging = document.querySelector(".is-dragging");
-      const rows = [...list.querySelectorAll(".content-row:not(.is-dragging)")];
+      const rows = [
+        ...list.querySelectorAll(
+          ".content-row:not(.is-dragging)"
+        ),
+      ];
 
       const nextRow = rows.find((row) => {
         const box = row.getBoundingClientRect();
+
         return event.clientY < box.top + box.height / 2;
       });
-
-      if (!dragging) return;
 
       if (nextRow) {
         list.insertBefore(dragging, nextRow);
@@ -107,12 +146,22 @@ const contents = CONTENTS
     });
 
     saveButton?.addEventListener("click", async () => {
-      if (!categoryId || !list || !saveStatus) return;
+      if (
+        !categoryId ||
+        !list ||
+        !saveStatus
+      ) {
+        return;
+      }
 
       saveStatus.textContent = "Saving...";
 
-      const orderedIds = [...list.querySelectorAll(".content-row")]
-        .map((row) => row.getAttribute("data-content-id"))
+      const orderedIds = [
+        ...list.querySelectorAll(".content-row"),
+      ]
+        .map((row) =>
+          row.getAttribute("data-content-id")
+        )
         .filter(Boolean);
 
       try {
@@ -123,18 +172,24 @@ const contents = CONTENTS
           throw new Error("Could not load contents.");
         }
 
-        const nextContents = currentData.contents.map((content) => {
-          if (content.categoryId !== categoryId) return content;
+        const nextContents = currentData.contents.map(
+          (content) => {
+            if (content.categoryId !== categoryId) {
+              return content;
+            }
 
-          const index = orderedIds.indexOf(content.id);
+            const index = orderedIds.indexOf(content.id);
 
-          if (index === -1) return content;
+            if (index === -1) {
+              return content;
+            }
 
-          return {
-            ...content,
-            order: index + 1,
-          };
-        });
+            return {
+              ...content,
+              order: index + 1,
+            };
+          }
+        );
 
         const saveRes = await authFetch("/contents", {
           method: "POST",
@@ -200,11 +255,19 @@ h1{
   margin-bottom:40px;
 }
 
+.content-list.is-coffee{
+  margin-bottom:0;
+}
+
 .content-row{
   display:flex;
   align-items:center;
   gap:14px;
   cursor:grab;
+}
+
+.content-list.is-coffee .content-row{
+  cursor:default;
 }
 
 .content-row.is-dragging{

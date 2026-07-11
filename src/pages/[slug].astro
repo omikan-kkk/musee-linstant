@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import GalleryCategory from "../components/category/GalleryCategory.astro";
 import BookCategory from "../components/category/BookCategory.astro";
+import CoffeeCategory from "../components/category/CoffeeCategory.astro";
 import { CATEGORIES } from "../config/site";
 import { CONTENTS } from "../data/contents";
 
@@ -31,12 +32,16 @@ const categoryType = category.type || "gallery";
   edgeFadeHorizontal={categoryType === "book"}
   lockVerticalScroll={categoryType === "book"}
 >
-  {(categoryType === "gallery" || categoryType === "coffee") && (
+  {categoryType === "gallery" && (
     <GalleryCategory category={category} items={items} />
   )}
 
   {categoryType === "book" && (
     <BookCategory items={items} />
+  )}
+
+  {categoryType === "coffee" && (
+    <CoffeeCategory items={items} />
   )}
 
   {categoryType === "music" && (

@@ -1,0 +1,127 @@
+---
+const { items = [] } = Astro.props;
+
+function formatDate(date = "") {
+  return date.replaceAll("-", "/");
+}
+
+const sortedItems = [...items].sort((a, b) =>
+  (b.date || "").localeCompare(a.date || "")
+);
+---
+
+<section class="coffee-section">
+  <div class="coffee-list">
+    {sortedItems.map((item) => (
+      <article class="coffee-item">
+        <time class="coffee-date" datetime={item.date}>
+          {formatDate(item.date)}
+        </time>
+
+        <span class="coffee-brand">
+          {item.brand}
+        </span>
+
+        <span class="coffee-name">
+          {item.coffeeName}
+        </span>
+
+        <p class="coffee-notes">
+          {item.notes}
+        </p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+.coffee-section{
+  --coffee-date-column:110px;
+  --coffee-brand-column:180px;
+  --coffee-column-gap:32px;
+  --coffee-row-gap:8px;
+
+  min-height:100vh;
+  padding:140px 8vw;
+  background:#fff;
+  color:var(--coffee-list-color, #555);
+  font-family:var(--site-font-family);
+  font-size:var(--coffee-list-size, 14px);
+}
+
+.coffee-list{
+  display:flex;
+  flex-direction:column;
+  gap:36px;
+  width:min(100%, 960px);
+  margin:0 auto;
+}
+
+.coffee-item{
+  display:grid;
+  grid-template-columns:
+    var(--coffee-date-column)
+    var(--coffee-brand-column)
+    minmax(0, 1fr);
+  column-gap:var(--coffee-column-gap);
+  row-gap:var(--coffee-row-gap);
+  align-items:baseline;
+}
+
+.coffee-date,
+.coffee-brand,
+.coffee-name,
+.coffee-notes{
+  margin:0;
+  color:var(--coffee-list-color, #555);
+  font-family:var(--site-font-family);
+  font-size:var(--coffee-list-size, 14px);
+  font-weight:400;
+  line-height:1.8;
+  letter-spacing:.08em;
+}
+
+.coffee-date,
+.coffee-brand,
+.coffee-name{
+  white-space:nowrap;
+}
+
+.coffee-notes{
+  grid-column:1 / -1;
+  white-space:pre-line;
+}
+
+@media (max-width:700px){
+  .coffee-section{
+    --coffee-date-column:100px;
+    --coffee-brand-column:150px;
+    --coffee-column-gap:20px;
+
+    padding:120px 24px;
+    overflow-x:auto;
+  }
+
+  .coffee-list{
+    gap:30px;
+    width:max-content;
+    min-width:100%;
+  }
+
+  .coffee-item{
+    grid-template-columns:
+      var(--coffee-date-column)
+      var(--coffee-brand-column)
+      minmax(180px, 1fr);
+  }
+
+  .coffee-notes{
+    max-width:calc(
+      var(--coffee-date-column) +
+      var(--coffee-brand-column) +
+      180px +
+      var(--coffee-column-gap) * 2
+    );
+  }
+}
+</style>

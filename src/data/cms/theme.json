@@ -2,11 +2,11 @@
   "fontFamilyLatin": "times",
   "fontFamilyJapanese": "yu-mincho",
   "fontSizes": {
-    "navigation": 16,
-    "galleryListTitle": 14,
-    "galleryListCaption": 12,
-    "galleryDetailTitle": 18,
-    "galleryDetailCaption": 14,
+    "navigation": 14,
+    "galleryListTitle": 10,
+    "galleryListCaption": 9,
+    "galleryDetailTitle": 11,
+    "galleryDetailCaption": 10,
     "bookList": 13,
     "coffeeList": 13
   },

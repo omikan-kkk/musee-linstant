@@ -230,5 +230,18 @@
     "titleSort": "どうしてもいきてる",
     "visible": true,
     "order": 6
+  },
+  {
+    "id": "content000025",
+    "categoryId": "category007",
+    "slug": "content000025",
+    "image": "",
+    "title": "もういちど生まれる",
+    "body": "",
+    "author": "朝井リョウ",
+    "authorSort": "あさいりょう",
+    "titleSort": "もういちどうまれる",
+    "visible": true,
+    "order": 7
   }
 ]

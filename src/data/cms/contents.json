@@ -763,5 +763,18 @@
     "titleSort": "るろうのつき",
     "visible": true,
     "order": 47
+  },
+  {
+    "id": "content000066",
+    "categoryId": "category007",
+    "slug": "content000066",
+    "image": "",
+    "title": "すみれ荘ファミリア",
+    "body": "",
+    "author": "凪良ゆう",
+    "authorSort": "なぎらゆう",
+    "titleSort": "すみれそうふぁみりあ",
+    "visible": true,
+    "order": 48
   }
 ]

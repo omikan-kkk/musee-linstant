@@ -425,5 +425,18 @@
     "titleSort": "あな",
     "visible": true,
     "order": 21
+  },
+  {
+    "id": "content000040",
+    "categoryId": "category007",
+    "slug": "content000040",
+    "image": "",
+    "title": "川上弘美",
+    "body": "",
+    "author": "水声",
+    "authorSort": "すいせい",
+    "titleSort": "かわかみひろみ",
+    "visible": true,
+    "order": 22
   }
 ]

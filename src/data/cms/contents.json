@@ -399,5 +399,18 @@
     "titleSort": "らっかするゆうがた",
     "visible": true,
     "order": 19
+  },
+  {
+    "id": "content000038",
+    "categoryId": "category007",
+    "slug": "content000038",
+    "image": "",
+    "title": "号泣する準備はできていた",
+    "body": "",
+    "author": "江國香織",
+    "authorSort": "えくにかおり",
+    "titleSort": "ごうきゅうするじゅんびはできていた",
+    "visible": true,
+    "order": 20
   }
 ]

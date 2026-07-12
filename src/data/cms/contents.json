@@ -659,5 +659,18 @@
     "titleSort": "かいりょう",
     "visible": true,
     "order": 39
+  },
+  {
+    "id": "content000058",
+    "categoryId": "category007",
+    "slug": "content000058",
+    "image": "",
+    "title": "破局",
+    "body": "",
+    "author": "遠野遥",
+    "authorSort": "とおのはるか",
+    "titleSort": "はきょく",
+    "visible": true,
+    "order": 40
   }
 ]

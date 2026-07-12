@@ -490,5 +490,18 @@
     "titleSort": "せいてんのまよいくじら",
     "visible": true,
     "order": 26
+  },
+  {
+    "id": "content000045",
+    "categoryId": "category007",
+    "slug": "content000045",
+    "image": "",
+    "title": "よるのふくらみ",
+    "body": "",
+    "author": "窪美澄",
+    "authorSort": "くぼみすみ",
+    "titleSort": "よるのふくらみ",
+    "visible": true,
+    "order": 27
   }
 ]

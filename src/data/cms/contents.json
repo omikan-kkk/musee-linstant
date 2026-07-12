@@ -594,5 +594,18 @@
     "titleSort": "わるいち",
     "visible": true,
     "order": 34
+  },
+  {
+    "id": "content000053",
+    "categoryId": "category007",
+    "slug": "content000053",
+    "image": "",
+    "title": "愛なき世界",
+    "body": "",
+    "author": "三浦しをん",
+    "authorSort": "みうらしをん",
+    "titleSort": "あいなきせかい",
+    "visible": true,
+    "order": 35
   }
 ]

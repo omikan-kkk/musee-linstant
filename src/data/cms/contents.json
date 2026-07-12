@@ -607,5 +607,18 @@
     "titleSort": "あいなきせかい",
     "visible": true,
     "order": 35
+  },
+  {
+    "id": "content000054",
+    "categoryId": "category007",
+    "slug": "content000054",
+    "image": "",
+    "title": "首里の馬",
+    "body": "",
+    "author": "高山羽根子",
+    "authorSort": "たかやまはねこ",
+    "titleSort": "しゅりのうま",
+    "visible": true,
+    "order": 36
   }
 ]

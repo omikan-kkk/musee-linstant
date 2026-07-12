@@ -737,5 +737,18 @@
     "titleSort": "すり",
     "visible": true,
     "order": 45
+  },
+  {
+    "id": "content000064",
+    "categoryId": "category007",
+    "slug": "content000064",
+    "image": "",
+    "title": "白い薔薇の淵まで",
+    "body": "",
+    "author": "中山可穂",
+    "authorSort": "なかやまかほ",
+    "titleSort": "しろいばらのふちまで",
+    "visible": true,
+    "order": 46
   }
 ]

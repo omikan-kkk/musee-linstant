@@ -529,5 +529,18 @@
     "titleSort": "つきのみちかけ",
     "visible": true,
     "order": 29
+  },
+  {
+    "id": "content000048",
+    "categoryId": "category007",
+    "slug": "content000048",
+    "image": "",
+    "title": "あなたの愛人の名前は",
+    "body": "",
+    "author": "島本理生",
+    "authorSort": "しまもとりお",
+    "titleSort": "あなたのあいじんのなまえは",
+    "visible": true,
+    "order": 30
   }
 ]

@@ -581,5 +581,18 @@
     "titleSort": "ぐれいすれす",
     "visible": true,
     "order": 33
+  },
+  {
+    "id": "content000052",
+    "categoryId": "category007",
+    "slug": "content000052",
+    "image": "",
+    "title": "悪い血",
+    "body": "",
+    "author": "鈴木涼美",
+    "authorSort": "すずきすずみ",
+    "titleSort": "わるいち",
+    "visible": true,
+    "order": 34
   }
 ]

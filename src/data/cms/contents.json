@@ -516,5 +516,18 @@
     "titleSort": "ほてるろーやる",
     "visible": true,
     "order": 28
+  },
+  {
+    "id": "content000047",
+    "categoryId": "category007",
+    "slug": "content000047",
+    "image": "",
+    "title": "月の満ち欠け",
+    "body": "",
+    "author": "佐藤正午",
+    "authorSort": "さとうしょうご",
+    "titleSort": "つきのみちかけ",
+    "visible": true,
+    "order": 29
   }
 ]

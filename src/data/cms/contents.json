@@ -464,5 +464,18 @@
     "titleSort": "ねむれるびじょ",
     "visible": true,
     "order": 24
+  },
+  {
+    "id": "content000043",
+    "categoryId": "category007",
+    "slug": "content000043",
+    "image": "",
+    "title": "さざなみのよる",
+    "body": "",
+    "author": "木皿泉",
+    "authorSort": "きざらいずみ",
+    "titleSort": "さざなみのよる",
+    "visible": true,
+    "order": 25
   }
 ]

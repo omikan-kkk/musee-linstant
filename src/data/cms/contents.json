@@ -503,5 +503,18 @@
     "titleSort": "よるのふくらみ",
     "visible": true,
     "order": 27
+  },
+  {
+    "id": "content000046",
+    "categoryId": "category007",
+    "slug": "content000046",
+    "image": "",
+    "title": "ホテルローヤル",
+    "body": "",
+    "author": "桜木紫乃",
+    "authorSort": "さくらぎしの",
+    "titleSort": "ほてるろーやる",
+    "visible": true,
+    "order": 28
   }
 ]

@@ -555,5 +555,18 @@
     "titleSort": "もしも、わたしがあなただったら",
     "visible": true,
     "order": 31
+  },
+  {
+    "id": "content000050",
+    "categoryId": "category007",
+    "slug": "content000050",
+    "image": "",
+    "title": "ギフテッド",
+    "body": "",
+    "author": "鈴木涼美",
+    "authorSort": "すずきすずみ",
+    "titleSort": "ぎふてっど",
+    "visible": true,
+    "order": 32
   }
 ]

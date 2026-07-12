@@ -698,5 +698,18 @@
     "titleSort": "おうこく",
     "visible": true,
     "order": 42
+  },
+  {
+    "id": "content000061",
+    "categoryId": "category007",
+    "slug": "content000061",
+    "image": "",
+    "title": "淵の王",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "ふちのおう",
+    "visible": true,
+    "order": 43
   }
 ]

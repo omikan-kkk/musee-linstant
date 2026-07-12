@@ -646,5 +646,18 @@
     "titleSort": "かみあわないかいわと、あるかこについて",
     "visible": true,
     "order": 38
+  },
+  {
+    "id": "content000057",
+    "categoryId": "category007",
+    "slug": "content000057",
+    "image": "",
+    "title": "改良",
+    "body": "",
+    "author": "遠野遥",
+    "authorSort": "とおのはるか",
+    "titleSort": "かいりょう",
+    "visible": true,
+    "order": 39
   }
 ]

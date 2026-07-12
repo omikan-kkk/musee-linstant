@@ -321,5 +321,18 @@
     "titleSort": "ほしのこ",
     "visible": true,
     "order": 13
+  },
+  {
+    "id": "content000032",
+    "categoryId": "category007",
+    "slug": "content000032",
+    "image": "",
+    "title": "推し、燃ゆ",
+    "body": "",
+    "author": "宇佐美りん",
+    "authorSort": "うさみりん",
+    "titleSort": "おし、もゆ",
+    "visible": true,
+    "order": 14
   }
 ]

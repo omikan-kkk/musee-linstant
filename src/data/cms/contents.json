@@ -711,5 +711,18 @@
     "titleSort": "ふちのおう",
     "visible": true,
     "order": 43
+  },
+  {
+    "id": "content000062",
+    "categoryId": "category007",
+    "slug": "content000062",
+    "image": "",
+    "title": "A",
+    "body": "",
+    "author": "中村文則",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "A",
+    "visible": true,
+    "order": 44
   }
 ]

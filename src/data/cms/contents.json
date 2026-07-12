@@ -477,5 +477,18 @@
     "titleSort": "さざなみのよる",
     "visible": true,
     "order": 25
+  },
+  {
+    "id": "content000044",
+    "categoryId": "category007",
+    "slug": "content000044",
+    "image": "",
+    "title": "晴天の迷いクジラ",
+    "body": "",
+    "author": "窪美澄",
+    "authorSort": "くぼみすみ",
+    "titleSort": "せいてんのまよいくじら",
+    "visible": true,
+    "order": 26
   }
 ]

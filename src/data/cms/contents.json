@@ -308,5 +308,18 @@
     "titleSort": "きみはだれかのどうでもいいひと",
     "visible": true,
     "order": 12
+  },
+  {
+    "id": "content000031",
+    "categoryId": "category007",
+    "slug": "content000031",
+    "image": "",
+    "title": "星の子",
+    "body": "",
+    "author": "今村夏子",
+    "authorSort": "いまむらなつこ",
+    "titleSort": "ほしのこ",
+    "visible": true,
+    "order": 13
   }
 ]

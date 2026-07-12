@@ -282,5 +282,18 @@
     "titleSort": "かけら",
     "visible": true,
     "order": 10
+  },
+  {
+    "id": "content000029",
+    "categoryId": "category007",
+    "slug": "content000029",
+    "image": "",
+    "title": "死神の精度",
+    "body": "",
+    "author": "伊坂幸太郎",
+    "authorSort": "いさかこうたろう",
+    "titleSort": "しにがみのせいど",
+    "visible": true,
+    "order": 11
   }
 ]

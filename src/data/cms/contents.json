@@ -542,5 +542,18 @@
     "titleSort": "あなたのあいじんのなまえは",
     "visible": true,
     "order": 30
+  },
+  {
+    "id": "content000049",
+    "categoryId": "category007",
+    "slug": "content000049",
+    "image": "",
+    "title": "もしも、私があなただったら",
+    "body": "",
+    "author": "白石一文",
+    "authorSort": "しらいしかずふみ",
+    "titleSort": "もしも、わたしがあなただったら",
+    "visible": true,
+    "order": 31
   }
 ]

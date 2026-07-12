@@ -334,5 +334,18 @@
     "titleSort": "おし、もゆ",
     "visible": true,
     "order": 14
+  },
+  {
+    "id": "content000033",
+    "categoryId": "category007",
+    "slug": "content000033",
+    "image": "",
+    "title": "ウエハースの椅子",
+    "body": "",
+    "author": "江國香織",
+    "authorSort": "えくにかおり",
+    "titleSort": "うえはーすのいす",
+    "visible": true,
+    "order": 15
   }
 ]

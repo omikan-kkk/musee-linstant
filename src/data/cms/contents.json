@@ -685,5 +685,18 @@
     "titleSort": "せかいのはて",
     "visible": true,
     "order": 41
+  },
+  {
+    "id": "content000060",
+    "categoryId": "category007",
+    "slug": "content000060",
+    "image": "",
+    "title": "王国",
+    "body": "",
+    "author": "中村文則",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "おうこく",
+    "visible": true,
+    "order": 42
   }
 ]

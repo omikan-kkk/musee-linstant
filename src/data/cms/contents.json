@@ -347,5 +347,18 @@
     "titleSort": "うえはーすのいす",
     "visible": true,
     "order": 15
+  },
+  {
+    "id": "content000034",
+    "categoryId": "category007",
+    "slug": "content000034",
+    "image": "",
+    "title": "神様のボート",
+    "body": "",
+    "author": "江國香織",
+    "authorSort": "えくにかおり",
+    "titleSort": "かみさまのぼーと",
+    "visible": true,
+    "order": 16
   }
 ]

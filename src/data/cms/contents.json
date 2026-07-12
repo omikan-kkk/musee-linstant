@@ -620,5 +620,18 @@
     "titleSort": "しゅりのうま",
     "visible": true,
     "order": 36
+  },
+  {
+    "id": "content000055",
+    "categoryId": "category007",
+    "slug": "content000055",
+    "image": "",
+    "title": "魚神",
+    "body": "",
+    "author": "千早茜",
+    "authorSort": "ちはやあかね",
+    "titleSort": "いおがみ",
+    "visible": true,
+    "order": 37
   }
 ]

@@ -750,5 +750,18 @@
     "titleSort": "しろいばらのふちまで",
     "visible": true,
     "order": 46
+  },
+  {
+    "id": "content000065",
+    "categoryId": "category007",
+    "slug": "content000065",
+    "image": "",
+    "title": "流浪の月",
+    "body": "",
+    "author": "凪良ゆう",
+    "authorSort": "なぎらゆう",
+    "titleSort": "るろうのつき",
+    "visible": true,
+    "order": 47
   }
 ]

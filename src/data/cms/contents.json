@@ -256,5 +256,18 @@
     "titleSort": "しゅうでんのかみさま",
     "visible": true,
     "order": 8
+  },
+  {
+    "id": "content000027",
+    "categoryId": "category007",
+    "slug": "content000027",
+    "image": "",
+    "title": "おもかげ",
+    "body": "",
+    "author": "浅田次郎",
+    "authorSort": "あさだじろう",
+    "titleSort": "おもかげ",
+    "visible": true,
+    "order": 9
   }
 ]

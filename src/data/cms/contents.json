@@ -360,5 +360,18 @@
     "titleSort": "かみさまのぼーと",
     "visible": true,
     "order": 16
+  },
+  {
+    "id": "content000035",
+    "categoryId": "category007",
+    "slug": "content000035",
+    "image": "",
+    "title": "薔薇の木 枇杷の木 檸檬の木",
+    "body": "",
+    "author": "江國香織",
+    "authorSort": "えくにかおり",
+    "titleSort": "ばらのきびわのきれもんのき",
+    "visible": true,
+    "order": 17
   }
 ]

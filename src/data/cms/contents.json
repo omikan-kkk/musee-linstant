@@ -451,5 +451,18 @@
     "titleSort": "すべてまよなかのこいびとたち",
     "visible": true,
     "order": 23
+  },
+  {
+    "id": "content000042",
+    "categoryId": "category007",
+    "slug": "content000042",
+    "image": "",
+    "title": "眠れる美女",
+    "body": "",
+    "author": "川端康成",
+    "authorSort": "かわばたやすなり",
+    "titleSort": "ねむれるびじょ",
+    "visible": true,
+    "order": 24
   }
 ]

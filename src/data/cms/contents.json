@@ -373,5 +373,18 @@
     "titleSort": "ばらのきびわのきれもんのき",
     "visible": true,
     "order": 17
+  },
+  {
+    "id": "content000036",
+    "categoryId": "category007",
+    "slug": "content000036",
+    "image": "",
+    "title": "真昼なのに昏い部屋",
+    "body": "",
+    "author": "江國香織",
+    "authorSort": "えくにかおり",
+    "titleSort": "まひるなのにくらいへや",
+    "visible": true,
+    "order": 18
   }
 ]

@@ -672,5 +672,18 @@
     "titleSort": "はきょく",
     "visible": true,
     "order": 40
+  },
+  {
+    "id": "content000059",
+    "categoryId": "category007",
+    "slug": "content000059",
+    "image": "",
+    "title": "世界の果て",
+    "body": "",
+    "author": "中村文則",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "せかいのはて",
+    "visible": true,
+    "order": 41
   }
 ]

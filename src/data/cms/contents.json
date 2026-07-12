@@ -776,5 +776,18 @@
     "titleSort": "すみれそうふぁみりあ",
     "visible": true,
     "order": 48
+  },
+  {
+    "id": "content000067",
+    "categoryId": "category007",
+    "slug": "content000067",
+    "image": "",
+    "title": "窓の魚",
+    "body": "",
+    "author": "西加奈子",
+    "authorSort": "にしかなこ",
+    "titleSort": "まどのさかな",
+    "visible": true,
+    "order": 49
   }
 ]

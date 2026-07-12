@@ -269,5 +269,18 @@
     "titleSort": "おもかげ",
     "visible": true,
     "order": 9
+  },
+  {
+    "id": "content000028",
+    "categoryId": "category007",
+    "slug": "content000028",
+    "image": "",
+    "title": "かけら",
+    "body": "",
+    "author": "青山七恵",
+    "authorSort": "あおやまななえ",
+    "titleSort": "かけら",
+    "visible": true,
+    "order": 10
   }
 ]

@@ -438,5 +438,18 @@
     "titleSort": "かわかみひろみ",
     "visible": true,
     "order": 22
+  },
+  {
+    "id": "content000041",
+    "categoryId": "category007",
+    "slug": "content000041",
+    "image": "",
+    "title": "すべて真夜中の恋人たち",
+    "body": "",
+    "author": "川上未映子",
+    "authorSort": "かわかみみえこ",
+    "titleSort": "すべてまよなかのこいびとたち",
+    "visible": true,
+    "order": 23
   }
 ]

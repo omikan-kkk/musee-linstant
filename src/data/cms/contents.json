@@ -568,5 +568,18 @@
     "titleSort": "ぎふてっど",
     "visible": true,
     "order": 32
+  },
+  {
+    "id": "content000051",
+    "categoryId": "category007",
+    "slug": "content000051",
+    "image": "",
+    "title": "グレイスレス",
+    "body": "",
+    "author": "鈴木涼美",
+    "authorSort": "すずきすずみ",
+    "titleSort": "ぐれいすれす",
+    "visible": true,
+    "order": 33
   }
 ]

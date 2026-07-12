@@ -724,5 +724,18 @@
     "titleSort": "A",
     "visible": true,
     "order": 44
+  },
+  {
+    "id": "content000063",
+    "categoryId": "category007",
+    "slug": "content000063",
+    "image": "",
+    "title": "掏摸",
+    "body": "",
+    "author": "中村文則",
+    "authorSort": "なかむらふみのり",
+    "titleSort": "すり",
+    "visible": true,
+    "order": 45
   }
 ]

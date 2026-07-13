@@ -1270,5 +1270,18 @@
     "titleSort": "とうきょうわんけい",
     "visible": true,
     "order": 86
+  },
+  {
+    "id": "content000105",
+    "categoryId": "category007",
+    "slug": "content000105",
+    "image": "",
+    "title": "最後に手にしたいもの",
+    "body": "",
+    "author": "吉田修一",
+    "authorSort": "よしだしゅういち",
+    "titleSort": "さいごにてにしたいもの",
+    "visible": true,
+    "order": 87
   }
 ]

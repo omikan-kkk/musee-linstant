@@ -932,5 +932,18 @@
     "titleSort": "たかせがわ",
     "visible": true,
     "order": 60
+  },
+  {
+    "id": "content000079",
+    "categoryId": "category007",
+    "slug": "content000079",
+    "image": "",
+    "title": "手のひらの音符",
+    "body": "",
+    "author": "藤岡陽子",
+    "authorSort": "ふじおかようこ",
+    "titleSort": "てのひらのおんぷ",
+    "visible": true,
+    "order": 61
   }
 ]

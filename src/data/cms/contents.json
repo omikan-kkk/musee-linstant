@@ -1127,5 +1127,18 @@
     "titleSort": "りばーす",
     "visible": true,
     "order": 75
+  },
+  {
+    "id": "content000094",
+    "categoryId": "category007",
+    "slug": "content000094",
+    "image": "",
+    "title": "残照の頂",
+    "body": "",
+    "author": "湊かなえ",
+    "authorSort": "みなとかなえ",
+    "titleSort": "ざんしょうのいただき",
+    "visible": true,
+    "order": 76
   }
 ]

@@ -958,5 +958,18 @@
     "titleSort": "すきすきだいすきちょうあいしてる。",
     "visible": true,
     "order": 62
+  },
+  {
+    "id": "content000081",
+    "categoryId": "category007",
+    "slug": "content000081",
+    "image": "",
+    "title": "阿修羅ガール",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "あしゅらがーる",
+    "visible": true,
+    "order": 63
   }
 ]

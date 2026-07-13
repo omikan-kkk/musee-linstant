@@ -1062,5 +1062,18 @@
     "titleSort": "うつくしがおかのふこうのいえ",
     "visible": true,
     "order": 70
+  },
+  {
+    "id": "content000089",
+    "categoryId": "category007",
+    "slug": "content000089",
+    "image": "",
+    "title": "金閣寺",
+    "body": "",
+    "author": "三島由紀夫",
+    "authorSort": "みしまゆきお",
+    "titleSort": "きんかくじ",
+    "visible": true,
+    "order": 71
   }
 ]

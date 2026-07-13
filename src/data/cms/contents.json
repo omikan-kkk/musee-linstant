@@ -854,5 +854,18 @@
     "titleSort": "らくえんのかんゔぁす",
     "visible": true,
     "order": 54
+  },
+  {
+    "id": "content000073",
+    "categoryId": "category007",
+    "slug": "content000073",
+    "image": "",
+    "title": "たゆたえども沈まず",
+    "body": "",
+    "author": "原田マハ",
+    "authorSort": "はらだまは",
+    "titleSort": "たゆたえどもしずまず",
+    "visible": true,
+    "order": 55
   }
 ]

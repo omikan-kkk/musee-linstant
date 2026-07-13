@@ -906,5 +906,18 @@
     "titleSort": "しょうせつのよみかた",
     "visible": true,
     "order": 58
+  },
+  {
+    "id": "content000077",
+    "categoryId": "category007",
+    "slug": "content000077",
+    "image": "",
+    "title": "ある男",
+    "body": "",
+    "author": "平野啓一郎",
+    "authorSort": "ひらのけいいちろう",
+    "titleSort": "あるおとこ",
+    "visible": true,
+    "order": 59
   }
 ]

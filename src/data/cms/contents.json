@@ -175,7 +175,9 @@
     "body": "",
     "author": "吉田修一",
     "visible": true,
-    "order": 5
+    "order": 5,
+    "authorSort": "よしだしゅういち",
+    "titleSort": "こくほう"
   },
   {
     "id": "content000021",

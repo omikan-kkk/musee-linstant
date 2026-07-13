@@ -945,5 +945,18 @@
     "titleSort": "てのひらのおんぷ",
     "visible": true,
     "order": 61
+  },
+  {
+    "id": "content000080",
+    "categoryId": "category007",
+    "slug": "content000080",
+    "image": "",
+    "title": "好き好き大好き超愛してる。",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "すきすきだいすきちょうあいしてる。",
+    "visible": true,
+    "order": 62
   }
 ]

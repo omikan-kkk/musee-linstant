@@ -867,5 +867,18 @@
     "titleSort": "たゆたえどもしずまず",
     "visible": true,
     "order": 55
+  },
+  {
+    "id": "content000074",
+    "categoryId": "category007",
+    "slug": "content000074",
+    "image": "",
+    "title": "手紙",
+    "body": "",
+    "author": "東野圭吾",
+    "authorSort": "ひがしのけいご",
+    "titleSort": "てがみ",
+    "visible": true,
+    "order": 56
   }
 ]

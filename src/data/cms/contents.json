@@ -971,5 +971,18 @@
     "titleSort": "あしゅらがーる",
     "visible": true,
     "order": 63
+  },
+  {
+    "id": "content000082",
+    "categoryId": "category007",
+    "slug": "content000082",
+    "image": "",
+    "title": "私はあなたの瞳の林檎",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "わたしはあなたのひとみのりんご",
+    "visible": true,
+    "order": 64
   }
 ]

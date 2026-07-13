@@ -1023,5 +1023,18 @@
     "titleSort": "あのひ、きみはなにをした",
     "visible": true,
     "order": 67
+  },
+  {
+    "id": "content000086",
+    "categoryId": "category007",
+    "slug": "content000086",
+    "image": "",
+    "title": "夜空に泳ぐチョコレートグラミー",
+    "body": "",
+    "author": "町田そのこ",
+    "authorSort": "まちだそのこ",
+    "titleSort": "よぞらにおよぐちょこれーとぐらみー",
+    "visible": true,
+    "order": 68
   }
 ]

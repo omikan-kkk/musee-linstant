@@ -1101,5 +1101,18 @@
     "titleSort": "ゆーとぴあ",
     "visible": true,
     "order": 73
+  },
+  {
+    "id": "content000092",
+    "categoryId": "category007",
+    "slug": "content000092",
+    "image": "",
+    "title": "絶唱",
+    "body": "",
+    "author": "湊かなえ",
+    "authorSort": "みなとかなえ",
+    "titleSort": "ぜっしょう",
+    "visible": true,
+    "order": 74
   }
 ]

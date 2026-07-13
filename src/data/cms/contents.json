@@ -1231,5 +1231,18 @@
     "titleSort": "まんがん",
     "visible": true,
     "order": 83
+  },
+  {
+    "id": "content000102",
+    "categoryId": "category007",
+    "slug": "content000102",
+    "image": "",
+    "title": "儚い羊たちの祝宴",
+    "body": "",
+    "author": "米澤穂信",
+    "authorSort": "よねざわほのぶ",
+    "titleSort": "はかないひつじたちのしゅくえん",
+    "visible": true,
+    "order": 84
   }
 ]

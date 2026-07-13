@@ -1283,5 +1283,18 @@
     "titleSort": "さいごにてにしたいもの",
     "visible": true,
     "order": 87
+  },
+  {
+    "id": "content000106",
+    "categoryId": "category007",
+    "slug": "content000106",
+    "image": "",
+    "title": "泣きたくなるような青空",
+    "body": "",
+    "author": "吉田修一",
+    "authorSort": "よしだしゅういち",
+    "titleSort": "なきたくなるようなあおぞら",
+    "visible": true,
+    "order": 88
   }
 ]

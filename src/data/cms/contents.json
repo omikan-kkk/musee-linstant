@@ -828,5 +828,18 @@
     "titleSort": "もねのあしあと",
     "visible": true,
     "order": 52
+  },
+  {
+    "id": "content000071",
+    "categoryId": "category007",
+    "slug": "content000071",
+    "image": "",
+    "title": "ジヴェルニーの食卓",
+    "body": "",
+    "author": "原田マハ",
+    "authorSort": "はらだまは",
+    "titleSort": "じゔぇるにーのしょくたく",
+    "visible": true,
+    "order": 53
   }
 ]

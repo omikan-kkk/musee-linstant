@@ -1218,5 +1218,18 @@
     "titleSort": "おーばーひーと",
     "visible": true,
     "order": 82
+  },
+  {
+    "id": "content000101",
+    "categoryId": "category007",
+    "slug": "content000101",
+    "image": "",
+    "title": "満願",
+    "body": "",
+    "author": "米澤穂信",
+    "authorSort": "よねざわほのぶ",
+    "titleSort": "まんがん",
+    "visible": true,
+    "order": 83
   }
 ]

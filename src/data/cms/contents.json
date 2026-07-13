@@ -1179,5 +1179,18 @@
     "titleSort": "ないるぱーちのじょしかい",
     "visible": true,
     "order": 79
+  },
+  {
+    "id": "content000098",
+    "categoryId": "category007",
+    "slug": "content000098",
+    "image": "",
+    "title": "彼岸花が咲く島",
+    "body": "",
+    "author": "李琴峰",
+    "authorSort": "りことみ",
+    "titleSort": "ひがんばながさくしま",
+    "visible": true,
+    "order": 80
   }
 ]

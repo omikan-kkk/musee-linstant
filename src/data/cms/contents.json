@@ -984,5 +984,18 @@
     "titleSort": "わたしはあなたのひとみのりんご",
     "visible": true,
     "order": 64
+  },
+  {
+    "id": "content000083",
+    "categoryId": "category007",
+    "slug": "content000083",
+    "image": "",
+    "title": "されど私の可愛い檸檬",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "されどわたしのかわいいれもん",
+    "visible": true,
+    "order": 65
   }
 ]

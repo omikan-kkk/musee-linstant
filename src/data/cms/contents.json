@@ -1166,5 +1166,18 @@
     "titleSort": "こんびににんげん",
     "visible": true,
     "order": 78
+  },
+  {
+    "id": "content000097",
+    "categoryId": "category007",
+    "slug": "content000097",
+    "image": "",
+    "title": "ナイルパーチの女子会",
+    "body": "",
+    "author": "村田沙耶香",
+    "authorSort": "むらたさやか",
+    "titleSort": "ないるぱーちのじょしかい",
+    "visible": true,
+    "order": 79
   }
 ]

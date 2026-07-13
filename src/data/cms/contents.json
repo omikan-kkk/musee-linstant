@@ -1075,5 +1075,18 @@
     "titleSort": "きんかくじ",
     "visible": true,
     "order": 71
+  },
+  {
+    "id": "content000090",
+    "categoryId": "category007",
+    "slug": "content000090",
+    "image": "",
+    "title": "光媒の花",
+    "body": "",
+    "author": "道尾秀介",
+    "authorSort": "みちおしゅうすけ",
+    "titleSort": "こうばいのはな",
+    "visible": true,
+    "order": 72
   }
 ]

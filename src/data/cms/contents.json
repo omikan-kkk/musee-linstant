@@ -789,5 +789,18 @@
     "titleSort": "まどのさかな",
     "visible": true,
     "order": 49
+  },
+  {
+    "id": "content000068",
+    "categoryId": "category007",
+    "slug": "content000068",
+    "image": "",
+    "title": "影裏",
+    "body": "",
+    "author": "沼田真佑",
+    "authorSort": "ぬまたしんすけ",
+    "titleSort": "えいり",
+    "visible": true,
+    "order": 50
   }
 ]

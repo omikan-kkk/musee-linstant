@@ -802,5 +802,18 @@
     "titleSort": "えいり",
     "visible": true,
     "order": 50
+  },
+  {
+    "id": "content000069",
+    "categoryId": "category007",
+    "slug": "content000069",
+    "image": "",
+    "title": "水曜の朝、午前三時",
+    "body": "",
+    "author": "蓮見圭一",
+    "authorSort": "はすみけいいち",
+    "titleSort": "すいようのあさ、ごぜんさんじ",
+    "visible": true,
+    "order": 51
   }
 ]

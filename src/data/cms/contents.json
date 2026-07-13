@@ -164,7 +164,9 @@
     "body": "",
     "author": "吉田修一",
     "visible": true,
-    "order": 4
+    "order": 4,
+    "authorSort": "よしだしゅういち",
+    "titleSort": "はつこいおんせん"
   },
   {
     "id": "content000020",

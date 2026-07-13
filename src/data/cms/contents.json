@@ -1153,5 +1153,18 @@
     "titleSort": "はなのくさり",
     "visible": true,
     "order": 77
+  },
+  {
+    "id": "content000096",
+    "categoryId": "category007",
+    "slug": "content000096",
+    "image": "",
+    "title": "コンビニ人間",
+    "body": "",
+    "author": "村田沙耶香",
+    "authorSort": "むらたさやか",
+    "titleSort": "こんびににんげん",
+    "visible": true,
+    "order": 78
   }
 ]

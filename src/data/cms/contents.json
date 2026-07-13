@@ -1049,5 +1049,18 @@
     "titleSort": "ごじゅうにへるつのくじらたち",
     "visible": true,
     "order": 69
+  },
+  {
+    "id": "content000088",
+    "categoryId": "category007",
+    "slug": "content000088",
+    "image": "",
+    "title": "うつくしが丘の不幸の家",
+    "body": "",
+    "author": "町田そのこ",
+    "authorSort": "まちだそのこ",
+    "titleSort": "うつくしがおかのふこうのいえ",
+    "visible": true,
+    "order": 70
   }
 ]

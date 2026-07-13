@@ -1257,5 +1257,18 @@
     "titleSort": "きのう、わかものたちは",
     "visible": true,
     "order": 85
+  },
+  {
+    "id": "content000104",
+    "categoryId": "category007",
+    "slug": "content000104",
+    "image": "",
+    "title": "東京湾景",
+    "body": "",
+    "author": "吉田修一",
+    "authorSort": "よしだしゅういち",
+    "titleSort": "とうきょうわんけい",
+    "visible": true,
+    "order": 86
   }
 ]

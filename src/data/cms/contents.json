@@ -1036,5 +1036,18 @@
     "titleSort": "よぞらにおよぐちょこれーとぐらみー",
     "visible": true,
     "order": 68
+  },
+  {
+    "id": "content000087",
+    "categoryId": "category007",
+    "slug": "content000087",
+    "image": "",
+    "title": "52ヘルツのクジラたち",
+    "body": "",
+    "author": "町田そのこ",
+    "authorSort": "まちだそのこ",
+    "titleSort": "ごじゅうにへるつのくじらたち",
+    "visible": true,
+    "order": 69
   }
 ]

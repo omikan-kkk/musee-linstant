@@ -841,5 +841,18 @@
     "titleSort": "じゔぇるにーのしょくたく",
     "visible": true,
     "order": 53
+  },
+  {
+    "id": "content000072",
+    "categoryId": "category007",
+    "slug": "content000072",
+    "image": "",
+    "title": "楽園のカンヴァス",
+    "body": "",
+    "author": "原田マハ",
+    "authorSort": "はらだまは",
+    "titleSort": "らくえんのかんゔぁす",
+    "visible": true,
+    "order": 54
   }
 ]

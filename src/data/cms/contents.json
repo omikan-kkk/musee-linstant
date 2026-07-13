@@ -815,5 +815,18 @@
     "titleSort": "すいようのあさ、ごぜんさんじ",
     "visible": true,
     "order": 51
+  },
+  {
+    "id": "content000070",
+    "categoryId": "category007",
+    "slug": "content000070",
+    "image": "",
+    "title": "モネのあしあと",
+    "body": "",
+    "author": "原田マハ",
+    "authorSort": "はらだまは",
+    "titleSort": "もねのあしあと",
+    "visible": true,
+    "order": 52
   }
 ]

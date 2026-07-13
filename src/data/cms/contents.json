@@ -1140,5 +1140,18 @@
     "titleSort": "ざんしょうのいただき",
     "visible": true,
     "order": 76
+  },
+  {
+    "id": "content000095",
+    "categoryId": "category007",
+    "slug": "content000095",
+    "image": "",
+    "title": "花の鎖",
+    "body": "",
+    "author": "湊かなえ",
+    "authorSort": "みなとかなえ",
+    "titleSort": "はなのくさり",
+    "visible": true,
+    "order": 77
   }
 ]

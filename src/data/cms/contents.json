@@ -1010,5 +1010,18 @@
     "titleSort": "たんぺんごぼうせい",
     "visible": true,
     "order": 66
+  },
+  {
+    "id": "content000085",
+    "categoryId": "category007",
+    "slug": "content000085",
+    "image": "",
+    "title": "あの日、君は何をした",
+    "body": "",
+    "author": "まさきとしか",
+    "authorSort": "まさきとしか",
+    "titleSort": "あのひ、きみはなにをした",
+    "visible": true,
+    "order": 67
   }
 ]

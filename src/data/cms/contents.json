@@ -997,5 +997,18 @@
     "titleSort": "されどわたしのかわいいれもん",
     "visible": true,
     "order": 65
+  },
+  {
+    "id": "content000084",
+    "categoryId": "category007",
+    "slug": "content000084",
+    "image": "",
+    "title": "短篇五芒星",
+    "body": "",
+    "author": "舞城王太郎",
+    "authorSort": "まいじょうおうたろう",
+    "titleSort": "たんぺんごぼうせい",
+    "visible": true,
+    "order": 66
   }
 ]

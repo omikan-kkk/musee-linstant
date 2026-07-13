@@ -1192,5 +1192,18 @@
     "titleSort": "ひがんばながさくしま",
     "visible": true,
     "order": 80
+  },
+  {
+    "id": "content000099",
+    "categoryId": "category007",
+    "slug": "content000099",
+    "image": "",
+    "title": "私の盲端",
+    "body": "",
+    "author": "朝比奈秋",
+    "authorSort": "あさひなあき",
+    "titleSort": "わたしのもうたん",
+    "visible": true,
+    "order": 81
   }
 ]

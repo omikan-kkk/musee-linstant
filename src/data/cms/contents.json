@@ -1114,5 +1114,18 @@
     "titleSort": "ぜっしょう",
     "visible": true,
     "order": 74
+  },
+  {
+    "id": "content000093",
+    "categoryId": "category007",
+    "slug": "content000093",
+    "image": "",
+    "title": "リバース",
+    "body": "",
+    "author": "湊かなえ",
+    "authorSort": "みなとかなえ",
+    "titleSort": "りばーす",
+    "visible": true,
+    "order": 75
   }
 ]

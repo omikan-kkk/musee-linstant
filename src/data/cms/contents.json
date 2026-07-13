@@ -1244,5 +1244,18 @@
     "titleSort": "はかないひつじたちのしゅくえん",
     "visible": true,
     "order": 84
+  },
+  {
+    "id": "content000103",
+    "categoryId": "category007",
+    "slug": "content000103",
+    "image": "",
+    "title": "昨日、若者たちは",
+    "body": "",
+    "author": "吉田修一",
+    "authorSort": "よしだしゅういち",
+    "titleSort": "きのう、わかものたちは",
+    "visible": true,
+    "order": 85
   }
 ]

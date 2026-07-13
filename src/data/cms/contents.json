@@ -893,5 +893,18 @@
     "titleSort": "けっかい",
     "visible": true,
     "order": 57
+  },
+  {
+    "id": "content000076",
+    "categoryId": "category007",
+    "slug": "content000076",
+    "image": "",
+    "title": "小説の読み方",
+    "body": "",
+    "author": "平野啓一郎",
+    "authorSort": "ひらのけいいちろう",
+    "titleSort": "しょうせつのよみかた",
+    "visible": true,
+    "order": 58
   }
 ]

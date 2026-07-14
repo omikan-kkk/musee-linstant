@@ -1312,6 +1312,10 @@
     "authorSort": "おおたすてふぁにー",
     "titleSort": "みどりいせき",
     "visible": true,
-    "order": 89
+    "order": 89,
+    "authorFontSizeOverride": true,
+    "authorFontSize": 11,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null
   }
 ]

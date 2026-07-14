@@ -1300,5 +1300,18 @@
     "titleSort": "なきたくなるようなあおぞら",
     "visible": true,
     "order": 88
+  },
+  {
+    "id": "content000107",
+    "categoryId": "category007",
+    "slug": "content000107",
+    "image": "",
+    "title": "みどりいせき",
+    "body": "",
+    "author": "大田ステファニー歓人",
+    "authorSort": "おおたすてふぁにー",
+    "titleSort": "みどりいせき",
+    "visible": true,
+    "order": 89
   }
 ]

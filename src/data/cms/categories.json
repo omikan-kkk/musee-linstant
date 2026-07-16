@@ -21,7 +21,7 @@
     "slug": "books",
     "type": "book",
     "visible": true,
-    "order": 7
+    "order": 3
   },
   {
     "id": "category008",
@@ -29,6 +29,6 @@
     "slug": "coffee",
     "type": "coffee",
     "visible": true,
-    "order": 8
+    "order": 2
   }
 ]

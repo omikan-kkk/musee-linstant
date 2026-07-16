@@ -1317,5 +1317,19 @@
     "authorFontSize": 11,
     "titleFontSizeOverride": false,
     "titleFontSize": null
+  },
+  {
+    "id": "content000108",
+    "categoryId": "category008",
+    "slug": "content000108",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-07-16",
+    "brand": "LiLo Coffee Roasters",
+    "coffeeName": "COSTA RICA Don Sabino Natural",
+    "notes": "orange peel, apricot, red apple, honey, cinnamon tea",
+    "visible": true,
+    "order": 3
   }
 ]

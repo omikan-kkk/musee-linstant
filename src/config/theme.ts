@@ -11,8 +11,8 @@ export const THEME = {
   },
 
   gallery: {
-    artworkAspectRatio: "4 / 3",
-    artworkMaxSize: "92%",
+    artworkAspectRatio: "1 / 1",
+    artworkMaxSize: "100%",
     captionMarginTop: "14px",
 
     maxWidth: "1200px",

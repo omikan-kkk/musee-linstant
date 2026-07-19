@@ -74,7 +74,7 @@
     "categoryId": "category003",
     "slug": "content000010",
     "image": "",
-    "title": "銀性八房五葉松",
+    "title": "銀八房五葉松",
     "body": "Pin blanc du Japon ‘Ginshō Yatsubusa’",
     "visible": true,
     "order": 5
@@ -103,7 +103,7 @@
     "id": "content000013",
     "categoryId": "category003",
     "slug": "content000013",
-    "image": "",
+    "image": "/images/contents/content000013.jpg",
     "title": "山紅葉",
     "body": "Érable du Japon",
     "visible": true,
@@ -202,9 +202,9 @@
     "title": "",
     "body": "",
     "date": "2026-07-09",
-    "brand": "Lilo",
-    "coffeeName": "Colombia",
-    "notes": "Tea, Flower",
+    "brand": "LiLo Coffee Roasters",
+    "coffeeName": "COLOMBIA Finca Zarza Pacamara Fermented Washed",
+    "notes": "mandarin orange, peach, passionfruit, silky, Yakult, lemon candy",
     "visible": true,
     "order": 1
   },
@@ -216,9 +216,9 @@
     "title": "",
     "body": "",
     "date": "2026-07-11",
-    "brand": "Lilo",
-    "coffeeName": "Ethiopia",
-    "notes": "Lemon, Jasmine, Pineapple",
+    "brand": "LiLo Coffee Roasters",
+    "coffeeName": "COLOMBIA El Origen Pink Bourbon Thermal Shock Washed",
+    "notes": "white peach, orange blossom, pink grapefruit, honey, candy",
     "visible": true,
     "order": 2
   },
@@ -1312,6 +1312,24 @@
     "authorSort": "おおたすてふぁにー",
     "titleSort": "みどりいせき",
     "visible": true,
-    "order": 89
+    "order": 89,
+    "authorFontSizeOverride": true,
+    "authorFontSize": 11,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null
+  },
+  {
+    "id": "content000108",
+    "categoryId": "category008",
+    "slug": "content000108",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-07-16",
+    "brand": "LiLo Coffee Roasters",
+    "coffeeName": "COSTA RICA Don Sabino Natural",
+    "notes": "orange peel, apricot, red apple, honey, cinnamon tea",
+    "visible": true,
+    "order": 3
   }
 ]

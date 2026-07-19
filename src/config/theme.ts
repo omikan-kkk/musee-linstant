@@ -21,7 +21,7 @@ export const THEME = {
     desktopColumns: "3",
 
     mobileGapRow: "90px",
-    mobileGapColumn: "40px",
+    mobileGapColumn: "20px",
 
     desktopGapRow: "110px",
     desktopGapColumn: "48px",

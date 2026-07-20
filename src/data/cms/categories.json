@@ -30,13 +30,5 @@
     "type": "coffee",
     "visible": true,
     "order": 2
-  },
-  {
-    "id": "category009",
-    "title": "test",
-    "slug": "test",
-    "type": "gallery",
-    "visible": true,
-    "order": 5
   }
 ]

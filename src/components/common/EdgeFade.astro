@@ -31,25 +31,15 @@ const {
   top:0;
   left:0;
   right:0;
-  height:calc(
-    env(safe-area-inset-top, 0px)
-    + var(--edge-fade-size-top)
-  );
+  height:calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top));
   background:linear-gradient(
     to bottom,
     #fff 0,
     #fff env(safe-area-inset-top, 0px),
-    rgba(255,255,255,.98)
-      calc(env(safe-area-inset-top, 0px) + 12px),
-    rgba(255,255,255,.88)
-      calc(env(safe-area-inset-top, 0px) + 28px),
-    rgba(255,255,255,.55)
-      calc(env(safe-area-inset-top, 0px) + 58px),
-    rgba(255,255,255,0)
-      calc(
-        env(safe-area-inset-top, 0px)
-        + var(--edge-fade-size-top)
-      )
+    rgba(255,255,255,.98) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.15),
+    rgba(255,255,255,.88) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.35),
+    rgba(255,255,255,.55) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.72),
+    rgba(255,255,255,0) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top))
   );
 }
 
@@ -57,25 +47,15 @@ const {
   bottom:0;
   left:0;
   right:0;
-  height:calc(
-    env(safe-area-inset-bottom, 0px)
-    + var(--edge-fade-size-bottom)
-  );
+  height:calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom));
   background:linear-gradient(
     to top,
     #fff 0,
     #fff env(safe-area-inset-bottom, 0px),
-    rgba(255,255,255,.96)
-      calc(env(safe-area-inset-bottom, 0px) + 8px),
-    rgba(255,255,255,.78)
-      calc(env(safe-area-inset-bottom, 0px) + 18px),
-    rgba(255,255,255,.38)
-      calc(env(safe-area-inset-bottom, 0px) + 34px),
-    rgba(255,255,255,0)
-      calc(
-        env(safe-area-inset-bottom, 0px)
-        + var(--edge-fade-size-bottom)
-      )
+    rgba(255,255,255,.98) calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom) * 0.15),
+    rgba(255,255,255,.88) calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom) * 0.35),
+    rgba(255,255,255,.55) calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom) * 0.72),
+    rgba(255,255,255,0) calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom))
   );
 }
 

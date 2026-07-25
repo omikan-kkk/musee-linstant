@@ -5,7 +5,8 @@ const lobbyContent = CONTENTS.find(
   (content) => content.id === "__lobby__"
 );
 
-const lobbyImage = lobbyContent?.image || "";
+const lobbyImage =
+  lobbyContent?.image || "";
 
 const desktopHeightPx =
   lobbyContent?.desktopHeightPx ?? 620;
@@ -14,14 +15,9 @@ const desktopHeightVh =
   lobbyContent?.desktopHeightVh ?? 60;
 
 const entranceStyle = [
-  lobbyImage
-    ? `--lobby-image: url("${lobbyImage}")`
-    : "",
   `--desktop-height-px: ${desktopHeightPx}px`,
   `--desktop-height-vh: ${desktopHeightVh}vh`,
-]
-  .filter(Boolean)
-  .join(";");
+].join(";");
 ---
 
 <div
@@ -32,7 +28,19 @@ const entranceStyle = [
   <div
     class="entrance-experience__lobby"
     aria-hidden="true"
-  ></div>
+  >
+    {
+      lobbyImage && (
+        <img
+          class="entrance-experience__lobby-image"
+          src={lobbyImage}
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      )
+    }
+  </div>
 
   <div
     class="entrance-experience__veil"
@@ -62,7 +70,10 @@ const entranceStyle = [
     "[data-entrance-experience]"
   );
 
-  if (root && root.dataset.initialized !== "true") {
+  if (
+    root &&
+    root.dataset.initialized !== "true"
+  ) {
     root.dataset.initialized = "true";
 
     /*
@@ -112,16 +123,28 @@ const entranceStyle = [
       value: number,
       min = 0,
       max = 1
-    ) => Math.min(max, Math.max(min, value));
+    ) =>
+      Math.min(
+        max,
+        Math.max(min, value)
+      );
 
-    const easeOutQuint = (value: number) =>
+    const easeOutQuint = (
+      value: number
+    ) =>
       1 - Math.pow(1 - value, 5);
 
-    const easeInOutCubic = (value: number) =>
+    const easeInOutCubic = (
+      value: number
+    ) =>
       value < 0.5
         ? 4 * value * value * value
         : 1 -
-          Math.pow(-2 * value + 2, 3) / 2;
+          Math.pow(
+            -2 * value + 2,
+            3
+          ) /
+            2;
 
     const dispatchState = (
       complete: boolean
@@ -140,7 +163,10 @@ const entranceStyle = [
     };
 
     const clearHeaderTimer = () => {
-      window.clearTimeout(headerTimer);
+      window.clearTimeout(
+        headerTimer
+      );
+
       headerTimer = 0;
     };
 
@@ -157,16 +183,14 @@ const entranceStyle = [
     const showHeaderAfterDelay = () => {
       clearHeaderTimer();
 
-      headerTimer = window.setTimeout(
-        () => {
+      headerTimer =
+        window.setTimeout(() => {
           document.body.classList.add(
             "entrance-is-complete"
           );
 
           dispatchState(true);
-        },
-        HEADER_DELAY
-      );
+        }, HEADER_DELAY);
     };
 
     const render = () => {
@@ -185,7 +209,9 @@ const entranceStyle = [
        * ロゴは通過直前に自然に消える。
        */
       const logoOpacity = clamp(
-        1 - (progress - 0.48) / 0.3
+        1 -
+          (progress - 0.48) /
+            0.3
       );
 
       const lobbyOpacity = clamp(
@@ -193,7 +219,8 @@ const entranceStyle = [
       );
 
       const lobbyScale =
-        1.045 - progress * 0.045;
+        1.045 -
+        progress * 0.045;
 
       /*
        * ロゴを通過する瞬間だけ、
@@ -201,7 +228,9 @@ const entranceStyle = [
        */
       const veilOpacity =
         progress < 0.58
-          ? clamp(progress / 0.58)
+          ? clamp(
+              progress / 0.58
+            )
           : clamp(
               1 -
                 (progress - 0.58) /
@@ -233,25 +262,16 @@ const entranceStyle = [
         String(veilOpacity)
       );
 
-      dispatchState(progress >= 1);
-    };
-
-    const setProgress = (
-      nextProgress: number
-    ) => {
-      progress = clamp(nextProgress);
-      wheelTarget = progress;
-
-      if (progress < 1) {
-        hideHeader();
-      }
-
-      render();
+      dispatchState(
+        progress >= 1
+      );
     };
 
     const cancelRenderFrame = () => {
       if (renderFrame) {
-        cancelAnimationFrame(renderFrame);
+        cancelAnimationFrame(
+          renderFrame
+        );
       }
 
       renderFrame = 0;
@@ -259,7 +279,9 @@ const entranceStyle = [
 
     const cancelSnap = () => {
       if (snapFrame) {
-        cancelAnimationFrame(snapFrame);
+        cancelAnimationFrame(
+          snapFrame
+        );
       }
 
       snapFrame = 0;
@@ -286,7 +308,9 @@ const entranceStyle = [
       }
     };
 
-    const snapTo = (target: 0 | 1) => {
+    const snapTo = (
+      target: 0 | 1
+    ) => {
       if (
         isSnapping &&
         snapTarget === target
@@ -300,7 +324,9 @@ const entranceStyle = [
       isSnapping = true;
       snapTarget = target;
 
-      const startProgress = progress;
+      const startProgress =
+        progress;
+
       const distance =
         target - startProgress;
 
@@ -328,13 +354,16 @@ const entranceStyle = [
         const elapsed =
           currentTime - startTime;
 
-        const timeProgress = clamp(
-          elapsed / duration
-        );
+        const timeProgress =
+          clamp(
+            elapsed / duration
+          );
 
         const eased =
           target === 1
-            ? easeOutQuint(timeProgress)
+            ? easeOutQuint(
+                timeProgress
+              )
             : easeInOutCubic(
                 timeProgress
               );
@@ -345,6 +374,7 @@ const entranceStyle = [
         );
 
         wheelTarget = progress;
+
         render();
 
         if (timeProgress < 1) {
@@ -360,7 +390,9 @@ const entranceStyle = [
       };
 
       snapFrame =
-        requestAnimationFrame(animate);
+        requestAnimationFrame(
+          animate
+        );
     };
 
     const evaluateThreshold = (
@@ -368,7 +400,8 @@ const entranceStyle = [
     ) => {
       if (
         direction > 0 &&
-        progress >= FORWARD_THRESHOLD
+        progress >=
+          FORWARD_THRESHOLD
       ) {
         snapTo(1);
         return true;
@@ -376,7 +409,8 @@ const entranceStyle = [
 
       if (
         direction < 0 &&
-        progress <= BACKWARD_THRESHOLD
+        progress <=
+          BACKWARD_THRESHOLD
       ) {
         snapTo(0);
         return true;
@@ -421,10 +455,12 @@ const entranceStyle = [
           Math.abs(difference) <
           0.001
         ) {
-          progress = wheelTarget;
+          progress =
+            wheelTarget;
         }
 
-        progress = clamp(progress);
+        progress =
+          clamp(progress);
 
         if (progress < 1) {
           hideHeader();
@@ -433,7 +469,9 @@ const entranceStyle = [
         render();
 
         if (
-          evaluateThreshold(direction)
+          evaluateThreshold(
+            direction
+          )
         ) {
           renderFrame = 0;
           return;
@@ -441,7 +479,8 @@ const entranceStyle = [
 
         if (
           Math.abs(
-            wheelTarget - progress
+            wheelTarget -
+              progress
           ) > 0.001
         ) {
           renderFrame =
@@ -456,7 +495,9 @@ const entranceStyle = [
       };
 
       renderFrame =
-        requestAnimationFrame(animate);
+        requestAnimationFrame(
+          animate
+        );
     };
 
     const handleWheel = (
@@ -465,14 +506,17 @@ const entranceStyle = [
       event.preventDefault();
 
       if (
-        Math.abs(event.deltaY) < 0.5
+        Math.abs(
+          event.deltaY
+        ) < 0.5
       ) {
         return;
       }
 
-      const direction = Math.sign(
-        event.deltaY
-      );
+      const direction =
+        Math.sign(
+          event.deltaY
+        );
 
       if (isSnapping) {
         const isReversing =
@@ -495,7 +539,9 @@ const entranceStyle = [
       const normalizedDelta =
         Math.min(
           Math.max(
-            Math.abs(event.deltaY),
+            Math.abs(
+              event.deltaY
+            ),
             22
           ),
           120
@@ -577,11 +623,13 @@ const entranceStyle = [
       touchLastY = touchY;
 
       if (
-        Math.abs(frameDistance) > 0.5
+        Math.abs(frameDistance) >
+        0.5
       ) {
-        touchDirection = Math.sign(
-          frameDistance
-        );
+        touchDirection =
+          Math.sign(
+            frameDistance
+          );
       }
 
       /*
@@ -805,33 +853,46 @@ const entranceStyle = [
     position: absolute;
     inset: 0;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
     opacity: var(
       --lobby-opacity
     );
 
-    background-color: #fff;
-    background-image: var(
-      --lobby-image,
-      none
-    );
-    background-position: center;
-    background-repeat: no-repeat;
-
-    background-size:
-      auto
-      min(
-        var(--desktop-height-vh),
-        var(--desktop-height-px)
-      );
+    background: #fff;
 
     transform: scale(
       var(--lobby-scale)
     );
+
     transform-origin: center;
 
     will-change:
       transform,
       opacity;
+  }
+
+  .entrance-experience__lobby-image {
+    display: block;
+
+    width: auto;
+    max-width: 100%;
+
+    height: min(
+      var(--desktop-height-vh),
+      var(--desktop-height-px)
+    );
+
+    max-height: 100svh;
+
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
   }
 
   .entrance-experience__veil {
@@ -894,11 +955,19 @@ const entranceStyle = [
     letter-spacing: 0.08em;
   }
 
-  @media (max-width: 640px) {
-    .entrance-experience__lobby {
-      background-size: cover;
-    }
+  @media (max-width: 1024px) {
+    .entrance-experience__lobby-image {
+      width: 100%;
+      max-width: none;
 
+      height: auto;
+      max-height: 100svh;
+
+      object-fit: contain;
+    }
+  }
+
+  @media (max-width: 640px) {
     .entrance-experience__logo {
       width: calc(
         100vw - 32px

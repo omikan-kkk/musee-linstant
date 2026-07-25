@@ -1341,5 +1341,15 @@
     "body": "山王美術館",
     "visible": true,
     "order": 1
+  },
+  {
+    "id": "__lobby__",
+    "categoryId": "__site__",
+    "slug": "__lobby__",
+    "image": "/images/contents/__lobby__.jpg",
+    "title": "",
+    "body": "",
+    "visible": true,
+    "order": 0
   }
 ]

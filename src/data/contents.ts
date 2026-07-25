@@ -1,3 +1,8 @@
 import contents from "./cms/contents.json";
 
-export const CONTENTS = contents;
+export type ContentItem = (typeof contents)[number] & {
+  desktopHeightPx?: number;
+  desktopHeightVh?: number;
+};
+
+export const CONTENTS = contents as ContentItem[];

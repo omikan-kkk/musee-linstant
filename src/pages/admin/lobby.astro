@@ -9,6 +9,10 @@ const lobbyContent = CONTENTS.find(
 );
 
 const currentLobbyImage = lobbyContent?.image || "";
+const currentDesktopHeightPx =
+  lobbyContent?.desktopHeightPx ?? 620;
+const currentDesktopHeightVh =
+  lobbyContent?.desktopHeightVh ?? 60;
 ---
 
 <Layout title="Lobby | Musée de l'Instant CMS" showHeader={false}>
@@ -21,6 +25,8 @@ const currentLobbyImage = lobbyContent?.image || "";
     <section
       class="editor"
       data-current-image={currentLobbyImage}
+      data-current-desktop-height-px={currentDesktopHeightPx}
+      data-current-desktop-height-vh={currentDesktopHeightVh}
     >
       <div class="field">
         <label for="image">Lobby Image</label>
@@ -54,6 +60,55 @@ const currentLobbyImage = lobbyContent?.image || "";
         <p class="note">
           One image only. Saving a new image replaces the current image.
         </p>
+      </div>
+
+      <div class="settings">
+        <div class="number-field">
+          <label for="desktop-height-px">
+            Desktop Height
+          </label>
+
+          <div class="number-input">
+            <input
+              id="desktop-height-px"
+              type="number"
+              min="1"
+              step="1"
+              value={currentDesktopHeightPx}
+              inputmode="numeric"
+            />
+
+            <span>px</span>
+          </div>
+
+          <p class="note">
+            Maximum image height on desktop.
+          </p>
+        </div>
+
+        <div class="number-field">
+          <label for="desktop-height-vh">
+            Desktop Height
+          </label>
+
+          <div class="number-input">
+            <input
+              id="desktop-height-vh"
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+              value={currentDesktopHeightVh}
+              inputmode="numeric"
+            />
+
+            <span>vh</span>
+          </div>
+
+          <p class="note">
+            Height relative to the browser window.
+          </p>
+        </div>
       </div>
 
       <div class="actions">
@@ -94,6 +149,12 @@ const currentLobbyImage = lobbyContent?.image || "";
     const imageInput = document.querySelector("#image");
     const imagePreview = document.querySelector("#image-preview");
     const emptyPreview = document.querySelector("#empty-preview");
+    const desktopHeightPxInput = document.querySelector(
+      "#desktop-height-px"
+    );
+    const desktopHeightVhInput = document.querySelector(
+      "#desktop-height-vh"
+    );
     const saveButton = document.querySelector("#save-button");
     const removeButton = document.querySelector("#remove-button");
     const saveStatus = document.querySelector("#save-status");
@@ -104,11 +165,37 @@ const currentLobbyImage = lobbyContent?.image || "";
     let savedImagePath =
       editor?.getAttribute("data-current-image") || "";
 
+    let savedDesktopHeightPx = Number(
+      editor?.getAttribute(
+        "data-current-desktop-height-px"
+      ) || 620
+    );
+
+    let savedDesktopHeightVh = Number(
+      editor?.getAttribute(
+        "data-current-desktop-height-vh"
+      ) || 60
+    );
+
+    async function readJson(response) {
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "Request failed."
+        );
+      }
+
+      return data;
+    }
+
     async function loadContents() {
       const response = await authFetch("/contents");
-      const data = await response.json();
+      const data = await readJson(response);
 
-      if (!data.ok || !Array.isArray(data.contents)) {
+      if (!data?.ok || !Array.isArray(data.contents)) {
         throw new Error("Could not load contents.");
       }
 
@@ -126,9 +213,9 @@ const currentLobbyImage = lobbyContent?.image || "";
         }),
       });
 
-      const data = await response.json();
+      const data = await readJson(response);
 
-      if (!data.ok) {
+      if (!data?.ok) {
         throw new Error("Could not save contents.");
       }
     }
@@ -147,9 +234,9 @@ const currentLobbyImage = lobbyContent?.image || "";
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await readJson(response);
 
-      if (!data.ok || !data.image) {
+      if (!data?.ok || !data.image) {
         throw new Error("Could not upload image.");
       }
 
@@ -191,6 +278,60 @@ const currentLobbyImage = lobbyContent?.image || "";
       }
     }
 
+    function getPositiveNumber(input, label) {
+      const value = Number(input?.value);
+
+      if (!Number.isFinite(value) || value <= 0) {
+        throw new Error(
+          `${label} must be greater than 0.`
+        );
+      }
+
+      return value;
+    }
+
+    function getHeightSettings() {
+      const desktopHeightPx = Math.round(
+        getPositiveNumber(
+          desktopHeightPxInput,
+          "Desktop Height (px)"
+        )
+      );
+
+      const desktopHeightVh = getPositiveNumber(
+        desktopHeightVhInput,
+        "Desktop Height (vh)"
+      );
+
+      if (desktopHeightVh > 100) {
+        throw new Error(
+          "Desktop Height (vh) must be 100 or less."
+        );
+      }
+
+      return {
+        desktopHeightPx,
+        desktopHeightVh,
+      };
+    }
+
+    function createLobbyContent({
+      currentContent,
+      image,
+      desktopHeightPx,
+      desktopHeightVh,
+    }) {
+      return {
+        ...currentContent,
+        id: LOBBY_CONTENT_ID,
+        category: LOBBY_CATEGORY_ID,
+        title: "Lobby",
+        image,
+        desktopHeightPx,
+        desktopHeightVh,
+      };
+    }
+
     imageInput?.addEventListener("change", () => {
       const file = imageInput.files?.[0];
 
@@ -223,16 +364,7 @@ const currentLobbyImage = lobbyContent?.image || "";
     });
 
     saveButton?.addEventListener("click", async () => {
-      if (
-        !selectedImageFile ||
-        !saveButton ||
-        !saveStatus
-      ) {
-        if (saveStatus) {
-          saveStatus.textContent =
-            "Select an image first";
-        }
-
+      if (!saveButton || !saveStatus) {
         return;
       }
 
@@ -242,135 +374,186 @@ const currentLobbyImage = lobbyContent?.image || "";
         removeButton.disabled = true;
       }
 
-      saveStatus.textContent = "Uploading image...";
+      saveStatus.textContent = "Saving...";
 
       try {
-        const uploadedImagePath =
-          await uploadImage(selectedImageFile);
+        const {
+          desktopHeightPx,
+          desktopHeightVh,
+        } = getHeightSettings();
 
-        saveStatus.textContent =
-          "Saving lobby image...";
+        const contents = await loadContents();
 
-        const currentContents =
-          await loadContents();
+        let nextImagePath = savedImagePath;
 
-        const existingLobbyContent =
-          currentContents.find(
+        if (selectedImageFile) {
+          nextImagePath = await uploadImage(
+            selectedImageFile
+          );
+        }
+
+        const lobbyContentIndex =
+          contents.findIndex(
             (content) =>
               content.id === LOBBY_CONTENT_ID
           );
 
-        let nextContents;
+        const currentContent =
+          lobbyContentIndex >= 0
+            ? contents[lobbyContentIndex]
+            : {};
 
-        if (existingLobbyContent) {
-          nextContents = currentContents.map(
-            (content) => {
-              if (
-                content.id !== LOBBY_CONTENT_ID
-              ) {
-                return content;
-              }
+        const nextLobbyContent =
+          createLobbyContent({
+            currentContent,
+            image: nextImagePath,
+            desktopHeightPx,
+            desktopHeightVh,
+          });
 
-              return {
-                ...content,
-                image: uploadedImagePath,
-                visible: true,
-              };
-            }
-          );
+        if (lobbyContentIndex >= 0) {
+          contents[lobbyContentIndex] =
+            nextLobbyContent;
         } else {
-          nextContents = [
-            ...currentContents,
-            {
-              id: LOBBY_CONTENT_ID,
-              categoryId: LOBBY_CATEGORY_ID,
-              slug: LOBBY_CONTENT_ID,
-              image: uploadedImagePath,
-              title: "",
-              body: "",
-              visible: true,
-              order: 0,
-            },
-          ];
+          contents.push(nextLobbyContent);
         }
 
-        await saveContents(nextContents);
+        await saveContents(contents);
 
-        savedImagePath = uploadedImagePath;
+        savedImagePath = nextImagePath;
+        savedDesktopHeightPx = desktopHeightPx;
+        savedDesktopHeightVh = desktopHeightVh;
 
         resetSelectedFile();
-        showImage(savedImagePath);
 
-        if (removeButton) {
-          removeButton.disabled = false;
-        }
-
-        saveStatus.textContent =
-          "Saved to GitHub";
-      } catch (error) {
-        console.error(error);
-        saveStatus.textContent = "Save failed";
-      } finally {
-        saveButton.disabled = false;
-
-        if (removeButton && savedImagePath) {
-          removeButton.disabled = false;
-        }
-      }
-    });
-
-    removeButton?.addEventListener("click", async () => {
-      if (
-        !saveButton ||
-        !removeButton ||
-        !saveStatus
-      ) {
-        return;
-      }
-
-      const confirmed = window.confirm(
-        "Remove the lobby image? The lobby will return to a white background."
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      saveButton.disabled = true;
-      removeButton.disabled = true;
-      saveStatus.textContent =
-        "Removing lobby image...";
-
-      try {
-        const currentContents =
-          await loadContents();
-
-        const nextContents =
-          currentContents.filter(
-            (content) =>
-              content.id !== LOBBY_CONTENT_ID
+        if (desktopHeightPxInput) {
+          desktopHeightPxInput.value = String(
+            savedDesktopHeightPx
           );
+        }
 
-        await saveContents(nextContents);
-
-        savedImagePath = "";
-
-        resetSelectedFile();
-        showEmpty();
-
-        saveStatus.textContent =
-          "Lobby image removed";
-      } catch (error) {
-        console.error(error);
-        saveStatus.textContent = "Remove failed";
+        if (desktopHeightVhInput) {
+          desktopHeightVhInput.value = String(
+            savedDesktopHeightVh
+          );
+        }
 
         if (savedImagePath) {
-          removeButton.disabled = false;
+          showImage(savedImagePath);
+        } else {
+          showEmpty();
+        }
+
+        if (removeButton) {
+          removeButton.disabled =
+            !savedImagePath;
+        }
+
+        saveStatus.textContent =
+          "Saved successfully.";
+      } catch (error) {
+        console.error(error);
+
+        saveStatus.textContent =
+          error instanceof Error
+            ? error.message
+            : "Could not save.";
+
+        if (removeButton) {
+          removeButton.disabled =
+            !savedImagePath;
         }
       } finally {
         saveButton.disabled = false;
       }
     });
+
+    removeButton?.addEventListener(
+      "click",
+      async () => {
+        if (
+          !removeButton ||
+          !saveButton ||
+          !saveStatus
+        ) {
+          return;
+        }
+
+        const shouldRemove = window.confirm(
+          "Remove the current lobby image?"
+        );
+
+        if (!shouldRemove) {
+          return;
+        }
+
+        removeButton.disabled = true;
+        saveButton.disabled = true;
+
+        saveStatus.textContent =
+          "Removing image...";
+
+        try {
+          const {
+            desktopHeightPx,
+            desktopHeightVh,
+          } = getHeightSettings();
+
+          const contents = await loadContents();
+
+          const lobbyContentIndex =
+            contents.findIndex(
+              (content) =>
+                content.id ===
+                LOBBY_CONTENT_ID
+            );
+
+          const currentContent =
+            lobbyContentIndex >= 0
+              ? contents[lobbyContentIndex]
+              : {};
+
+          const nextLobbyContent =
+            createLobbyContent({
+              currentContent,
+              image: "",
+              desktopHeightPx,
+              desktopHeightVh,
+            });
+
+          if (lobbyContentIndex >= 0) {
+            contents[lobbyContentIndex] =
+              nextLobbyContent;
+          } else {
+            contents.push(nextLobbyContent);
+          }
+
+          await saveContents(contents);
+
+          savedImagePath = "";
+          savedDesktopHeightPx = desktopHeightPx;
+          savedDesktopHeightVh = desktopHeightVh;
+
+          resetSelectedFile();
+          showEmpty();
+
+          saveStatus.textContent =
+            "Image removed.";
+        } catch (error) {
+          console.error(error);
+
+          saveStatus.textContent =
+            error instanceof Error
+              ? error.message
+              : "Could not remove image.";
+
+          removeButton.disabled =
+            !savedImagePath;
+        } finally {
+          saveButton.disabled = false;
+        }
+      }
+    );
 
     window.addEventListener(
       "beforeunload",
@@ -386,140 +569,243 @@ const currentLobbyImage = lobbyContent?.image || "";
 </Layout>
 
 <style>
-.admin{
-  max-width:720px;
-  margin:120px auto;
-  padding:24px;
-  color:#111;
-  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-header{
-  margin-bottom:56px;
-}
-
-header a{
-  display:inline-block;
-  margin-bottom:24px;
-  color:#777;
-  text-decoration:none;
-  font-size:12px;
-}
-
-h1{
-  margin:0;
-  font-size:24px;
-  font-weight:400;
-  letter-spacing:.04em;
-}
-
-.editor{
-  display:flex;
-  flex-direction:column;
-  gap:32px;
-}
-
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-
-label{
-  color:#777;
-  font-size:11px;
-  letter-spacing:.12em;
-}
-
-.image-preview{
-  display:block;
-  width:min(100%,560px);
-  max-height:560px;
-  object-fit:contain;
-  object-position:center;
-  background:#f7f7f7;
-}
-
-.empty-preview{
-  display:grid;
-  place-items:center;
-  width:min(100%,560px);
-  aspect-ratio:16 / 10;
-  border:1px solid #e5e5e5;
-  background:#fafafa;
-  color:#999;
-  font-size:12px;
-  letter-spacing:.08em;
-}
-
-.is-hidden{
-  display:none;
-}
-
-input[type="file"]{
-  width:100%;
-  border:none;
-  padding:0;
-  background:#fff;
-  color:#111;
-  font:inherit;
-  font-size:12px;
-}
-
-.note{
-  margin:0;
-  color:#999;
-  font-size:11px;
-  line-height:1.7;
-}
-
-.actions{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  flex-wrap:wrap;
-}
-
-.save-button,
-.remove-button{
-  border:none;
-  padding:12px 18px;
-  cursor:pointer;
-  font-size:12px;
-}
-
-.save-button{
-  background:#111;
-  color:#fff;
-}
-
-.remove-button{
-  background:transparent;
-  color:#777;
-  padding-left:0;
-  padding-right:0;
-}
-
-.save-button:disabled,
-.remove-button:disabled{
-  opacity:.4;
-  cursor:not-allowed;
-}
-
-#save-status{
-  margin:0;
-  color:#777;
-  font-size:12px;
-}
-
-@media (max-width:640px){
-  .admin{
-    margin:72px auto;
-    padding:20px;
+  :global(html) {
+    background: #f5f5f2;
   }
 
-  header{
-    margin-bottom:40px;
+  :global(body) {
+    margin: 0;
+    background: #f5f5f2;
+    color: #111;
+    font-family:
+      Arial,
+      Helvetica,
+      sans-serif;
   }
-}
+
+  .admin {
+    box-sizing: border-box;
+    width: min(100%, 960px);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding:
+      48px
+      32px
+      80px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  header a {
+    color: #555;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  header a:hover {
+    color: #111;
+  }
+
+  h1 {
+    margin: 0;
+    font-family:
+      Georgia,
+      "Times New Roman",
+      serif;
+    font-size:
+      clamp(
+        32px,
+        5vw,
+        52px
+      );
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+
+  .editor {
+    display: grid;
+    gap: 32px;
+    padding: 32px;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+
+  .field,
+  .number-field {
+    display: grid;
+    gap: 16px;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .image-preview,
+  .empty-preview {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border: 1px solid #ddd;
+    background: #f8f8f6;
+  }
+
+  .image-preview {
+    object-fit: contain;
+  }
+
+  .empty-preview {
+    display: grid;
+    place-items: center;
+    color: #999;
+    font-size: 14px;
+  }
+
+  .is-hidden {
+    display: none;
+  }
+
+  input[type="file"],
+  input[type="number"] {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid #ccc;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+  }
+
+  input[type="file"] {
+    padding: 12px;
+  }
+
+  input[type="number"] {
+    min-width: 0;
+    padding: 12px;
+    border: 0;
+    outline: none;
+  }
+
+  input[type="file"]::file-selector-button {
+    margin-right: 16px;
+    padding: 8px 14px;
+    border: 1px solid #bbb;
+    background: #f3f3f1;
+    cursor: pointer;
+  }
+
+  .settings {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+  }
+
+  .number-input {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+
+  .number-input:focus-within {
+    border-color: #111;
+  }
+
+  .number-input span {
+    padding: 0 14px;
+    color: #666;
+    font-size: 13px;
+  }
+
+  .note {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+  }
+
+  button {
+    min-width: 120px;
+    padding: 12px 20px;
+    border: 1px solid #111;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .save-button {
+    background: #111;
+    color: #fff;
+  }
+
+  .remove-button {
+    background: #fff;
+    color: #111;
+  }
+
+  #save-status {
+    flex-basis: 100%;
+    min-height: 1.4em;
+    margin: 4px 0 0;
+    color: #555;
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .admin {
+      padding:
+        28px
+        16px
+        56px;
+    }
+
+    header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .editor {
+      gap: 24px;
+      padding: 20px;
+    }
+
+    .settings {
+      grid-template-columns: 1fr;
+    }
+
+    .actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
 </style>

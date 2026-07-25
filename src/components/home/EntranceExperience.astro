@@ -1,20 +1,43 @@
 ---
 import { CONTENTS } from "../../data/contents";
 
-const lobbyImage =
-  CONTENTS.find(
-    (content) => content.id === "__lobby__"
-  )?.image || "";
+const lobbyContent = CONTENTS.find(
+  (content) => content.id === "__lobby__"
+);
+
+const lobbyImage = lobbyContent?.image || "";
+
+const desktopHeightPx =
+  lobbyContent?.desktopHeightPx ?? 620;
+
+const desktopHeightVh =
+  lobbyContent?.desktopHeightVh ?? 60;
+
+const entranceStyle = [
+  lobbyImage
+    ? `--lobby-image: url("${lobbyImage}")`
+    : "",
+  `--desktop-height-px: ${desktopHeightPx}px`,
+  `--desktop-height-vh: ${desktopHeightVh}vh`,
+]
+  .filter(Boolean)
+  .join(";");
 ---
 
 <div
   class="entrance-experience"
   data-entrance-experience
-  style={lobbyImage ? `--lobby-image: url("${lobbyImage}")` : undefined}
+  style={entranceStyle}
 >
-  <div class="entrance-experience__lobby" aria-hidden="true"></div>
+  <div
+    class="entrance-experience__lobby"
+    aria-hidden="true"
+  ></div>
 
-  <div class="entrance-experience__veil" aria-hidden="true"></div>
+  <div
+    class="entrance-experience__veil"
+    aria-hidden="true"
+  ></div>
 
   <svg
     class="entrance-experience__logo"
@@ -85,8 +108,11 @@ const lobbyImage =
     let isSnapping = false;
     let snapTarget: 0 | 1 | null = null;
 
-    const clamp = (value: number, min = 0, max = 1) =>
-      Math.min(max, Math.max(min, value));
+    const clamp = (
+      value: number,
+      min = 0,
+      max = 1
+    ) => Math.min(max, Math.max(min, value));
 
     const easeOutQuint = (value: number) =>
       1 - Math.pow(1 - value, 5);
@@ -94,16 +120,22 @@ const lobbyImage =
     const easeInOutCubic = (value: number) =>
       value < 0.5
         ? 4 * value * value * value
-        : 1 - Math.pow(-2 * value + 2, 3) / 2;
+        : 1 -
+          Math.pow(-2 * value + 2, 3) / 2;
 
-    const dispatchState = (complete: boolean) => {
+    const dispatchState = (
+      complete: boolean
+    ) => {
       window.dispatchEvent(
-        new CustomEvent("entrance-state-change", {
-          detail: {
-            complete,
-            progress,
-          },
-        })
+        new CustomEvent(
+          "entrance-state-change",
+          {
+            detail: {
+              complete,
+              progress,
+            },
+          }
+        )
       );
     };
 
@@ -114,26 +146,39 @@ const lobbyImage =
 
     const hideHeader = () => {
       clearHeaderTimer();
-      document.body.classList.remove("entrance-is-complete");
+
+      document.body.classList.remove(
+        "entrance-is-complete"
+      );
+
       dispatchState(false);
     };
 
     const showHeaderAfterDelay = () => {
       clearHeaderTimer();
 
-      headerTimer = window.setTimeout(() => {
-        document.body.classList.add("entrance-is-complete");
-        dispatchState(true);
-      }, HEADER_DELAY);
+      headerTimer = window.setTimeout(
+        () => {
+          document.body.classList.add(
+            "entrance-is-complete"
+          );
+
+          dispatchState(true);
+        },
+        HEADER_DELAY
+      );
     };
 
     const render = () => {
       /*
-       * 前半はゆっくり、奥へ進むほどロゴの迫り方が強くなる。
+       * 前半はゆっくり、
+       * 奥へ進むほどロゴの迫り方が強くなる。
        */
-      const forwardCurve = progress * progress;
+      const forwardCurve =
+        progress * progress;
 
-      const logoScale = 1 + forwardCurve * 13;
+      const logoScale =
+        1 + forwardCurve * 13;
 
       /*
        * 巨大化したHTML文字の荒さが見えないよう、
@@ -151,12 +196,17 @@ const lobbyImage =
         1.045 - progress * 0.045;
 
       /*
-       * ロゴを通過する瞬間だけ、ごく薄い白を挟む。
+       * ロゴを通過する瞬間だけ、
+       * ごく薄い白を挟む。
        */
       const veilOpacity =
         progress < 0.58
           ? clamp(progress / 0.58)
-          : clamp(1 - (progress - 0.58) / 0.42);
+          : clamp(
+              1 -
+                (progress - 0.58) /
+                  0.42
+            );
 
       root.style.setProperty(
         "--logo-scale",
@@ -186,7 +236,9 @@ const lobbyImage =
       dispatchState(progress >= 1);
     };
 
-    const setProgress = (nextProgress: number) => {
+    const setProgress = (
+      nextProgress: number
+    ) => {
       progress = clamp(nextProgress);
       wheelTarget = progress;
 
@@ -215,7 +267,9 @@ const lobbyImage =
       snapTarget = null;
     };
 
-    const completeSnap = (target: 0 | 1) => {
+    const completeSnap = (
+      target: 0 | 1
+    ) => {
       progress = target;
       wheelTarget = target;
 
@@ -233,7 +287,10 @@ const lobbyImage =
     };
 
     const snapTo = (target: 0 | 1) => {
-      if (isSnapping && snapTarget === target) {
+      if (
+        isSnapping &&
+        snapTarget === target
+      ) {
         return;
       }
 
@@ -244,10 +301,12 @@ const lobbyImage =
       snapTarget = target;
 
       const startProgress = progress;
-      const distance = target - startProgress;
+      const distance =
+        target - startProgress;
 
       /*
-       * 残り距離が短い場合は、無駄に長くならないよう調整。
+       * 残り距離が短い場合は、
+       * 無駄に長くならないよう調整。
        */
       const baseDuration =
         target === 1
@@ -256,39 +315,57 @@ const lobbyImage =
 
       const duration = Math.max(
         260,
-        baseDuration * Math.abs(distance)
+        baseDuration *
+          Math.abs(distance)
       );
 
-      const startTime = performance.now();
+      const startTime =
+        performance.now();
 
-      const animate = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const timeProgress = clamp(elapsed / duration);
+      const animate = (
+        currentTime: number
+      ) => {
+        const elapsed =
+          currentTime - startTime;
+
+        const timeProgress = clamp(
+          elapsed / duration
+        );
 
         const eased =
           target === 1
             ? easeOutQuint(timeProgress)
-            : easeInOutCubic(timeProgress);
+            : easeInOutCubic(
+                timeProgress
+              );
 
         progress = clamp(
-          startProgress + distance * eased
+          startProgress +
+            distance * eased
         );
 
         wheelTarget = progress;
         render();
 
         if (timeProgress < 1) {
-          snapFrame = requestAnimationFrame(animate);
+          snapFrame =
+            requestAnimationFrame(
+              animate
+            );
+
           return;
         }
 
         completeSnap(target);
       };
 
-      snapFrame = requestAnimationFrame(animate);
+      snapFrame =
+        requestAnimationFrame(animate);
     };
 
-    const evaluateThreshold = (direction: number) => {
+    const evaluateThreshold = (
+      direction: number
+    ) => {
       if (
         direction > 0 &&
         progress >= FORWARD_THRESHOLD
@@ -312,10 +389,12 @@ const lobbyImage =
      * PCホイール用。
      *
      * deltaYをprogressへ直接反映すると、
-     * ホイールの段差がそのまま「ガッガッ」と見える。
+     * ホイールの段差がそのまま
+     * 「ガッガッ」と見える。
      *
      * そこで入力先をwheelTargetに蓄積し、
-     * 実際のprogressは毎フレーム滑らかに追いかける。
+     * 実際のprogressは毎フレーム
+     * 滑らかに追いかける。
      */
     const startWheelInterpolation = (
       direction: number
@@ -328,15 +407,20 @@ const lobbyImage =
           return;
         }
 
-        const difference = wheelTarget - progress;
+        const difference =
+          wheelTarget - progress;
 
         /*
          * フレームごとに差分の約18%だけ進める。
          * ホイールの段差を滑らかな移動へ変換する。
          */
-        progress += difference * 0.18;
+        progress +=
+          difference * 0.18;
 
-        if (Math.abs(difference) < 0.001) {
+        if (
+          Math.abs(difference) <
+          0.001
+        ) {
           progress = wheelTarget;
         }
 
@@ -348,35 +432,54 @@ const lobbyImage =
 
         render();
 
-        if (evaluateThreshold(direction)) {
+        if (
+          evaluateThreshold(direction)
+        ) {
           renderFrame = 0;
           return;
         }
 
-        if (Math.abs(wheelTarget - progress) > 0.001) {
-          renderFrame = requestAnimationFrame(animate);
+        if (
+          Math.abs(
+            wheelTarget - progress
+          ) > 0.001
+        ) {
+          renderFrame =
+            requestAnimationFrame(
+              animate
+            );
+
           return;
         }
 
         renderFrame = 0;
       };
 
-      renderFrame = requestAnimationFrame(animate);
+      renderFrame =
+        requestAnimationFrame(animate);
     };
 
-    const handleWheel = (event: WheelEvent) => {
+    const handleWheel = (
+      event: WheelEvent
+    ) => {
       event.preventDefault();
 
-      if (Math.abs(event.deltaY) < 0.5) {
+      if (
+        Math.abs(event.deltaY) < 0.5
+      ) {
         return;
       }
 
-      const direction = Math.sign(event.deltaY);
+      const direction = Math.sign(
+        event.deltaY
+      );
 
       if (isSnapping) {
         const isReversing =
-          (snapTarget === 1 && direction < 0) ||
-          (snapTarget === 0 && direction > 0);
+          (snapTarget === 1 &&
+            direction < 0) ||
+          (snapTarget === 0 &&
+            direction > 0);
 
         if (!isReversing) {
           return;
@@ -389,35 +492,53 @@ const lobbyImage =
        * 極端に大きいdeltaYは制限し、
        * マウスとトラックパッドの差を小さくする。
        */
-      const normalizedDelta = Math.min(
-        Math.max(Math.abs(event.deltaY), 22),
-        120
-      );
+      const normalizedDelta =
+        Math.min(
+          Math.max(
+            Math.abs(event.deltaY),
+            22
+          ),
+          120
+        );
 
       wheelTarget = clamp(
         wheelTarget +
-          direction * normalizedDelta / WHEEL_DISTANCE
+          (direction *
+            normalizedDelta) /
+            WHEEL_DISTANCE
       );
 
-      startWheelInterpolation(direction);
+      startWheelInterpolation(
+        direction
+      );
 
       /*
-       * トラックパッドの細かなイベントが止まったあと、
-       * 閾値を越えていれば確実に最後まで到達させる。
+       * トラックパッドの細かなイベントが
+       * 止まったあと、閾値を越えていれば
+       * 確実に最後まで到達させる。
        */
-      window.clearTimeout(wheelEndTimer);
+      window.clearTimeout(
+        wheelEndTimer
+      );
 
-      wheelEndTimer = window.setTimeout(() => {
-        evaluateThreshold(direction);
-      }, 70);
+      wheelEndTimer =
+        window.setTimeout(() => {
+          evaluateThreshold(
+            direction
+          );
+        }, 70);
     };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1) {
+        const handleTouchStart = (
+      event: TouchEvent
+    ) => {
+      if (
+        event.touches.length !== 1
+      ) {
         return;
       }
 
-      const touchY = event.touches[0].clientY;
+      const touchY =
+        event.touches[0].clientY;
 
       isTouching = true;
       touchStartY = touchY;
@@ -432,7 +553,9 @@ const lobbyImage =
       }
     };
 
-    const handleTouchMove = (event: TouchEvent) => {
+    const handleTouchMove = (
+      event: TouchEvent
+    ) => {
       if (
         !isTouching ||
         event.touches.length !== 1
@@ -442,7 +565,8 @@ const lobbyImage =
 
       event.preventDefault();
 
-      const touchY = event.touches[0].clientY;
+      const touchY =
+        event.touches[0].clientY;
 
       const totalDistance =
         touchStartY - touchY;
@@ -452,8 +576,12 @@ const lobbyImage =
 
       touchLastY = touchY;
 
-      if (Math.abs(frameDistance) > 0.5) {
-        touchDirection = Math.sign(frameDistance);
+      if (
+        Math.abs(frameDistance) > 0.5
+      ) {
+        touchDirection = Math.sign(
+          frameDistance
+        );
       }
 
       /*
@@ -462,7 +590,8 @@ const lobbyImage =
        */
       progress = clamp(
         touchStartProgress +
-          totalDistance / TOUCH_DISTANCE
+          totalDistance /
+            TOUCH_DISTANCE
       );
 
       wheelTarget = progress;
@@ -475,9 +604,14 @@ const lobbyImage =
 
       /*
        * 一定位置へ入ったら、
-       * 指を滑らせ続けなくても慣性で最奥へ進む。
+       * 指を滑らせ続けなくても
+       * 慣性で最奥へ進む。
        */
-      if (evaluateThreshold(touchDirection)) {
+      if (
+        evaluateThreshold(
+          touchDirection
+        )
+      ) {
         isTouching = false;
       }
     };
@@ -491,12 +625,17 @@ const lobbyImage =
 
       /*
        * 閾値未満なら、その位置に留める。
-       * 短く弱いスワイプで勝手に入館しない。
+       * 短く弱いスワイプで
+       * 勝手に入館しない。
        */
-      evaluateThreshold(touchDirection);
+      evaluateThreshold(
+        touchDirection
+      );
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (
+      event: KeyboardEvent
+    ) => {
       const forwardKeys = [
         "ArrowDown",
         "PageDown",
@@ -511,12 +650,19 @@ const lobbyImage =
       ];
 
       const isForward =
-        forwardKeys.includes(event.key);
+        forwardKeys.includes(
+          event.key
+        );
 
       const isBackward =
-        backwardKeys.includes(event.key);
+        backwardKeys.includes(
+          event.key
+        );
 
-      if (!isForward && !isBackward) {
+      if (
+        !isForward &&
+        !isBackward
+      ) {
         return;
       }
 
@@ -533,7 +679,10 @@ const lobbyImage =
       cancelRenderFrame();
       cancelSnap();
 
-      window.clearTimeout(wheelEndTimer);
+      window.clearTimeout(
+        wheelEndTimer
+      );
+
       clearHeaderTimer();
 
       window.removeEventListener(
@@ -578,31 +727,41 @@ const lobbyImage =
     window.addEventListener(
       "wheel",
       handleWheel,
-      { passive: false }
+      {
+        passive: false,
+      }
     );
 
     window.addEventListener(
       "touchstart",
       handleTouchStart,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     window.addEventListener(
       "touchmove",
       handleTouchMove,
-      { passive: false }
+      {
+        passive: false,
+      }
     );
 
     window.addEventListener(
       "touchend",
       handleTouchEnd,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     window.addEventListener(
       "touchcancel",
       handleTouchEnd,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     window.addEventListener(
@@ -625,6 +784,9 @@ const lobbyImage =
     --lobby-scale: 1.045;
     --veil-opacity: 0;
 
+    --desktop-height-px: 620px;
+    --desktop-height-vh: 60vh;
+
     position: fixed;
     inset: 0;
     z-index: 1;
@@ -641,27 +803,45 @@ const lobbyImage =
 
   .entrance-experience__lobby {
     position: absolute;
-    inset: -2%;
+    inset: 0;
 
-    opacity: var(--lobby-opacity);
+    opacity: var(
+      --lobby-opacity
+    );
 
     background-color: #fff;
-    background-image: var(--lobby-image, none);
+    background-image: var(
+      --lobby-image,
+      none
+    );
     background-position: center;
     background-repeat: no-repeat;
-    background-size: cover;
 
-    transform: scale(var(--lobby-scale));
+    background-size:
+      auto
+      min(
+        var(--desktop-height-vh),
+        var(--desktop-height-px)
+      );
+
+    transform: scale(
+      var(--lobby-scale)
+    );
     transform-origin: center;
 
-    will-change: transform, opacity;
+    will-change:
+      transform,
+      opacity;
   }
 
   .entrance-experience__veil {
     position: absolute;
     inset: 0;
 
-    opacity: calc(var(--veil-opacity) * 0.1);
+    opacity: calc(
+      var(--veil-opacity) * 0.1
+    );
+
     background: #fff;
 
     pointer-events: none;
@@ -674,12 +854,17 @@ const lobbyImage =
     top: 50%;
     left: 50%;
 
-    width: min(680px, calc(100vw - 48px));
-    height: auto;
+    width: min(
+      680px,
+      calc(100vw - 48px)
+    );
 
+    height: auto;
     overflow: visible;
 
-    opacity: var(--logo-opacity);
+    opacity: var(
+      --logo-opacity
+    );
 
     transform:
       translate(-50%, -50%)
@@ -690,21 +875,34 @@ const lobbyImage =
     pointer-events: none;
     user-select: none;
 
-    will-change: transform, opacity;
+    will-change:
+      transform,
+      opacity;
   }
 
   .entrance-experience__logo-text {
-    fill: var(--navigation-color);
+    fill: var(
+      --navigation-color
+    );
 
-    font-family: var(--site-font-family);
+    font-family: var(
+      --site-font-family
+    );
+
     font-size: 34px;
     font-weight: 400;
     letter-spacing: 0.08em;
   }
 
   @media (max-width: 640px) {
+    .entrance-experience__lobby {
+      background-size: cover;
+    }
+
     .entrance-experience__logo {
-      width: calc(100vw - 32px);
+      width: calc(
+        100vw - 32px
+      );
     }
 
     .entrance-experience__logo-text {

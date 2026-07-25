@@ -45,6 +45,7 @@ const entranceStyle = [
 
   <div
     class="entrance-experience__veil"
+    data-entrance-veil
     aria-hidden="true"
   ></div>
 
@@ -99,6 +100,11 @@ const entranceStyle = [
         "[data-lobby]"
       );
 
+    const veil =
+      root.querySelector<HTMLElement>(
+        "[data-entrance-veil]"
+      );
+
     const logoVisual =
       root.querySelector<HTMLElement>(
         "[data-logo-visual]"
@@ -121,10 +127,14 @@ const entranceStyle = [
     const FORWARD_SNAP_DURATION = 620;
 
     /*
-     * 退館開始後、ロゴは必ず固定500msで
-     * 入口の状態まで戻る。
+     * 退館ロゴはJavaScriptで毎フレーム
+     * transformを書き換えず、
+     * ブラウザのCSS Transitionへ任せる。
      */
     const EXIT_LOGO_DURATION = 500;
+
+    const EXIT_LOGO_EASING =
+      "cubic-bezier(0.45, 0, 0.55, 1)";
 
     /*
      * 入館画像演出。
@@ -148,8 +158,9 @@ const entranceStyle = [
 
     let renderFrame = 0;
     let snapFrame = 0;
-    let exitFrame = 0;
+    let exitStartFrame = 0;
     let wheelEndTimer = 0;
+    let exitCompleteTimer = 0;
 
     let isTouching = false;
     let isSnapping = false;
@@ -157,14 +168,6 @@ const entranceStyle = [
     let isLobbyVisible = false;
 
     let snapTarget: 0 | 1 | null = null;
-
-    /*
-     * 退館中はprogressからロゴを描画せず、
-     * こちらの値を直接使用する。
-     */
-    let exitLogoScale = 1;
-    let exitLogoOpacity = 1;
-    let exitVeilOpacity = 0;
 
     const clamp = (
       value: number,
@@ -180,108 +183,6 @@ const entranceStyle = [
       value: number
     ) =>
       1 - Math.pow(1 - value, 5);
-
-    /*
-     * cubic-bezier(0.16, 1, 0.3, 1)に近い
-     * 滑らかな退館用カーブ。
-     *
-     * Newton法でベジェ曲線のx座標から
-     * 対応するy座標を求める。
-     */
-    const exitEase = (
-      value: number
-    ) => {
-      const x1 = 0.16;
-      const y1 = 1;
-      const x2 = 0.3;
-      const y2 = 1;
-
-      const sampleCurve = (
-        t: number,
-        point1: number,
-        point2: number
-      ) => {
-        const inverse = 1 - t;
-
-        return (
-          3 *
-            inverse *
-            inverse *
-            t *
-            point1 +
-          3 *
-            inverse *
-            t *
-            t *
-            point2 +
-          t * t * t
-        );
-      };
-
-      const sampleDerivative = (
-        t: number,
-        point1: number,
-        point2: number
-      ) => {
-        const inverse = 1 - t;
-
-        return (
-          3 *
-            inverse *
-            inverse *
-            point1 +
-          6 *
-            inverse *
-            t *
-            (point2 - point1) +
-          3 *
-            t *
-            t *
-            (1 - point2)
-        );
-      };
-
-      let t = value;
-
-      for (
-        let index = 0;
-        index < 5;
-        index += 1
-      ) {
-        const currentX =
-          sampleCurve(
-            t,
-            x1,
-            x2
-          ) - value;
-
-        const derivative =
-          sampleDerivative(
-            t,
-            x1,
-            x2
-          );
-
-        if (
-          Math.abs(derivative) <
-          0.000001
-        ) {
-          break;
-        }
-
-        t = clamp(
-          t -
-            currentX /
-              derivative
-        );
-      }
-
-      return sampleCurve(
-        t,
-        y1,
-        y2
-      );
-    };
 
     const dispatchState = (
       complete: boolean
@@ -299,8 +200,13 @@ const entranceStyle = [
       );
     };
 
-    const forceReflow = () => {
+    const forceLobbyReflow = () => {
       lobby?.getBoundingClientRect();
+    };
+
+    const forceExitReflow = () => {
+      logoVisual?.getBoundingClientRect();
+      veil?.getBoundingClientRect();
     };
 
     const getLogoValues = (
@@ -342,6 +248,44 @@ const entranceStyle = [
                 0.42
           );
 
+    const applyLogoVisual = (
+      scale: number,
+      opacity: number
+    ) => {
+      if (!logoVisual) {
+        return;
+      }
+
+      logoVisual.style.transform =
+        `scale(${scale})`;
+
+      logoVisual.style.opacity =
+        String(opacity);
+    };
+
+    const applyVeilOpacity = (
+      opacity: number
+    ) => {
+      if (!veil) {
+        return;
+      }
+
+      veil.style.opacity =
+        String(opacity * 0.1);
+    };
+
+    const clearExitTransitions = () => {
+      if (logoVisual) {
+        logoVisual.style.transition =
+          "none";
+      }
+
+      if (veil) {
+        veil.style.transition =
+          "none";
+      }
+    };
+
     const showLobbyAndHeader = () => {
       if (isLobbyVisible) {
         document.body.classList.add(
@@ -368,7 +312,7 @@ const entranceStyle = [
       lobby.style.transform =
         `scale(${LOBBY_ENTER_SCALE})`;
 
-      forceReflow();
+      forceLobbyReflow();
 
       lobby.style.transition = [
         `opacity ${LOBBY_ENTER_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
@@ -412,41 +356,12 @@ const entranceStyle = [
       dispatchState(false);
     };
 
-    /*
-     * ロゴのscaleだけを内側コンテナへ適用。
-     *
-     * 中央配置のtranslateは外側要素へ固定されるため、
-     * 将来ロゴを外部SVGへ変更しても共通で動作する。
-     */
-    const applyLogoVisual = (
-      scale: number,
-      opacity: number
-    ) => {
-      if (!logoVisual) {
-        return;
-      }
-
-      logoVisual.style.transform =
-        `scale(${scale})`;
-
-      logoVisual.style.opacity =
-        String(opacity);
-    };
-
     const render = () => {
+      /*
+       * 退館中のロゴとveilはCSS Transitionが
+       * 管理しているため、ここから上書きしない。
+       */
       if (isExiting) {
-        applyLogoVisual(
-          exitLogoScale,
-          exitLogoOpacity
-        );
-
-        root.style.setProperty(
-          "--veil-opacity",
-          String(
-            exitVeilOpacity
-          )
-        );
-
         dispatchState(false);
         return;
       }
@@ -457,14 +372,15 @@ const entranceStyle = [
       const veilOpacity =
         getVeilOpacity(progress);
 
+      clearExitTransitions();
+
       applyLogoVisual(
         logoValues.scale,
         logoValues.opacity
       );
 
-      root.style.setProperty(
-        "--veil-opacity",
-        String(veilOpacity)
+      applyVeilOpacity(
+        veilOpacity
       );
 
       dispatchState(
@@ -495,14 +411,21 @@ const entranceStyle = [
     };
 
     const cancelExit = () => {
-      if (exitFrame) {
+      if (exitStartFrame) {
         cancelAnimationFrame(
-          exitFrame
+          exitStartFrame
         );
       }
 
-      exitFrame = 0;
+      window.clearTimeout(
+        exitCompleteTimer
+      );
+
+      exitStartFrame = 0;
+      exitCompleteTimer = 0;
       isExiting = false;
+
+      clearExitTransitions();
     };
 
     const completeEntranceSnap = () => {
@@ -520,7 +443,8 @@ const entranceStyle = [
     /*
      * 入館用の自動遷移。
 
-     * 退館にはこのprogress補間を使用しない。
+     * 入館側は従来どおり、
+     * requestAnimationFrameでprogressを補間する。
      */
     const snapToEntrance = () => {
       if (
@@ -607,11 +531,12 @@ const entranceStyle = [
     };
 
     /*
-     * 退館ロゴをprogressから切り離して直接補間する。
-
-     * scaleは対数補間を使用するため、
-     * 巨大な状態から通常サイズへ戻る際も
-     * 視覚的な縮小速度が不自然に段階化しにくい。
+     * 退館ロゴは、現在の表示状態を固定したあと、
+     * transformとopacityの終点を一度だけ設定する。
+     *
+     * 500ms中にJavaScriptからtransformを
+     * 毎フレーム更新しないため、SVG内のtextでも
+     * 外部SVG画像でもブラウザ側で滑らかに合成される。
      */
     const startExitTransition = () => {
       if (
@@ -631,116 +556,82 @@ const entranceStyle = [
       cancelSnap();
       cancelExit();
 
-      hideLobbyAndHeader();
-
       const currentLogo =
         getLogoValues(progress);
 
-      const startScale =
-        Math.max(
-          1,
-          currentLogo.scale
-        );
-
-      const startOpacity =
-        currentLogo.opacity;
-
-      const startVeilOpacity =
+      const currentVeilOpacity =
         getVeilOpacity(progress);
 
-      exitLogoScale =
-        startScale;
+      /*
+       * まず現在地をtransitionなしで固定。
+       */
+      clearExitTransitions();
 
-      exitLogoOpacity =
-        startOpacity;
+      applyLogoVisual(
+        currentLogo.scale,
+        currentLogo.opacity
+      );
 
-      exitVeilOpacity =
-        startVeilOpacity;
+      applyVeilOpacity(
+        currentVeilOpacity
+      );
+
+      forceExitReflow();
 
       isExiting = true;
 
-      const startTime =
-        performance.now();
+      hideLobbyAndHeader();
 
-      const animate = (
-        currentTime: number
-      ) => {
-        const elapsed =
-          currentTime - startTime;
+      /*
+       * 状態値はここで入口へ確定する。
+       * 見た目だけが500msかけて追いつく。
+       */
+      progress = 0;
+      wheelTarget = 0;
 
-        const timeProgress =
-          clamp(
-            elapsed /
-              EXIT_LOGO_DURATION
-          );
+      dispatchState(false);
 
-        const eased =
-          exitEase(
-            timeProgress
-          );
+      exitStartFrame =
+        requestAnimationFrame(() => {
+          exitStartFrame = 0;
 
-        /*
-         * 対数補間：
-         *
-         * startScale → 1
-         *
-         * 倍率として均質に縮小するため、
-         * 大きなscaleから戻る場合も滑らか。
-         */
-        exitLogoScale =
-          Math.exp(
-            Math.log(startScale) *
-              (1 - eased)
-          );
+          if (!isExiting) {
+            return;
+          }
 
-        exitLogoOpacity =
-          startOpacity +
-          (1 - startOpacity) *
-            eased;
+          if (logoVisual) {
+            logoVisual.style.transition = [
+              `transform ${EXIT_LOGO_DURATION}ms ${EXIT_LOGO_EASING}`,
+              `opacity ${EXIT_LOGO_DURATION}ms ${EXIT_LOGO_EASING}`,
+            ].join(", ");
 
-        exitVeilOpacity =
-          startVeilOpacity *
-          (1 - eased);
+            logoVisual.style.transform =
+              "scale(1)";
 
-        /*
-         * イベント利用側との整合性のため、
-         * progressも更新するが、
-         * ロゴ描画には使用しない。
-         */
-        progress =
-          1 - eased;
+            logoVisual.style.opacity =
+              "1";
+          }
 
-        wheelTarget =
-          progress;
+          if (veil) {
+            veil.style.transition =
+              `opacity ${EXIT_LOGO_DURATION}ms ${EXIT_LOGO_EASING}`;
 
-        render();
+            veil.style.opacity = "0";
+          }
+        });
 
-        if (timeProgress < 1) {
-          exitFrame =
-            requestAnimationFrame(
-              animate
-            );
+      exitCompleteTimer =
+        window.setTimeout(() => {
+          exitCompleteTimer = 0;
+          isExiting = false;
 
-          return;
-        }
+          clearExitTransitions();
 
-        progress = 0;
-        wheelTarget = 0;
+          applyLogoVisual(1, 1);
+          applyVeilOpacity(0);
 
-        exitLogoScale = 1;
-        exitLogoOpacity = 1;
-        exitVeilOpacity = 0;
-
-        isExiting = false;
-        exitFrame = 0;
-
-        render();
-      };
-
-      exitFrame =
-        requestAnimationFrame(
-          animate
-        );
+          render();
+        }, EXIT_LOGO_DURATION + 34);
     };
 
     const evaluateForwardThreshold = (
@@ -925,8 +816,8 @@ const entranceStyle = [
        * 入館中の自動遷移だけは、
        * 新しいタッチ操作で中断できる。
        *
-       * 退館はisExitingによって
-       * 一切中断されない。
+       * 退館開始後はisExitingによって
+       * 中断されない。
        */
       if (
         isSnapping &&
@@ -972,10 +863,8 @@ const entranceStyle = [
 
       /*
        * 退館方向の動きを一度検知した時点で、
-       * 指の移動量との連動を終了する。
-       *
-       * 以後は固定500msの退館演出が
-       * 必ず最後まで進行する。
+       * 指との追従を終了し、
+       * CSS Transitionへ移行する。
        */
       if (touchDirection < 0) {
         startExitTransition();
@@ -1145,12 +1034,10 @@ const entranceStyle = [
         `scale(${LOBBY_EXIT_SCALE})`;
     }
 
-    applyLogoVisual(1, 1);
+    clearExitTransitions();
 
-    root.style.setProperty(
-      "--veil-opacity",
-      "0"
-    );
+    applyLogoVisual(1, 1);
+    applyVeilOpacity(0);
 
     render();
 
@@ -1214,8 +1101,6 @@ const entranceStyle = [
 
 <style>
   .entrance-experience {
-    --veil-opacity: 0;
-
     --desktop-height-px: 620px;
     --desktop-height-vh: 60vh;
 
@@ -1279,15 +1164,13 @@ const entranceStyle = [
     position: absolute;
     inset: 0;
 
-    opacity: calc(
-      var(--veil-opacity) * 0.1
-    );
+    opacity: 0;
 
     background: #fff;
 
-    pointer-events: none;
-
     will-change: opacity;
+
+    pointer-events: none;
   }
 
   /*
@@ -1362,7 +1245,8 @@ const entranceStyle = [
 
   /*
    * 将来、外部SVGファイルへ変更した場合も
-   * 以下のクラスを付ければ同じ寸法で表示できる。
+   * 以下のクラスを付ければ、
+   * 現在と同じアニメーションを使用できる。
    *
    * 例：
    *
@@ -1410,7 +1294,9 @@ const entranceStyle = [
     prefers-reduced-motion:
     reduce
   ) {
-    .entrance-experience__lobby {
+    .entrance-experience__lobby,
+    .entrance-experience__logo-visual,
+    .entrance-experience__veil {
       transition-duration:
         1ms !important;
     }

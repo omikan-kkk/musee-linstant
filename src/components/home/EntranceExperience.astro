@@ -26,42 +26,18 @@ const entranceStyle = [
   style={entranceStyle}
 >
   <div
-    class="entrance-experience__lobby-stage"
+    class="entrance-experience__lobby"
     aria-hidden="true"
   >
     {
       lobbyImage && (
-        <>
-          <div
-            class="
-              entrance-experience__lobby-layer
-              entrance-experience__lobby-layer--approach
-            "
-          >
-            <img
-              class="entrance-experience__lobby-image"
-              src={lobbyImage}
-              alt=""
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-
-          <div
-            class="
-              entrance-experience__lobby-layer
-              entrance-experience__lobby-layer--final
-            "
-          >
-            <img
-              class="entrance-experience__lobby-image"
-              src={lobbyImage}
-              alt=""
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        </>
+        <img
+          class="entrance-experience__lobby-image"
+          src={lobbyImage}
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
       )
     }
   </div>
@@ -103,24 +79,26 @@ const entranceStyle = [
 
     /*
      * 入口：0
-     * ロビー：1
+     * ロビー最奥：1
      */
     const FORWARD_THRESHOLD = 0.42;
     const BACKWARD_THRESHOLD = 0.58;
 
     /*
-     * 一度の縦スワイプで、
-     * 入館・退館しやすい操作距離。
+     * 操作感度を従来の約半分にする。
+     *
+     * 同じ進行量に対して、
+     * 約2倍のスワイプ・ホイール操作が必要。
      */
-    const TOUCH_DISTANCE = 230;
-    const WHEEL_DISTANCE = 190;
+    const TOUCH_DISTANCE = 460;
+    const WHEEL_DISTANCE = 380;
 
     const FORWARD_SNAP_DURATION = 620;
     const BACKWARD_SNAP_DURATION = 560;
 
     /*
-     * LogoButton / MenuButtonと
-     * ロビー画像の本表示を同時に開始する。
+     * 入館完了後、画像とヘッダーの表示を
+     * ほぼ同時に開始する。
      */
     const HEADER_DELAY = 10;
 
@@ -192,12 +170,16 @@ const entranceStyle = [
       headerTimer = 0;
     };
 
-    const hideHeader = () => {
+    const hideLobbyAndHeader = () => {
       clearHeaderTimer();
 
       /*
-       * ロビー画像の本表示を解除する。
-       * CSS側の900ms easeでフェードアウトする。
+       * 退館開始直後にクラスを外す。
+       *
+       * 画像はCSS側で、
+       * opacity 1 → 0
+       * scale 1 → 0.75
+       * を900ms linearで同時に行う。
        */
       root.classList.remove(
         "is-lobby-complete"
@@ -210,14 +192,19 @@ const entranceStyle = [
       dispatchState(false);
     };
 
-    const showHeaderAfterDelay = () => {
+    const showLobbyAndHeader = () => {
       clearHeaderTimer();
 
       headerTimer =
         window.setTimeout(() => {
           /*
-           * ロビー画像・ロゴボタン・
-           * メニューボタンの表示開始を揃える。
+           * progressが1へ到達したあとで初めて、
+           * ロビー画像を表示する。
+           *
+           * 画像はCSS側で、
+           * opacity 0 → 1
+           * scale 0.75 → 1
+           * を900ms linearで同時に行う。
            */
           root.classList.add(
             "is-lobby-complete"
@@ -249,43 +236,11 @@ const entranceStyle = [
       );
 
       /*
-       * ロビー画像は遠方の小さな状態から始まり、
-       * 入館が進むほど近づいて大きくなる。
-       *
-       * progress 0.18までは遠景のまま、
-       * そこから1.0に向けて所定サイズへ近づく。
-       */
-      const lobbyTravelProgress =
-        clamp(
-          (progress - 0.18) /
-            0.82
-        );
-
-      const lobbyTravelCurve =
-        easeOutQuint(
-          lobbyTravelProgress
-        );
-
-      const lobbyScale =
-        0.72 +
-        lobbyTravelCurve * 0.28;
-
-      /*
-       * 接近中は、遠くにロビーが存在することが
-       * 分かる程度の薄い像だけを表示する。
-       *
-       * 入館完了後の鮮明な本表示は、
-       * CSS側で900msかけて重ねる。
-       */
-      const lobbyApproachOpacity =
-        clamp(
-          (progress - 0.28) /
-            0.42
-        ) * 0.22;
-
-      /*
        * ロゴを通過する瞬間だけ、
        * ごく薄い白を挟む。
+       *
+       * ロビー画像自体は、
+       * progressが1になるまで表示しない。
        */
       const veilOpacity =
         progress < 0.58
@@ -306,18 +261,6 @@ const entranceStyle = [
       root.style.setProperty(
         "--logo-opacity",
         String(logoOpacity)
-      );
-
-      root.style.setProperty(
-        "--lobby-scale",
-        String(lobbyScale)
-      );
-
-      root.style.setProperty(
-        "--lobby-approach-opacity",
-        String(
-          lobbyApproachOpacity
-        )
       );
 
       root.style.setProperty(
@@ -365,9 +308,13 @@ const entranceStyle = [
       render();
 
       if (target === 1) {
-        showHeaderAfterDelay();
+        /*
+         * 最奥への遷移完了後に、
+         * ロビー画像を初めて表示する。
+         */
+        showLobbyAndHeader();
       } else {
-        hideHeader();
+        hideLobbyAndHeader();
       }
     };
 
@@ -385,12 +332,11 @@ const entranceStyle = [
       cancelSnap();
 
       /*
-       * 退館を始める場合は、
-       * 画像とボタン類のフェードアウトを
-       * 移動開始と同時に始める。
+       * 退館時は、遷移開始直後から
+       * フェードアウトと縮小を始める。
        */
       if (target === 0) {
-        hideHeader();
+        hideLobbyAndHeader();
       }
 
       isSnapping = true;
@@ -488,8 +434,10 @@ const entranceStyle = [
     };
 
     /*
-     * ホイールの段差を直接描画せず、
-     * wheelTargetを滑らかに追いかける。
+     * PCホイール用。
+     *
+     * wheelTargetへ入力を蓄積し、
+     * progressが滑らかに追従する。
      */
     const startWheelInterpolation = (
       direction: number
@@ -519,8 +467,17 @@ const entranceStyle = [
         progress =
           clamp(progress);
 
-        if (progress < 1) {
-          hideHeader();
+        /*
+         * ロビーから少しでも戻り始めたら、
+         * 画像・ヘッダーの退館演出を開始する。
+         */
+        if (
+          progress < 1 &&
+          root.classList.contains(
+            "is-lobby-complete"
+          )
+        ) {
+          hideLobbyAndHeader();
         }
 
         render();
@@ -587,6 +544,10 @@ const entranceStyle = [
         }
 
         cancelSnap();
+
+        if (direction < 0) {
+          hideLobbyAndHeader();
+        }
       }
 
       const normalizedDelta =
@@ -680,9 +641,6 @@ const entranceStyle = [
           );
       }
 
-      /*
-       * 指の移動距離へ直接追従する。
-       */
       progress = clamp(
         touchStartProgress +
           totalDistance /
@@ -691,16 +649,21 @@ const entranceStyle = [
 
       wheelTarget = progress;
 
-      if (progress < 1) {
-        hideHeader();
+      /*
+       * ロビー最奥から少しでも戻り始めたら、
+       * 画像とヘッダーの退館演出を開始する。
+       */
+      if (
+        progress < 1 &&
+        root.classList.contains(
+          "is-lobby-complete"
+        )
+      ) {
+        hideLobbyAndHeader();
       }
 
       render();
 
-      /*
-       * 閾値へ到達したら、
-       * 残りを自動的に進める。
-       */
       if (
         evaluateThreshold(
           touchDirection
@@ -718,8 +681,10 @@ const entranceStyle = [
       isTouching = false;
 
       /*
-       * 閾値未満の場合は、
-       * 現在位置に留める。
+       * 閾値を超えていれば、
+       * 残りを自動遷移させる。
+       *
+       * 閾値未満なら現在位置に留まる。
        */
       evaluateThreshold(
         touchDirection
@@ -815,7 +780,7 @@ const entranceStyle = [
     };
 
     render();
-    hideHeader();
+    hideLobbyAndHeader();
 
     window.addEventListener(
       "wheel",
@@ -873,10 +838,6 @@ const entranceStyle = [
   .entrance-experience {
     --logo-scale: 1;
     --logo-opacity: 1;
-
-    --lobby-scale: 0.72;
-    --lobby-approach-opacity: 0;
-
     --veil-opacity: 0;
 
     --desktop-height-px: 620px;
@@ -896,7 +857,7 @@ const entranceStyle = [
     background: #fff;
   }
 
-  .entrance-experience__lobby-stage {
+  .entrance-experience__lobby {
     position: absolute;
     inset: 0;
 
@@ -906,70 +867,36 @@ const entranceStyle = [
 
     overflow: hidden;
 
-    background: #fff;
+    opacity: 0;
 
-    pointer-events: none;
-  }
-
-  .entrance-experience__lobby-layer {
-    position: absolute;
-    inset: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    transform:
-      scale(
-        var(--lobby-scale)
-      );
-
+    transform: scale(0.75);
     transform-origin: center;
 
+    background: #fff;
+
+    transition:
+      opacity 900ms linear,
+      transform 900ms linear;
+
     will-change:
-      transform,
-      opacity;
+      opacity,
+      transform;
 
     pointer-events: none;
   }
 
   /*
-   * 接近中に見える薄い遠景。
+   * ロビー最奥への遷移が完了したあと、
+   * 画像を初めて表示する。
    *
-   * スクロール量に応じて小→大へ進み、
-   * ロビーへ到着すると役割を終える。
+   * 75% → 100%
+   * opacity 0 → 1
+   * を900ms linearで同時に行う。
    */
-  .entrance-experience__lobby-layer--approach {
-    opacity:
-      var(
-        --lobby-approach-opacity
-      );
-
-    transition:
-      opacity 180ms linear;
-  }
-
-  /*
-   * 入館完了後の鮮明なロビー画像。
-   *
-   * LogoButton / MenuButtonと同じ
-   * 900ms easeで表示する。
-   */
-  .entrance-experience__lobby-layer--final {
-    opacity: 0;
-
-    transition:
-      opacity 900ms ease;
-  }
-
   .entrance-experience.is-lobby-complete
-    .entrance-experience__lobby-layer--approach {
-    opacity: 0;
-  }
-
-  .entrance-experience.is-lobby-complete
-    .entrance-experience__lobby-layer--final {
+    .entrance-experience__lobby {
     opacity: 1;
+    transform: scale(1);
   }
 
   .entrance-experience__lobby-image {
@@ -1057,11 +984,8 @@ const entranceStyle = [
   }
 
   /*
-   * タブレット・スマホでは、
-   * 横幅100%・高さ自動。
-   *
-   * 画像の縦横比を維持し、
-   * 上下の余白は白背景として残す。
+   * タブレット・スマホ：
+   * 横幅100%、高さ自動。
    */
   @media (max-width: 1024px) {
     .entrance-experience__lobby-image {
@@ -1091,8 +1015,7 @@ const entranceStyle = [
     prefers-reduced-motion:
     reduce
   ) {
-    .entrance-experience__lobby-layer--approach,
-    .entrance-experience__lobby-layer--final {
+    .entrance-experience__lobby {
       transition-duration: 1ms;
     }
   }

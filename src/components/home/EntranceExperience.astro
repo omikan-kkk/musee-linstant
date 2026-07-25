@@ -93,16 +93,30 @@ const entranceStyle = [
 
     /*
      * 退館方向では、
-     * progressが0.33以下になった時点で
+     * progressが0.10以下になった時点で
      * 入口までの自動遷移を開始する。
      */
-    const BACKWARD_THRESHOLD = 0.33;
+    const BACKWARD_THRESHOLD = 0.10;
 
     /*
-     * 操作感度。
+     * 入館方向の操作感度。
+     *
+     * 現在の完成済み設定を維持する。
      */
-    const TOUCH_DISTANCE = 345;
-    const WHEEL_DISTANCE = 300;
+    const FORWARD_TOUCH_DISTANCE = 345;
+    const FORWARD_WHEEL_DISTANCE = 300;
+
+    /*
+     * 退館方向の操作感度。
+     *
+     * 入館方向の約1.5倍敏感にするため、
+     * 必要な操作距離を3分の2にする。
+     *
+     * 345 ÷ 1.5 = 230
+     * 300 ÷ 1.5 = 200
+     */
+    const BACKWARD_TOUCH_DISTANCE = 230;
+    const BACKWARD_WHEEL_DISTANCE = 200;
 
     /*
      * 閾値を超えたあとの
@@ -155,17 +169,6 @@ const entranceStyle = [
 
     let isTouching = false;
     let isSnapping = false;
-
-    /*
-     * ロビー画像の状態管理。
-     *
-     * isLobbyVisible:
-     * 画像が表示状態、または表示演出中。
-     *
-     * 一度trueになったあとは、
-     * hideLobbyAndHeader()が実行されるまで
-     * showLobbyAndHeader()を再実行しない。
-     */
     let isLobbyVisible = false;
 
     let snapTarget: 0 | 1 | null = null;
@@ -213,10 +216,6 @@ const entranceStyle = [
       );
     };
 
-    /*
-     * JavaScriptで指定した開始状態を
-     * ブラウザへ確定させる。
-     */
     const forceReflow = () => {
       lobby?.getBoundingClientRect();
     };
@@ -224,13 +223,9 @@ const entranceStyle = [
     /*
      * 入館完了後の画像表示。
      *
-     * 重要：
-     * すでに表示済み、または表示演出中なら
+     * 一度表示済みになったあとは、
+     * 退館画像演出が始まるまで
      * 再実行しない。
-     *
-     * これにより、入館後にさらに同方向へ
-     * ホイールやスワイプを繰り返しても、
-     * 画像出現演出は再生されない。
      */
     const showLobbyAndHeader = () => {
       if (isLobbyVisible) {
@@ -253,9 +248,6 @@ const entranceStyle = [
         return;
       }
 
-      /*
-       * 透明なまま85%の開始位置へ準備する。
-       */
       lobby.style.transition = "none";
       lobby.style.opacity = "0";
       lobby.style.transform =
@@ -263,10 +255,6 @@ const entranceStyle = [
 
       forceReflow();
 
-      /*
-       * 幻想的で余韻のあるイーズアウトで、
-       * 700msかけて出現・拡大する。
-       */
       lobby.style.transition = [
         `opacity ${LOBBY_ENTER_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
         `transform ${LOBBY_ENTER_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
@@ -286,7 +274,7 @@ const entranceStyle = [
     /*
      * 退館開始直後の画像消失。
      *
-     * 画像演出だけは退館progressから独立し、
+     * 画像だけはprogressから独立し、
      * 固定400msで消失・縮小する。
      */
     const hideLobbyAndHeader = () => {
@@ -299,13 +287,6 @@ const entranceStyle = [
         return;
       }
 
-      /*
-       * この時点でfalseに戻す。
-       *
-       * 画像消失演出が一度開始されたあとなら、
-       * 次回の入館完了時に限り、
-       * 再び画像出現演出を実行できる。
-       */
       isLobbyVisible = false;
 
       if (lobby) {
@@ -323,10 +304,6 @@ const entranceStyle = [
     };
 
     const render = () => {
-      /*
-       * 入口ロゴは、
-       * 奥へ進むほど加速しながら拡大する。
-       */
       const forwardCurve =
         progress * progress;
 
@@ -339,10 +316,6 @@ const entranceStyle = [
             0.3
       );
 
-      /*
-       * ロゴを通過する瞬間だけ、
-       * ごく薄い白を挟む。
-       */
       const veilOpacity =
         progress < 0.58
           ? clamp(
@@ -409,10 +382,6 @@ const entranceStyle = [
       render();
 
       if (target === 1) {
-        /*
-         * showLobbyAndHeader()内部にも
-         * 再実行防止ガードがある。
-         */
         showLobbyAndHeader();
       } else {
         hideLobbyAndHeader();
@@ -422,11 +391,6 @@ const entranceStyle = [
     const snapTo = (
       target: 0 | 1
     ) => {
-      /*
-       * 入館済みの状態で、
-       * さらに入館方向の自動遷移を
-       * 起動しない。
-       */
       if (
         target === 1 &&
         progress >= 1 &&
@@ -436,11 +400,6 @@ const entranceStyle = [
         return;
       }
 
-      /*
-       * 入口へ完全に戻っている状態で、
-       * さらに退館方向の自動遷移を
-       * 起動しない。
-       */
       if (
         target === 0 &&
         progress <= 0 &&
@@ -460,11 +419,6 @@ const entranceStyle = [
       cancelRenderFrame();
       cancelSnap();
 
-      /*
-       * 退館時は、
-       * 退館遷移の開始と同時に
-       * 画像の固定400ms演出を開始する。
-       */
       if (target === 0) {
         hideLobbyAndHeader();
       }
@@ -542,11 +496,6 @@ const entranceStyle = [
     const evaluateThreshold = (
       direction: number
     ) => {
-      /*
-       * すでに入館済みなら、
-       * 入館方向の入力で再びsnapTo(1)を
-       * 起動しない。
-       */
       if (
         direction > 0 &&
         progress >= 1
@@ -555,11 +504,6 @@ const entranceStyle = [
         return false;
       }
 
-      /*
-       * すでに入口なら、
-       * 退館方向の入力で再びsnapTo(0)を
-       * 起動しない。
-       */
       if (
         direction < 0 &&
         progress <= 0
@@ -592,8 +536,8 @@ const entranceStyle = [
     /*
      * PCホイール用。
      *
-     * wheelTargetへ入力を蓄積し、
-     * progressが滑らかに追従する。
+     * 入館方向と退館方向で、
+     * progressへの換算感度を分ける。
      */
     const startWheelInterpolation = (
       direction: number
@@ -623,10 +567,6 @@ const entranceStyle = [
         progress =
           clamp(progress);
 
-        /*
-         * 最奥から退館方向へ少しでも戻ったら、
-         * 画像の固定400ms退館演出を開始する。
-         */
         if (
           direction < 0 &&
           progress < 1 &&
@@ -687,12 +627,6 @@ const entranceStyle = [
           event.deltaY
         );
 
-      /*
-       * 入館完了済みの状態で、
-       * さらに入館方向へ回しても何もしない。
-       *
-       * 画像出現演出も再実行しない。
-       */
       if (
         direction > 0 &&
         progress >= 1 &&
@@ -702,10 +636,6 @@ const entranceStyle = [
         return;
       }
 
-      /*
-       * 入口へ戻り切った状態で、
-       * さらに退館方向へ回しても何もしない。
-       */
       if (
         direction < 0 &&
         progress <= 0 &&
@@ -744,11 +674,24 @@ const entranceStyle = [
           120
         );
 
+      /*
+       * 入館方向：
+       * 300を基準に換算。
+       *
+       * 退館方向：
+       * 200を基準に換算し、
+       * 入館より約1.5倍敏感にする。
+       */
+      const wheelDistance =
+        direction > 0
+          ? FORWARD_WHEEL_DISTANCE
+          : BACKWARD_WHEEL_DISTANCE;
+
       wheelTarget = clamp(
         wheelTarget +
           (direction *
             normalizedDelta) /
-            WHEEL_DISTANCE
+            wheelDistance
       );
 
       startWheelInterpolation(
@@ -824,10 +767,27 @@ const entranceStyle = [
           );
       }
 
+      /*
+       * 入館方向と退館方向で、
+       * スワイプ感度を分ける。
+       *
+       * 入館方向：
+       * 345pxでprogress 1ぶん。
+       *
+       * 退館方向：
+       * 230pxでprogress 1ぶん。
+       *
+       * 退館の方が約1.5倍敏感。
+       */
+      const touchDistance =
+        totalDistance >= 0
+          ? FORWARD_TOUCH_DISTANCE
+          : BACKWARD_TOUCH_DISTANCE;
+
       progress = clamp(
         touchStartProgress +
           totalDistance /
-            TOUCH_DISTANCE
+            touchDistance
       );
 
       wheelTarget = progress;
@@ -835,9 +795,6 @@ const entranceStyle = [
       /*
        * 最奥から退館方向へ戻り始めた場合のみ、
        * 画像の固定400ms退館演出を開始する。
-       *
-       * 入館方向へ追加スワイプしても、
-       * 画像出現演出は再実行しない。
        */
       if (
         touchDirection < 0 &&
@@ -869,7 +826,8 @@ const entranceStyle = [
        * 閾値を超えていれば、
        * 残りを自動遷移させる。
        *
-       * 閾値未満なら現在位置に留まる。
+       * 閾値未満なら、
+       * 現在位置に留まる。
        */
       evaluateThreshold(
         touchDirection

@@ -26,18 +26,42 @@ const entranceStyle = [
   style={entranceStyle}
 >
   <div
-    class="entrance-experience__lobby"
+    class="entrance-experience__lobby-stage"
     aria-hidden="true"
   >
     {
       lobbyImage && (
-        <img
-          class="entrance-experience__lobby-image"
-          src={lobbyImage}
-          alt=""
-          loading="eager"
-          decoding="async"
-        />
+        <>
+          <div
+            class="
+              entrance-experience__lobby-layer
+              entrance-experience__lobby-layer--approach
+            "
+          >
+            <img
+              class="entrance-experience__lobby-image"
+              src={lobbyImage}
+              alt=""
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+
+          <div
+            class="
+              entrance-experience__lobby-layer
+              entrance-experience__lobby-layer--final
+            "
+          >
+            <img
+              class="entrance-experience__lobby-image"
+              src={lobbyImage}
+              alt=""
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+        </>
       )
     }
   </div>
@@ -66,9 +90,10 @@ const entranceStyle = [
 </div>
 
 <script>
-  const root = document.querySelector<HTMLElement>(
-    "[data-entrance-experience]"
-  );
+  const root =
+    document.querySelector<HTMLElement>(
+      "[data-entrance-experience]"
+    );
 
   if (
     root &&
@@ -79,27 +104,24 @@ const entranceStyle = [
     /*
      * 入口：0
      * ロビー：1
-     *
-     * 指で動かしている間は操作量に追従。
-     * 閾値を超えたら、残りを慣性で自動的に進む。
      */
     const FORWARD_THRESHOLD = 0.42;
     const BACKWARD_THRESHOLD = 0.58;
 
     /*
-     * 約90〜110px程度の縦スワイプで閾値へ到達する。
-     * 一般的な一度のスワイプで入退館できる設定。
+     * 一度の縦スワイプで、
+     * 入館・退館しやすい操作距離。
      */
     const TOUCH_DISTANCE = 230;
-
-    /*
-     * ホイール1ノッチ、または一度のトラックパッド操作で
-     * 閾値へ到達しやすい設定。
-     */
     const WHEEL_DISTANCE = 190;
 
     const FORWARD_SNAP_DURATION = 620;
     const BACKWARD_SNAP_DURATION = 560;
+
+    /*
+     * LogoButton / MenuButtonと
+     * ロビー画像の本表示を同時に開始する。
+     */
     const HEADER_DELAY = 10;
 
     let progress = 0;
@@ -173,6 +195,14 @@ const entranceStyle = [
     const hideHeader = () => {
       clearHeaderTimer();
 
+      /*
+       * ロビー画像の本表示を解除する。
+       * CSS側の900ms easeでフェードアウトする。
+       */
+      root.classList.remove(
+        "is-lobby-complete"
+      );
+
       document.body.classList.remove(
         "entrance-is-complete"
       );
@@ -185,6 +215,14 @@ const entranceStyle = [
 
       headerTimer =
         window.setTimeout(() => {
+          /*
+           * ロビー画像・ロゴボタン・
+           * メニューボタンの表示開始を揃える。
+           */
+          root.classList.add(
+            "is-lobby-complete"
+          );
+
           document.body.classList.add(
             "entrance-is-complete"
           );
@@ -195,8 +233,8 @@ const entranceStyle = [
 
     const render = () => {
       /*
-       * 前半はゆっくり、
-       * 奥へ進むほどロゴの迫り方が強くなる。
+       * 入口ロゴは、奥へ進むほど
+       * 加速するように巨大化する。
        */
       const forwardCurve =
         progress * progress;
@@ -204,23 +242,46 @@ const entranceStyle = [
       const logoScale =
         1 + forwardCurve * 13;
 
-      /*
-       * 巨大化したHTML文字の荒さが見えないよう、
-       * ロゴは通過直前に自然に消える。
-       */
       const logoOpacity = clamp(
         1 -
           (progress - 0.48) /
             0.3
       );
 
-      const lobbyOpacity = clamp(
-        (progress - 0.2) / 0.72
-      );
+      /*
+       * ロビー画像は遠方の小さな状態から始まり、
+       * 入館が進むほど近づいて大きくなる。
+       *
+       * progress 0.18までは遠景のまま、
+       * そこから1.0に向けて所定サイズへ近づく。
+       */
+      const lobbyTravelProgress =
+        clamp(
+          (progress - 0.18) /
+            0.82
+        );
+
+      const lobbyTravelCurve =
+        easeOutQuint(
+          lobbyTravelProgress
+        );
 
       const lobbyScale =
-        1.045 -
-        progress * 0.045;
+        0.72 +
+        lobbyTravelCurve * 0.28;
+
+      /*
+       * 接近中は、遠くにロビーが存在することが
+       * 分かる程度の薄い像だけを表示する。
+       *
+       * 入館完了後の鮮明な本表示は、
+       * CSS側で900msかけて重ねる。
+       */
+      const lobbyApproachOpacity =
+        clamp(
+          (progress - 0.28) /
+            0.42
+        ) * 0.22;
 
       /*
        * ロゴを通過する瞬間だけ、
@@ -248,13 +309,15 @@ const entranceStyle = [
       );
 
       root.style.setProperty(
-        "--lobby-opacity",
-        String(lobbyOpacity)
+        "--lobby-scale",
+        String(lobbyScale)
       );
 
       root.style.setProperty(
-        "--lobby-scale",
-        String(lobbyScale)
+        "--lobby-approach-opacity",
+        String(
+          lobbyApproachOpacity
+        )
       );
 
       root.style.setProperty(
@@ -321,6 +384,15 @@ const entranceStyle = [
       cancelRenderFrame();
       cancelSnap();
 
+      /*
+       * 退館を始める場合は、
+       * 画像とボタン類のフェードアウトを
+       * 移動開始と同時に始める。
+       */
+      if (target === 0) {
+        hideHeader();
+      }
+
       isSnapping = true;
       snapTarget = target;
 
@@ -330,10 +402,6 @@ const entranceStyle = [
       const distance =
         target - startProgress;
 
-      /*
-       * 残り距離が短い場合は、
-       * 無駄に長くならないよう調整。
-       */
       const baseDuration =
         target === 1
           ? FORWARD_SNAP_DURATION
@@ -420,15 +488,8 @@ const entranceStyle = [
     };
 
     /*
-     * PCホイール用。
-     *
-     * deltaYをprogressへ直接反映すると、
-     * ホイールの段差がそのまま
-     * 「ガッガッ」と見える。
-     *
-     * そこで入力先をwheelTargetに蓄積し、
-     * 実際のprogressは毎フレーム
-     * 滑らかに追いかける。
+     * ホイールの段差を直接描画せず、
+     * wheelTargetを滑らかに追いかける。
      */
     const startWheelInterpolation = (
       direction: number
@@ -444,10 +505,6 @@ const entranceStyle = [
         const difference =
           wheelTarget - progress;
 
-        /*
-         * フレームごとに差分の約18%だけ進める。
-         * ホイールの段差を滑らかな移動へ変換する。
-         */
         progress +=
           difference * 0.18;
 
@@ -532,10 +589,6 @@ const entranceStyle = [
         cancelSnap();
       }
 
-      /*
-       * 極端に大きいdeltaYは制限し、
-       * マウスとトラックパッドの差を小さくする。
-       */
       const normalizedDelta =
         Math.min(
           Math.max(
@@ -558,11 +611,6 @@ const entranceStyle = [
         direction
       );
 
-      /*
-       * トラックパッドの細かなイベントが
-       * 止まったあと、閾値を越えていれば
-       * 確実に最後まで到達させる。
-       */
       window.clearTimeout(
         wheelEndTimer
       );
@@ -633,8 +681,7 @@ const entranceStyle = [
       }
 
       /*
-       * 指の移動距離へ直接追従するため、
-       * 指を止めた瞬間はこの位置で止まる。
+       * 指の移動距離へ直接追従する。
        */
       progress = clamp(
         touchStartProgress +
@@ -651,9 +698,8 @@ const entranceStyle = [
       render();
 
       /*
-       * 一定位置へ入ったら、
-       * 指を滑らせ続けなくても
-       * 慣性で最奥へ進む。
+       * 閾値へ到達したら、
+       * 残りを自動的に進める。
        */
       if (
         evaluateThreshold(
@@ -672,9 +718,8 @@ const entranceStyle = [
       isTouching = false;
 
       /*
-       * 閾値未満なら、その位置に留める。
-       * 短く弱いスワイプで
-       * 勝手に入館しない。
+       * 閾値未満の場合は、
+       * 現在位置に留める。
        */
       evaluateThreshold(
         touchDirection
@@ -828,8 +873,10 @@ const entranceStyle = [
   .entrance-experience {
     --logo-scale: 1;
     --logo-opacity: 1;
-    --lobby-opacity: 0;
-    --lobby-scale: 1.045;
+
+    --lobby-scale: 0.72;
+    --lobby-approach-opacity: 0;
+
     --veil-opacity: 0;
 
     --desktop-height-px: 620px;
@@ -849,7 +896,7 @@ const entranceStyle = [
     background: #fff;
   }
 
-  .entrance-experience__lobby {
+  .entrance-experience__lobby-stage {
     position: absolute;
     inset: 0;
 
@@ -859,21 +906,70 @@ const entranceStyle = [
 
     overflow: hidden;
 
-    opacity: var(
-      --lobby-opacity
-    );
-
     background: #fff;
 
-    transform: scale(
-      var(--lobby-scale)
-    );
+    pointer-events: none;
+  }
+
+  .entrance-experience__lobby-layer {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transform:
+      scale(
+        var(--lobby-scale)
+      );
 
     transform-origin: center;
 
     will-change:
       transform,
       opacity;
+
+    pointer-events: none;
+  }
+
+  /*
+   * 接近中に見える薄い遠景。
+   *
+   * スクロール量に応じて小→大へ進み、
+   * ロビーへ到着すると役割を終える。
+   */
+  .entrance-experience__lobby-layer--approach {
+    opacity:
+      var(
+        --lobby-approach-opacity
+      );
+
+    transition:
+      opacity 180ms linear;
+  }
+
+  /*
+   * 入館完了後の鮮明なロビー画像。
+   *
+   * LogoButton / MenuButtonと同じ
+   * 900ms easeで表示する。
+   */
+  .entrance-experience__lobby-layer--final {
+    opacity: 0;
+
+    transition:
+      opacity 900ms ease;
+  }
+
+  .entrance-experience.is-lobby-complete
+    .entrance-experience__lobby-layer--approach {
+    opacity: 0;
+  }
+
+  .entrance-experience.is-lobby-complete
+    .entrance-experience__lobby-layer--final {
+    opacity: 1;
   }
 
   .entrance-experience__lobby-image {
@@ -923,13 +1019,16 @@ const entranceStyle = [
     height: auto;
     overflow: visible;
 
-    opacity: var(
-      --logo-opacity
-    );
+    opacity:
+      var(
+        --logo-opacity
+      );
 
     transform:
       translate(-50%, -50%)
-      scale(var(--logo-scale));
+      scale(
+        var(--logo-scale)
+      );
 
     transform-origin: center;
 
@@ -942,19 +1041,28 @@ const entranceStyle = [
   }
 
   .entrance-experience__logo-text {
-    fill: var(
-      --navigation-color
-    );
+    fill:
+      var(
+        --navigation-color
+      );
 
-    font-family: var(
-      --site-font-family
-    );
+    font-family:
+      var(
+        --site-font-family
+      );
 
     font-size: 34px;
     font-weight: 400;
     letter-spacing: 0.08em;
   }
 
+  /*
+   * タブレット・スマホでは、
+   * 横幅100%・高さ自動。
+   *
+   * 画像の縦横比を維持し、
+   * 上下の余白は白背景として残す。
+   */
   @media (max-width: 1024px) {
     .entrance-experience__lobby-image {
       width: 100%;
@@ -976,6 +1084,16 @@ const entranceStyle = [
 
     .entrance-experience__logo-text {
       font-size: 32px;
+    }
+  }
+
+  @media (
+    prefers-reduced-motion:
+    reduce
+  ) {
+    .entrance-experience__lobby-layer--approach,
+    .entrance-experience__lobby-layer--final {
+      transition-duration: 1ms;
     }
   }
 </style>

@@ -1,0 +1,525 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { CONTENTS } from "../../data/contents";
+
+const LOBBY_CONTENT_ID = "__lobby__";
+
+const lobbyContent = CONTENTS.find(
+  (content) => content.id === LOBBY_CONTENT_ID
+);
+
+const currentLobbyImage = lobbyContent?.image || "";
+---
+
+<Layout title="Lobby | Musée de l'Instant CMS" showHeader={false}>
+  <main class="admin">
+    <header>
+      <a href="/admin">← CMS</a>
+      <h1>Lobby</h1>
+    </header>
+
+    <section
+      class="editor"
+      data-current-image={currentLobbyImage}
+    >
+      <div class="field">
+        <label for="image">Lobby Image</label>
+
+        <div
+          id="empty-preview"
+          class:list={[
+            "empty-preview",
+            currentLobbyImage && "is-hidden",
+          ]}
+        >
+          No image
+        </div>
+
+        <img
+          id="image-preview"
+          class:list={[
+            "image-preview",
+            !currentLobbyImage && "is-hidden",
+          ]}
+          src={currentLobbyImage || undefined}
+          alt=""
+        />
+
+        <input
+          id="image"
+          type="file"
+          accept="image/*"
+        />
+
+        <p class="note">
+          One image only. Saving a new image replaces the current image.
+        </p>
+      </div>
+
+      <div class="actions">
+        <button
+          type="button"
+          id="save-button"
+          class="save-button"
+        >
+          Save
+        </button>
+
+        <button
+          type="button"
+          id="remove-button"
+          class="remove-button"
+          disabled={!currentLobbyImage}
+        >
+          Remove Image
+        </button>
+
+        <p id="save-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import {
+      requireLogin,
+      authFetch,
+    } from "../../lib/auth";
+
+    requireLogin();
+
+    const LOBBY_CONTENT_ID = "__lobby__";
+    const LOBBY_CATEGORY_ID = "__site__";
+
+    const editor = document.querySelector(".editor");
+    const imageInput = document.querySelector("#image");
+    const imagePreview = document.querySelector("#image-preview");
+    const emptyPreview = document.querySelector("#empty-preview");
+    const saveButton = document.querySelector("#save-button");
+    const removeButton = document.querySelector("#remove-button");
+    const saveStatus = document.querySelector("#save-status");
+
+    let selectedImageFile = null;
+    let previewObjectUrl = "";
+
+    let savedImagePath =
+      editor?.getAttribute("data-current-image") || "";
+
+    async function loadContents() {
+      const response = await authFetch("/contents");
+      const data = await response.json();
+
+      if (!data.ok || !Array.isArray(data.contents)) {
+        throw new Error("Could not load contents.");
+      }
+
+      return data.contents;
+    }
+
+    async function saveContents(contents) {
+      const response = await authFetch("/contents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.ok) {
+        throw new Error("Could not save contents.");
+      }
+    }
+
+    async function uploadImage(file) {
+      const formData = new FormData();
+
+      formData.append("file", file);
+      formData.append(
+        "contentId",
+        LOBBY_CONTENT_ID
+      );
+
+      const response = await authFetch("/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!data.ok || !data.image) {
+        throw new Error("Could not upload image.");
+      }
+
+      return data.image;
+    }
+
+    function showImage(src, alt = "") {
+      if (!imagePreview || !emptyPreview) {
+        return;
+      }
+
+      imagePreview.src = src;
+      imagePreview.alt = alt;
+      imagePreview.classList.remove("is-hidden");
+      emptyPreview.classList.add("is-hidden");
+    }
+
+    function showEmpty() {
+      if (!imagePreview || !emptyPreview) {
+        return;
+      }
+
+      imagePreview.removeAttribute("src");
+      imagePreview.alt = "";
+      imagePreview.classList.add("is-hidden");
+      emptyPreview.classList.remove("is-hidden");
+    }
+
+    function resetSelectedFile() {
+      selectedImageFile = null;
+
+      if (imageInput) {
+        imageInput.value = "";
+      }
+
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = "";
+      }
+    }
+
+    imageInput?.addEventListener("change", () => {
+      const file = imageInput.files?.[0];
+
+      if (!file) {
+        resetSelectedFile();
+
+        if (savedImagePath) {
+          showImage(savedImagePath);
+        } else {
+          showEmpty();
+        }
+
+        return;
+      }
+
+      selectedImageFile = file;
+
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+      }
+
+      previewObjectUrl = URL.createObjectURL(file);
+
+      showImage(previewObjectUrl, file.name);
+
+      if (saveStatus) {
+        saveStatus.textContent =
+          "New image selected. Press Save.";
+      }
+    });
+
+    saveButton?.addEventListener("click", async () => {
+      if (
+        !selectedImageFile ||
+        !saveButton ||
+        !saveStatus
+      ) {
+        if (saveStatus) {
+          saveStatus.textContent =
+            "Select an image first";
+        }
+
+        return;
+      }
+
+      saveButton.disabled = true;
+
+      if (removeButton) {
+        removeButton.disabled = true;
+      }
+
+      saveStatus.textContent = "Uploading image...";
+
+      try {
+        const uploadedImagePath =
+          await uploadImage(selectedImageFile);
+
+        saveStatus.textContent =
+          "Saving lobby image...";
+
+        const currentContents =
+          await loadContents();
+
+        const existingLobbyContent =
+          currentContents.find(
+            (content) =>
+              content.id === LOBBY_CONTENT_ID
+          );
+
+        let nextContents;
+
+        if (existingLobbyContent) {
+          nextContents = currentContents.map(
+            (content) => {
+              if (
+                content.id !== LOBBY_CONTENT_ID
+              ) {
+                return content;
+              }
+
+              return {
+                ...content,
+                image: uploadedImagePath,
+                visible: true,
+              };
+            }
+          );
+        } else {
+          nextContents = [
+            ...currentContents,
+            {
+              id: LOBBY_CONTENT_ID,
+              categoryId: LOBBY_CATEGORY_ID,
+              slug: LOBBY_CONTENT_ID,
+              image: uploadedImagePath,
+              title: "",
+              body: "",
+              visible: true,
+              order: 0,
+            },
+          ];
+        }
+
+        await saveContents(nextContents);
+
+        savedImagePath = uploadedImagePath;
+
+        resetSelectedFile();
+        showImage(savedImagePath);
+
+        if (removeButton) {
+          removeButton.disabled = false;
+        }
+
+        saveStatus.textContent =
+          "Saved to GitHub";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Save failed";
+      } finally {
+        saveButton.disabled = false;
+
+        if (removeButton && savedImagePath) {
+          removeButton.disabled = false;
+        }
+      }
+    });
+
+    removeButton?.addEventListener("click", async () => {
+      if (
+        !saveButton ||
+        !removeButton ||
+        !saveStatus
+      ) {
+        return;
+      }
+
+      const confirmed = window.confirm(
+        "Remove the lobby image? The lobby will return to a white background."
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      saveButton.disabled = true;
+      removeButton.disabled = true;
+      saveStatus.textContent =
+        "Removing lobby image...";
+
+      try {
+        const currentContents =
+          await loadContents();
+
+        const nextContents =
+          currentContents.filter(
+            (content) =>
+              content.id !== LOBBY_CONTENT_ID
+          );
+
+        await saveContents(nextContents);
+
+        savedImagePath = "";
+
+        resetSelectedFile();
+        showEmpty();
+
+        saveStatus.textContent =
+          "Lobby image removed";
+      } catch (error) {
+        console.error(error);
+        saveStatus.textContent = "Remove failed";
+
+        if (savedImagePath) {
+          removeButton.disabled = false;
+        }
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    window.addEventListener(
+      "beforeunload",
+      () => {
+        if (previewObjectUrl) {
+          URL.revokeObjectURL(
+            previewObjectUrl
+          );
+        }
+      }
+    );
+  </script>
+</Layout>
+
+<style>
+.admin{
+  max-width:720px;
+  margin:120px auto;
+  padding:24px;
+  color:#111;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+header{
+  margin-bottom:56px;
+}
+
+header a{
+  display:inline-block;
+  margin-bottom:24px;
+  color:#777;
+  text-decoration:none;
+  font-size:12px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  font-weight:400;
+  letter-spacing:.04em;
+}
+
+.editor{
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+label{
+  color:#777;
+  font-size:11px;
+  letter-spacing:.12em;
+}
+
+.image-preview{
+  display:block;
+  width:min(100%,560px);
+  max-height:560px;
+  object-fit:contain;
+  object-position:center;
+  background:#f7f7f7;
+}
+
+.empty-preview{
+  display:grid;
+  place-items:center;
+  width:min(100%,560px);
+  aspect-ratio:16 / 10;
+  border:1px solid #e5e5e5;
+  background:#fafafa;
+  color:#999;
+  font-size:12px;
+  letter-spacing:.08em;
+}
+
+.is-hidden{
+  display:none;
+}
+
+input[type="file"]{
+  width:100%;
+  border:none;
+  padding:0;
+  background:#fff;
+  color:#111;
+  font:inherit;
+  font-size:12px;
+}
+
+.note{
+  margin:0;
+  color:#999;
+  font-size:11px;
+  line-height:1.7;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.save-button,
+.remove-button{
+  border:none;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.save-button{
+  background:#111;
+  color:#fff;
+}
+
+.remove-button{
+  background:transparent;
+  color:#777;
+  padding-left:0;
+  padding-right:0;
+}
+
+.save-button:disabled,
+.remove-button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+#save-status{
+  margin:0;
+  color:#777;
+  font-size:12px;
+}
+
+@media (max-width:640px){
+  .admin{
+    margin:72px auto;
+    padding:20px;
+  }
+
+  header{
+    margin-bottom:40px;
+  }
+}
+</style>

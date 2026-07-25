@@ -9,39 +9,66 @@ import MenuPanel from "./MenuPanel.astro";
 <MenuPanel />
 
 <script>
-  const menuButton = document.querySelector(".menu-button");
-  const menuPanel = document.querySelector(".menu-panel");
+const menuButton = document.querySelector(".menu-button");
+const menuPanel = document.querySelector(".menu-panel");
 
-  menuButton?.addEventListener("click", () => {
-    menuButton.classList.toggle("is-open");
-    menuPanel?.classList.toggle("is-open");
-  });
+menuButton?.addEventListener("click", () => {
+  menuButton.classList.toggle("is-open");
+  menuPanel?.classList.toggle("is-open");
+});
 
-  function updateScrolledState(scrollTop) {
-    if (document.body.classList.contains("force-header")) {
-      document.body.classList.add("has-scrolled");
-      return;
-    }
+function applyHeaderState(show) {
+  document.body.classList.toggle(
+    "has-scrolled",
+    show
+  );
+}
 
-    document.body.classList.toggle(
-      "has-scrolled",
-      scrollTop > 20
+function syncFromBody() {
+  applyHeaderState(
+    document.body.classList.contains(
+      "entrance-is-complete"
+    )
+  );
+}
+
+/*
+ * 初期状態
+ */
+syncFromBody();
+
+/*
+ * EntranceExperienceから通知される
+ */
+window.addEventListener(
+  "entrance-state-change",
+  (event) => {
+    applyHeaderState(
+      event.detail.complete
     );
   }
+);
 
-  const scrollRoot = document.querySelector("[data-scroll-root]");
+/*
+ * bodyクラス変更にも追従
+ * （260ms後の表示など）
+ */
+const observer = new MutationObserver(() => {
+  syncFromBody();
+});
 
-  if (scrollRoot) {
-    updateScrolledState(scrollRoot.scrollTop);
+observer.observe(document.body, {
+  attributes: true,
+  attributeFilter: ["class"],
+});
 
-    scrollRoot.addEventListener("scroll", () => {
-      updateScrolledState(scrollRoot.scrollTop);
-    });
-  } else {
-    updateScrolledState(window.scrollY);
-
-    window.addEventListener("scroll", () => {
-      updateScrolledState(window.scrollY);
-    });
+/*
+ * Astro遷移時
+ */
+document.addEventListener(
+  "astro:before-swap",
+  () => {
+    observer.disconnect();
   }
+);
 </script>

@@ -1,0 +1,714 @@
+---
+import { CONTENTS } from "../../data/contents";
+
+const lobbyImage =
+  CONTENTS.find(
+    (content) => content.id === "__lobby__"
+  )?.image || "";
+---
+
+<div
+  class="entrance-experience"
+  data-entrance-experience
+  style={lobbyImage ? `--lobby-image: url("${lobbyImage}")` : undefined}
+>
+  <div class="entrance-experience__lobby" aria-hidden="true"></div>
+
+  <div class="entrance-experience__veil" aria-hidden="true"></div>
+
+  <svg
+    class="entrance-experience__logo"
+    viewBox="0 0 1000 120"
+    role="img"
+    aria-label="Musée de l'Instant"
+  >
+    <text
+      class="entrance-experience__logo-text"
+      x="500"
+      y="66"
+      text-anchor="middle"
+      dominant-baseline="middle"
+    >
+      Musée de l'Instant
+    </text>
+  </svg>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>(
+    "[data-entrance-experience]"
+  );
+
+  if (root && root.dataset.initialized !== "true") {
+    root.dataset.initialized = "true";
+
+    /*
+     * 入口：0
+     * ロビー：1
+     *
+     * 指で動かしている間は操作量に追従。
+     * 閾値を超えたら、残りを慣性で自動的に進む。
+     */
+    const FORWARD_THRESHOLD = 0.42;
+    const BACKWARD_THRESHOLD = 0.58;
+
+    /*
+     * 約90〜110px程度の縦スワイプで閾値へ到達する。
+     * 一般的な一度のスワイプで入退館できる設定。
+     */
+    const TOUCH_DISTANCE = 230;
+
+    /*
+     * ホイール1ノッチ、または一度のトラックパッド操作で
+     * 閾値へ到達しやすい設定。
+     */
+    const WHEEL_DISTANCE = 190;
+
+    const FORWARD_SNAP_DURATION = 620;
+    const BACKWARD_SNAP_DURATION = 560;
+    const HEADER_DELAY = 10;
+
+    let progress = 0;
+    let wheelTarget = 0;
+
+    let touchStartY = 0;
+    let touchStartProgress = 0;
+    let touchLastY = 0;
+    let touchDirection = 0;
+
+    let renderFrame = 0;
+    let snapFrame = 0;
+    let wheelEndTimer = 0;
+    let headerTimer = 0;
+
+    let isTouching = false;
+    let isSnapping = false;
+    let snapTarget: 0 | 1 | null = null;
+
+    const clamp = (value: number, min = 0, max = 1) =>
+      Math.min(max, Math.max(min, value));
+
+    const easeOutQuint = (value: number) =>
+      1 - Math.pow(1 - value, 5);
+
+    const easeInOutCubic = (value: number) =>
+      value < 0.5
+        ? 4 * value * value * value
+        : 1 - Math.pow(-2 * value + 2, 3) / 2;
+
+    const dispatchState = (complete: boolean) => {
+      window.dispatchEvent(
+        new CustomEvent("entrance-state-change", {
+          detail: {
+            complete,
+            progress,
+          },
+        })
+      );
+    };
+
+    const clearHeaderTimer = () => {
+      window.clearTimeout(headerTimer);
+      headerTimer = 0;
+    };
+
+    const hideHeader = () => {
+      clearHeaderTimer();
+      document.body.classList.remove("entrance-is-complete");
+      dispatchState(false);
+    };
+
+    const showHeaderAfterDelay = () => {
+      clearHeaderTimer();
+
+      headerTimer = window.setTimeout(() => {
+        document.body.classList.add("entrance-is-complete");
+        dispatchState(true);
+      }, HEADER_DELAY);
+    };
+
+    const render = () => {
+      /*
+       * 前半はゆっくり、奥へ進むほどロゴの迫り方が強くなる。
+       */
+      const forwardCurve = progress * progress;
+
+      const logoScale = 1 + forwardCurve * 13;
+
+      /*
+       * 巨大化したHTML文字の荒さが見えないよう、
+       * ロゴは通過直前に自然に消える。
+       */
+      const logoOpacity = clamp(
+        1 - (progress - 0.48) / 0.3
+      );
+
+      const lobbyOpacity = clamp(
+        (progress - 0.2) / 0.72
+      );
+
+      const lobbyScale =
+        1.045 - progress * 0.045;
+
+      /*
+       * ロゴを通過する瞬間だけ、ごく薄い白を挟む。
+       */
+      const veilOpacity =
+        progress < 0.58
+          ? clamp(progress / 0.58)
+          : clamp(1 - (progress - 0.58) / 0.42);
+
+      root.style.setProperty(
+        "--logo-scale",
+        String(logoScale)
+      );
+
+      root.style.setProperty(
+        "--logo-opacity",
+        String(logoOpacity)
+      );
+
+      root.style.setProperty(
+        "--lobby-opacity",
+        String(lobbyOpacity)
+      );
+
+      root.style.setProperty(
+        "--lobby-scale",
+        String(lobbyScale)
+      );
+
+      root.style.setProperty(
+        "--veil-opacity",
+        String(veilOpacity)
+      );
+
+      dispatchState(progress >= 1);
+    };
+
+    const setProgress = (nextProgress: number) => {
+      progress = clamp(nextProgress);
+      wheelTarget = progress;
+
+      if (progress < 1) {
+        hideHeader();
+      }
+
+      render();
+    };
+
+    const cancelRenderFrame = () => {
+      if (renderFrame) {
+        cancelAnimationFrame(renderFrame);
+      }
+
+      renderFrame = 0;
+    };
+
+    const cancelSnap = () => {
+      if (snapFrame) {
+        cancelAnimationFrame(snapFrame);
+      }
+
+      snapFrame = 0;
+      isSnapping = false;
+      snapTarget = null;
+    };
+
+    const completeSnap = (target: 0 | 1) => {
+      progress = target;
+      wheelTarget = target;
+
+      isSnapping = false;
+      snapTarget = null;
+      snapFrame = 0;
+
+      render();
+
+      if (target === 1) {
+        showHeaderAfterDelay();
+      } else {
+        hideHeader();
+      }
+    };
+
+    const snapTo = (target: 0 | 1) => {
+      if (isSnapping && snapTarget === target) {
+        return;
+      }
+
+      cancelRenderFrame();
+      cancelSnap();
+
+      isSnapping = true;
+      snapTarget = target;
+
+      const startProgress = progress;
+      const distance = target - startProgress;
+
+      /*
+       * 残り距離が短い場合は、無駄に長くならないよう調整。
+       */
+      const baseDuration =
+        target === 1
+          ? FORWARD_SNAP_DURATION
+          : BACKWARD_SNAP_DURATION;
+
+      const duration = Math.max(
+        260,
+        baseDuration * Math.abs(distance)
+      );
+
+      const startTime = performance.now();
+
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const timeProgress = clamp(elapsed / duration);
+
+        const eased =
+          target === 1
+            ? easeOutQuint(timeProgress)
+            : easeInOutCubic(timeProgress);
+
+        progress = clamp(
+          startProgress + distance * eased
+        );
+
+        wheelTarget = progress;
+        render();
+
+        if (timeProgress < 1) {
+          snapFrame = requestAnimationFrame(animate);
+          return;
+        }
+
+        completeSnap(target);
+      };
+
+      snapFrame = requestAnimationFrame(animate);
+    };
+
+    const evaluateThreshold = (direction: number) => {
+      if (
+        direction > 0 &&
+        progress >= FORWARD_THRESHOLD
+      ) {
+        snapTo(1);
+        return true;
+      }
+
+      if (
+        direction < 0 &&
+        progress <= BACKWARD_THRESHOLD
+      ) {
+        snapTo(0);
+        return true;
+      }
+
+      return false;
+    };
+
+    /*
+     * PCホイール用。
+     *
+     * deltaYをprogressへ直接反映すると、
+     * ホイールの段差がそのまま「ガッガッ」と見える。
+     *
+     * そこで入力先をwheelTargetに蓄積し、
+     * 実際のprogressは毎フレーム滑らかに追いかける。
+     */
+    const startWheelInterpolation = (
+      direction: number
+    ) => {
+      cancelRenderFrame();
+
+      const animate = () => {
+        if (isSnapping) {
+          renderFrame = 0;
+          return;
+        }
+
+        const difference = wheelTarget - progress;
+
+        /*
+         * フレームごとに差分の約18%だけ進める。
+         * ホイールの段差を滑らかな移動へ変換する。
+         */
+        progress += difference * 0.18;
+
+        if (Math.abs(difference) < 0.001) {
+          progress = wheelTarget;
+        }
+
+        progress = clamp(progress);
+
+        if (progress < 1) {
+          hideHeader();
+        }
+
+        render();
+
+        if (evaluateThreshold(direction)) {
+          renderFrame = 0;
+          return;
+        }
+
+        if (Math.abs(wheelTarget - progress) > 0.001) {
+          renderFrame = requestAnimationFrame(animate);
+          return;
+        }
+
+        renderFrame = 0;
+      };
+
+      renderFrame = requestAnimationFrame(animate);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+
+      if (Math.abs(event.deltaY) < 0.5) {
+        return;
+      }
+
+      const direction = Math.sign(event.deltaY);
+
+      if (isSnapping) {
+        const isReversing =
+          (snapTarget === 1 && direction < 0) ||
+          (snapTarget === 0 && direction > 0);
+
+        if (!isReversing) {
+          return;
+        }
+
+        cancelSnap();
+      }
+
+      /*
+       * 極端に大きいdeltaYは制限し、
+       * マウスとトラックパッドの差を小さくする。
+       */
+      const normalizedDelta = Math.min(
+        Math.max(Math.abs(event.deltaY), 22),
+        120
+      );
+
+      wheelTarget = clamp(
+        wheelTarget +
+          direction * normalizedDelta / WHEEL_DISTANCE
+      );
+
+      startWheelInterpolation(direction);
+
+      /*
+       * トラックパッドの細かなイベントが止まったあと、
+       * 閾値を越えていれば確実に最後まで到達させる。
+       */
+      window.clearTimeout(wheelEndTimer);
+
+      wheelEndTimer = window.setTimeout(() => {
+        evaluateThreshold(direction);
+      }, 70);
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        return;
+      }
+
+      const touchY = event.touches[0].clientY;
+
+      isTouching = true;
+      touchStartY = touchY;
+      touchLastY = touchY;
+      touchStartProgress = progress;
+      touchDirection = 0;
+
+      cancelRenderFrame();
+
+      if (isSnapping) {
+        cancelSnap();
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (
+        !isTouching ||
+        event.touches.length !== 1
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const touchY = event.touches[0].clientY;
+
+      const totalDistance =
+        touchStartY - touchY;
+
+      const frameDistance =
+        touchLastY - touchY;
+
+      touchLastY = touchY;
+
+      if (Math.abs(frameDistance) > 0.5) {
+        touchDirection = Math.sign(frameDistance);
+      }
+
+      /*
+       * 指の移動距離へ直接追従するため、
+       * 指を止めた瞬間はこの位置で止まる。
+       */
+      progress = clamp(
+        touchStartProgress +
+          totalDistance / TOUCH_DISTANCE
+      );
+
+      wheelTarget = progress;
+
+      if (progress < 1) {
+        hideHeader();
+      }
+
+      render();
+
+      /*
+       * 一定位置へ入ったら、
+       * 指を滑らせ続けなくても慣性で最奥へ進む。
+       */
+      if (evaluateThreshold(touchDirection)) {
+        isTouching = false;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (!isTouching) {
+        return;
+      }
+
+      isTouching = false;
+
+      /*
+       * 閾値未満なら、その位置に留める。
+       * 短く弱いスワイプで勝手に入館しない。
+       */
+      evaluateThreshold(touchDirection);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const forwardKeys = [
+        "ArrowDown",
+        "PageDown",
+        " ",
+        "Enter",
+      ];
+
+      const backwardKeys = [
+        "ArrowUp",
+        "PageUp",
+        "Escape",
+      ];
+
+      const isForward =
+        forwardKeys.includes(event.key);
+
+      const isBackward =
+        backwardKeys.includes(event.key);
+
+      if (!isForward && !isBackward) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (isForward) {
+        snapTo(1);
+      } else {
+        snapTo(0);
+      }
+    };
+
+    const cleanup = () => {
+      cancelRenderFrame();
+      cancelSnap();
+
+      window.clearTimeout(wheelEndTimer);
+      clearHeaderTimer();
+
+      window.removeEventListener(
+        "wheel",
+        handleWheel
+      );
+
+      window.removeEventListener(
+        "touchstart",
+        handleTouchStart
+      );
+
+      window.removeEventListener(
+        "touchmove",
+        handleTouchMove
+      );
+
+      window.removeEventListener(
+        "touchend",
+        handleTouchEnd
+      );
+
+      window.removeEventListener(
+        "touchcancel",
+        handleTouchEnd
+      );
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+      document.removeEventListener(
+        "astro:before-swap",
+        cleanup
+      );
+    };
+
+    render();
+    hideHeader();
+
+    window.addEventListener(
+      "wheel",
+      handleWheel,
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchstart",
+      handleTouchStart,
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      handleTouchMove,
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchend",
+      handleTouchEnd,
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "touchcancel",
+      handleTouchEnd,
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    document.addEventListener(
+      "astro:before-swap",
+      cleanup
+    );
+  }
+</script>
+
+<style>
+  .entrance-experience {
+    --logo-scale: 1;
+    --logo-opacity: 1;
+    --lobby-opacity: 0;
+    --lobby-scale: 1.045;
+    --veil-opacity: 0;
+
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+
+    width: 100%;
+    height: 100svh;
+
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+
+    background: #fff;
+  }
+
+  .entrance-experience__lobby {
+    position: absolute;
+    inset: -2%;
+
+    opacity: var(--lobby-opacity);
+
+    background-color: #fff;
+    background-image: var(--lobby-image, none);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    transform: scale(var(--lobby-scale));
+    transform-origin: center;
+
+    will-change: transform, opacity;
+  }
+
+  .entrance-experience__veil {
+    position: absolute;
+    inset: 0;
+
+    opacity: calc(var(--veil-opacity) * 0.1);
+    background: #fff;
+
+    pointer-events: none;
+
+    will-change: opacity;
+  }
+
+  .entrance-experience__logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: min(680px, calc(100vw - 48px));
+    height: auto;
+
+    overflow: visible;
+
+    opacity: var(--logo-opacity);
+
+    transform:
+      translate(-50%, -50%)
+      scale(var(--logo-scale));
+
+    transform-origin: center;
+
+    pointer-events: none;
+    user-select: none;
+
+    will-change: transform, opacity;
+  }
+
+  .entrance-experience__logo-text {
+    fill: var(--navigation-color);
+
+    font-family: var(--site-font-family);
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 640px) {
+    .entrance-experience__logo {
+      width: calc(100vw - 32px);
+    }
+
+    .entrance-experience__logo-text {
+      font-size: 32px;
+    }
+  }
+</style>

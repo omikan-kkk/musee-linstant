@@ -1,37 +1,26 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import EntranceExperience from "../components/home/EntranceExperience.astro";
 ---
 
-<Layout showEdgeFade={true}>
-  <main>
-    <section class="first-view">
-      <div class="center-logo">
-        Musée de l'Instant
-      </div>
-    </section>
+<Layout showEdgeFade={false}>
+  <EntranceExperience />
 
-    <section class="scroll-space"></section>
+  <main class="home-main">
+    <section class="home-placeholder" aria-hidden="true"></section>
   </main>
 </Layout>
 
 <style>
-  .first-view {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: #fff;
+  .home-main {
+    position: relative;
+    width: 100%;
+    min-height: 100svh;
+    background: transparent;
   }
 
-  .center-logo {
-    color: var(--navigation-color);
-    font-family: var(--site-font-family);
-    font-size: var(--navigation-size);
-    letter-spacing: .08em;
-    font-weight: 400;
-  }
-
-  .scroll-space {
-    min-height: 120vh;
-    background: #fff;
+  .home-placeholder {
+    width: 100%;
+    min-height: 100svh;
   }
 </style>

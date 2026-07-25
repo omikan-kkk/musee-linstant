@@ -9,66 +9,109 @@ import MenuPanel from "./MenuPanel.astro";
 <MenuPanel />
 
 <script>
-const menuButton = document.querySelector(".menu-button");
-const menuPanel = document.querySelector(".menu-panel");
+  const menuButton =
+    document.querySelector(
+      ".menu-button"
+    );
 
-menuButton?.addEventListener("click", () => {
-  menuButton.classList.toggle("is-open");
-  menuPanel?.classList.toggle("is-open");
-});
+  const menuPanel =
+    document.querySelector(
+      ".menu-panel"
+    );
 
-function applyHeaderState(show) {
-  document.body.classList.toggle(
-    "has-scrolled",
+  menuButton?.addEventListener(
+    "click",
+    () => {
+      menuButton.classList.toggle(
+        "is-open"
+      );
+
+      menuPanel?.classList.toggle(
+        "is-open"
+      );
+    }
+  );
+
+  function applyHeaderState(
     show
-  );
-}
-
-function syncFromBody() {
-  applyHeaderState(
-    document.body.classList.contains(
-      "entrance-is-complete"
-    )
-  );
-}
-
-/*
- * 初期状態
- */
-syncFromBody();
-
-/*
- * EntranceExperienceから通知される
- */
-window.addEventListener(
-  "entrance-state-change",
-  (event) => {
-    applyHeaderState(
-      event.detail.complete
+  ) {
+    document.body.classList.toggle(
+      "has-scrolled",
+      show
     );
   }
-);
 
-/*
- * bodyクラス変更にも追従
- * （260ms後の表示など）
- */
-const observer = new MutationObserver(() => {
-  syncFromBody();
-});
-
-observer.observe(document.body, {
-  attributes: true,
-  attributeFilter: ["class"],
-});
-
-/*
- * Astro遷移時
- */
-document.addEventListener(
-  "astro:before-swap",
-  () => {
-    observer.disconnect();
+  /*
+   * ヘッダーを表示する条件：
+   *
+   * 1. 一覧・詳細ページなど、
+   *    Layoutからforce-headerが付いている
+   *
+   * または
+   *
+   * 2. トップページで入館が完了している
+   */
+  function shouldShowHeader() {
+    return (
+      document.body.classList.contains(
+        "force-header"
+      ) ||
+      document.body.classList.contains(
+        "entrance-is-complete"
+      )
+    );
   }
-);
+
+  function syncFromBody() {
+    applyHeaderState(
+      shouldShowHeader()
+    );
+  }
+
+  /*
+   * 初期状態
+   */
+  syncFromBody();
+
+  /*
+   * EntranceExperienceから通知される。
+   *
+   * force-headerページでは、
+   * 入退館イベントの値にかかわらず
+   * 常時表示を維持する。
+   */
+  window.addEventListener(
+    "entrance-state-change",
+    () => {
+      syncFromBody();
+    }
+  );
+
+  /*
+   * bodyクラス変更にも追従。
+   */
+  const observer =
+    new MutationObserver(() => {
+      syncFromBody();
+    });
+
+  observer.observe(
+    document.body,
+    {
+      attributes: true,
+      attributeFilter: [
+        "class",
+      ],
+    }
+  );
+
+  /*
+   * Astro遷移時
+   */
+  document.addEventListener(
+    "astro:before-swap",
+    () => {
+      observer.disconnect();
+    }
+  );
 </script>

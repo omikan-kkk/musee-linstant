@@ -33,9 +33,15 @@ const categoryType = category.type || "gallery";
 
       <div class="field">
         <label for="slug">Slug</label>
-        <input id="slug" type="text" value={category.slug} readonly />
+        <input
+          id="slug"
+          type="text"
+          value={category.slug}
+          autocomplete="off"
+          spellcheck="false"
+        />
         <p class="note">
-          Slug is generated automatically when the category is created.
+          Used in the public URL. Lowercase letters, numbers and hyphens only.
         </p>
       </div>
 
@@ -75,10 +81,21 @@ const categoryType = category.type || "gallery";
     const categoryId = editor?.getAttribute("data-category-id");
 
     const titleInput = document.querySelector("#title");
+    const slugInput = document.querySelector("#slug");
     const visibleInput = document.querySelector("#visible");
     const saveButton = document.querySelector("#save-button");
     const deleteButton = document.querySelector("#delete-button");
     const saveStatus = document.querySelector("#save-status");
+
+    function normalizeSlug(value) {
+      return value
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
 
     async function loadCategories() {
       const currentRes = await authFetch("/categories");
@@ -142,13 +159,36 @@ const categoryType = category.type || "gallery";
       return saveData;
     }
 
+    slugInput?.addEventListener("blur", () => {
+      slugInput.value = normalizeSlug(slugInput.value);
+    });
+
     saveButton?.addEventListener("click", async () => {
       if (
         !categoryId ||
         !titleInput ||
+        !slugInput ||
         !visibleInput ||
         !saveStatus
       ) {
+        return;
+      }
+
+      const nextTitle = titleInput.value.trim();
+      const nextSlug = normalizeSlug(slugInput.value);
+
+      titleInput.value = nextTitle;
+      slugInput.value = nextSlug;
+
+      if (!nextTitle) {
+        saveStatus.textContent = "Title is required";
+        titleInput.focus();
+        return;
+      }
+
+      if (!nextSlug) {
+        saveStatus.textContent = "Slug is required";
+        slugInput.focus();
         return;
       }
 
@@ -157,6 +197,18 @@ const categoryType = category.type || "gallery";
       try {
         const currentCategories = await loadCategories();
 
+        const slugAlreadyExists = currentCategories.some(
+          (category) =>
+            category.id !== categoryId &&
+            normalizeSlug(category.slug) === nextSlug
+        );
+
+        if (slugAlreadyExists) {
+          saveStatus.textContent = "This slug is already in use";
+          slugInput.focus();
+          return;
+        }
+
         const nextCategories = currentCategories.map((category) => {
           if (category.id !== categoryId) {
             return category;
@@ -164,7 +216,8 @@ const categoryType = category.type || "gallery";
 
           return {
             ...category,
-            title: titleInput.value,
+            title: nextTitle,
+            slug: nextSlug,
             visible: visibleInput.checked,
           };
         });

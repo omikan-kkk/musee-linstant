@@ -92,40 +92,27 @@ const entranceStyle = [
     const FORWARD_THRESHOLD = 0.42;
 
     /*
-     * 退館方向では、
-     * progressが0.10以下になった時点で
-     * 入口までの自動遷移を開始する。
-     */
-    const BACKWARD_THRESHOLD = 0.10;
-
-    /*
      * 入館方向の操作感度。
      *
-     * 現在の完成済み設定を維持する。
+     * 入館側は完成済みのため、
+     * 現在の数値を維持する。
      */
     const FORWARD_TOUCH_DISTANCE = 345;
     const FORWARD_WHEEL_DISTANCE = 300;
 
     /*
-     * 退館方向の操作感度。
-     *
-     * 入館方向の約1.5倍敏感にするため、
-     * 必要な操作距離を3分の2にする。
-     *
-     * 345 ÷ 1.5 = 230
-     * 300 ÷ 1.5 = 200
-     */
-    const BACKWARD_TOUCH_DISTANCE = 230;
-    const BACKWARD_WHEEL_DISTANCE = 200;
-
-    /*
-     * 閾値を超えたあとの
-     * 自動遷移時間の基準。
-     *
-     * 入館・退館とも620ms。
+     * 入館時の自動遷移時間基準。
      */
     const FORWARD_SNAP_DURATION = 620;
-    const BACKWARD_SNAP_DURATION = 620;
+
+    /*
+     * 退館時のロゴ遷移時間。
+     *
+     * 退館方向の入力を一度検知した時点から、
+     * 操作量にかかわらず固定500msで
+     * 必ず入口まで戻る。
+     */
+    const BACKWARD_SNAP_DURATION = 500;
 
     /*
      * 入館画像演出。
@@ -274,7 +261,7 @@ const entranceStyle = [
     /*
      * 退館開始直後の画像消失。
      *
-     * 画像だけはprogressから独立し、
+     * ロゴの退館遷移とは独立して、
      * 固定400msで消失・縮小する。
      */
     const hideLobbyAndHeader = () => {
@@ -388,6 +375,16 @@ const entranceStyle = [
       }
     };
 
+    /*
+     * 入館・退館の自動遷移。
+     *
+     * 入館：
+     * 残り距離に応じて尺を調整する。
+     *
+     * 退館：
+     * 開始位置に関係なく固定500ms。
+     * 一度開始したらキャンセルしない。
+     */
     const snapTo = (
       target: 0 | 1
     ) => {
@@ -416,6 +413,17 @@ const entranceStyle = [
         return;
       }
 
+      /*
+       * 退館遷移がすでに始まっている場合は、
+       * 別の入力で中断・反転させない。
+       */
+      if (
+        isSnapping &&
+        snapTarget === 0
+      ) {
+        return;
+      }
+
       cancelRenderFrame();
       cancelSnap();
 
@@ -432,16 +440,14 @@ const entranceStyle = [
       const distance =
         target - startProgress;
 
-      const baseDuration =
-        target === 1
-          ? FORWARD_SNAP_DURATION
-          : BACKWARD_SNAP_DURATION;
-
-      const duration = Math.max(
-        260,
-        baseDuration *
-          Math.abs(distance)
-      );
+      const duration =
+        target === 0
+          ? BACKWARD_SNAP_DURATION
+          : Math.max(
+              260,
+              FORWARD_SNAP_DURATION *
+                Math.abs(distance)
+            );
 
       const startTime =
         performance.now();
@@ -493,27 +499,68 @@ const entranceStyle = [
         );
     };
 
-    const evaluateThreshold = (
+    /*
+     * 退館方向の入力を一度検知した時点で、
+     * 画像とロゴの退館演出を同時に開始する。
+     *
+     * 以後は指・ホイールを止めても、
+     * 必ず500msで入口まで戻る。
+     */
+    const startExitTransition = () => {
+      if (
+        progress <= 0 ||
+        (
+          isSnapping &&
+          snapTarget === 0
+        )
+      ) {
+        return;
+      }
+
+      isTouching = false;
+
+      window.clearTimeout(
+        wheelEndTimer
+      );
+
+      cancelRenderFrame();
+
+      /*
+       * 入館方向への自動遷移中だった場合だけ、
+       * その遷移を中断して退館へ切り替える。
+       */
+      if (
+        isSnapping &&
+        snapTarget === 1
+      ) {
+        cancelSnap();
+      }
+
+      snapTo(0);
+    };
+
+    /*
+     * 入館方向の閾値判定。
+     *
+     * 退館には閾値を使用しない。
+     * 退館方向入力の初回検知で即座に
+     * startExitTransition()を実行する。
+     */
+    const evaluateForwardThreshold = (
       direction: number
     ) => {
       if (
-        direction > 0 &&
-        progress >= 1
+        direction <= 0
       ) {
+        return false;
+      }
+
+      if (progress >= 1) {
         wheelTarget = 1;
         return false;
       }
 
       if (
-        direction < 0 &&
-        progress <= 0
-      ) {
-        wheelTarget = 0;
-        return false;
-      }
-
-      if (
-        direction > 0 &&
         progress >=
           FORWARD_THRESHOLD
       ) {
@@ -521,27 +568,16 @@ const entranceStyle = [
         return true;
       }
 
-      if (
-        direction < 0 &&
-        progress <=
-          BACKWARD_THRESHOLD
-      ) {
-        snapTo(0);
-        return true;
-      }
-
       return false;
     };
 
     /*
-     * PCホイール用。
+     * PCホイールによる入館操作。
      *
-     * 入館方向と退館方向で、
-     * progressへの換算感度を分ける。
+     * 退館方向はここを通らず、
+     * 検知直後に確定退館へ移行する。
      */
-    const startWheelInterpolation = (
-      direction: number
-    ) => {
+    const startWheelInterpolation = () => {
       cancelRenderFrame();
 
       const animate = () => {
@@ -567,20 +603,10 @@ const entranceStyle = [
         progress =
           clamp(progress);
 
-        if (
-          direction < 0 &&
-          progress < 1 &&
-          isLobbyVisible
-        ) {
-          hideLobbyAndHeader();
-        }
-
         render();
 
         if (
-          evaluateThreshold(
-            direction
-          )
+          evaluateForwardThreshold(1)
         ) {
           renderFrame = 0;
           return;
@@ -627,8 +653,27 @@ const entranceStyle = [
           event.deltaY
         );
 
+      /*
+       * 退館方向のホイール入力を
+       * 一度でも検知したら即退館する。
+       */
+      if (direction < 0) {
+        startExitTransition();
+        return;
+      }
+
+      /*
+       * 退館確定遷移中は、
+       * 入館方向の追加入力も無視する。
+       */
       if (
-        direction > 0 &&
+        isSnapping &&
+        snapTarget === 0
+      ) {
+        return;
+      }
+
+      if (
         progress >= 1 &&
         isLobbyVisible
       ) {
@@ -636,31 +681,8 @@ const entranceStyle = [
         return;
       }
 
-      if (
-        direction < 0 &&
-        progress <= 0 &&
-        !isLobbyVisible
-      ) {
-        wheelTarget = 0;
-        return;
-      }
-
       if (isSnapping) {
-        const isReversing =
-          (snapTarget === 1 &&
-            direction < 0) ||
-          (snapTarget === 0 &&
-            direction > 0);
-
-        if (!isReversing) {
-          return;
-        }
-
-        cancelSnap();
-
-        if (direction < 0) {
-          hideLobbyAndHeader();
-        }
+        return;
       }
 
       const normalizedDelta =
@@ -674,29 +696,13 @@ const entranceStyle = [
           120
         );
 
-      /*
-       * 入館方向：
-       * 300を基準に換算。
-       *
-       * 退館方向：
-       * 200を基準に換算し、
-       * 入館より約1.5倍敏感にする。
-       */
-      const wheelDistance =
-        direction > 0
-          ? FORWARD_WHEEL_DISTANCE
-          : BACKWARD_WHEEL_DISTANCE;
-
       wheelTarget = clamp(
         wheelTarget +
-          (direction *
-            normalizedDelta) /
-            wheelDistance
+          normalizedDelta /
+            FORWARD_WHEEL_DISTANCE
       );
 
-      startWheelInterpolation(
-        direction
-      );
+      startWheelInterpolation();
 
       window.clearTimeout(
         wheelEndTimer
@@ -704,9 +710,7 @@ const entranceStyle = [
 
       wheelEndTimer =
         window.setTimeout(() => {
-          evaluateThreshold(
-            direction
-          );
+          evaluateForwardThreshold(1);
         }, 70);
     };
         const handleTouchStart = (
@@ -714,6 +718,17 @@ const entranceStyle = [
     ) => {
       if (
         event.touches.length !== 1
+      ) {
+        return;
+      }
+
+      /*
+       * 退館確定遷移中は、
+       * 新しいタッチ操作を受け付けない。
+       */
+      if (
+        isSnapping &&
+        snapTarget === 0
       ) {
         return;
       }
@@ -729,7 +744,17 @@ const entranceStyle = [
 
       cancelRenderFrame();
 
-      if (isSnapping) {
+      /*
+       * 入館方向の自動遷移中に
+       * 新しい操作が始まった場合だけ、
+       * その入館遷移を中断可能にする。
+       *
+       * 退館遷移は中断しない。
+       */
+      if (
+        isSnapping &&
+        snapTarget === 1
+      ) {
         cancelSnap();
       }
     };
@@ -768,46 +793,37 @@ const entranceStyle = [
       }
 
       /*
-       * 入館方向と退館方向で、
-       * スワイプ感度を分ける。
+       * 退館方向のスワイプを
+       * 一度でも検知したら、
+       * その場で確定退館を開始する。
        *
-       * 入館方向：
-       * 345pxでprogress 1ぶん。
-       *
-       * 退館方向：
-       * 230pxでprogress 1ぶん。
-       *
-       * 退館の方が約1.5倍敏感。
+       * 指を止めても、
+       * 指を離しても、
+       * 必ず500msで入口まで戻る。
        */
-      const touchDistance =
-        totalDistance >= 0
-          ? FORWARD_TOUCH_DISTANCE
-          : BACKWARD_TOUCH_DISTANCE;
+      if (
+        touchDirection < 0
+      ) {
+        startExitTransition();
+        return;
+      }
 
+      /*
+       * 入館方向のみ、
+       * 指の移動量へprogressを追従させる。
+       */
       progress = clamp(
         touchStartProgress +
           totalDistance /
-            touchDistance
+            FORWARD_TOUCH_DISTANCE
       );
 
       wheelTarget = progress;
 
-      /*
-       * 最奥から退館方向へ戻り始めた場合のみ、
-       * 画像の固定400ms退館演出を開始する。
-       */
-      if (
-        touchDirection < 0 &&
-        progress < 1 &&
-        isLobbyVisible
-      ) {
-        hideLobbyAndHeader();
-      }
-
       render();
 
       if (
-        evaluateThreshold(
+        evaluateForwardThreshold(
           touchDirection
         )
       ) {
@@ -823,13 +839,14 @@ const entranceStyle = [
       isTouching = false;
 
       /*
-       * 閾値を超えていれば、
-       * 残りを自動遷移させる。
+       * 入館方向の操作だけ、
+       * 指を離した時点で閾値を判定する。
        *
-       * 閾値未満なら、
-       * 現在位置に留まる。
+       * 退館はすでに初回検知時点で
+       * 確定遷移へ入っているため、
+       * touchendでは何もしない。
        */
-      evaluateThreshold(
+      evaluateForwardThreshold(
         touchDirection
       );
     };
@@ -869,6 +886,17 @@ const entranceStyle = [
 
       event.preventDefault();
 
+      /*
+       * 退館確定遷移中は、
+       * すべてのキー入力を無視する。
+       */
+      if (
+        isSnapping &&
+        snapTarget === 0
+      ) {
+        return;
+      }
+
       if (
         isForward &&
         progress >= 1 &&
@@ -888,7 +916,7 @@ const entranceStyle = [
       if (isForward) {
         snapTo(1);
       } else {
-        snapTo(0);
+        startExitTransition();
       }
     };
 

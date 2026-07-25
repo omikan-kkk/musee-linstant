@@ -1347,9 +1347,12 @@
     "categoryId": "__site__",
     "slug": "__lobby__",
     "image": "/images/contents/__lobby__.jpg",
-    "title": "",
+    "title": "Lobby",
     "body": "",
     "visible": true,
-    "order": 0
+    "order": 0,
+    "category": "__site__",
+    "desktopHeightPx": 1251,
+    "desktopHeightVh": 33
   }
 ]

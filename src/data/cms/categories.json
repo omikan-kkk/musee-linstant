@@ -18,7 +18,7 @@
   {
     "id": "category007",
     "title": "Romans",
-    "slug": "books",
+    "slug": "romans",
     "type": "book",
     "visible": true,
     "order": 3

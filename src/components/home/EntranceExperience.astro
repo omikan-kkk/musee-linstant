@@ -90,22 +90,28 @@ const entranceStyle = [
      * 1 = ロビー最奥
      */
     const FORWARD_THRESHOLD = 0.42;
-    const BACKWARD_THRESHOLD = 0.58;
+
+    /*
+     * 退館方向では、
+     * progressが0.33以下になった時点で
+     * 入口までの自動遷移を開始する。
+     */
+    const BACKWARD_THRESHOLD = 0.33;
 
     /*
      * 操作感度。
-     *
-     * 数値が大きいほど、
-     * 同じ進行量に必要な操作距離が長くなる。
      */
     const TOUCH_DISTANCE = 345;
     const WHEEL_DISTANCE = 300;
 
     /*
-     * 閾値を超えたあとの自動遷移時間。
+     * 閾値を超えたあとの
+     * 自動遷移時間の基準。
+     *
+     * 入館・退館とも620ms。
      */
     const FORWARD_SNAP_DURATION = 620;
-    const BACKWARD_SNAP_DURATION = 560;
+    const BACKWARD_SNAP_DURATION = 620;
 
     /*
      * 入館画像演出。
@@ -114,11 +120,12 @@ const entranceStyle = [
      * 0 → 1
      *
      * scale:
-     * 0.95 → 1
+     * 0.85 → 1
      *
-     * 500ms
+     * 700ms
      */
-    const LOBBY_ENTER_DURATION = 500;
+    const LOBBY_ENTER_DURATION = 700;
+    const LOBBY_ENTER_SCALE = 0.85;
 
     /*
      * 退館画像演出。
@@ -129,9 +136,10 @@ const entranceStyle = [
      * scale:
      * 1 → 0.75
      *
-     * 200ms linear
+     * 400ms linear
      */
-    const LOBBY_EXIT_DURATION = 200;
+    const LOBBY_EXIT_DURATION = 400;
+    const LOBBY_EXIT_SCALE = 0.75;
 
     let progress = 0;
     let wheelTarget = 0;
@@ -147,6 +155,17 @@ const entranceStyle = [
 
     let isTouching = false;
     let isSnapping = false;
+
+    /*
+     * ロビー画像の状態管理。
+     *
+     * isLobbyVisible:
+     * 画像が表示状態、または表示演出中。
+     *
+     * 一度trueになったあとは、
+     * hideLobbyAndHeader()が実行されるまで
+     * showLobbyAndHeader()を再実行しない。
+     */
     let isLobbyVisible = false;
 
     let snapTarget: 0 | 1 | null = null;
@@ -195,8 +214,7 @@ const entranceStyle = [
     };
 
     /*
-     * 強制的にリフローさせ、
-     * JavaScriptで設定した開始状態を
+     * JavaScriptで指定した開始状態を
      * ブラウザへ確定させる。
      */
     const forceReflow = () => {
@@ -206,14 +224,16 @@ const entranceStyle = [
     /*
      * 入館完了後の画像表示。
      *
-     * 透明な状態で95%へ瞬時に準備し、
-     * そこから500msで
-     * opacity 0 → 1
-     * scale 0.95 → 1
-     * へ遷移する。
+     * 重要：
+     * すでに表示済み、または表示演出中なら
+     * 再実行しない。
+     *
+     * これにより、入館後にさらに同方向へ
+     * ホイールやスワイプを繰り返しても、
+     * 画像出現演出は再生されない。
      */
     const showLobbyAndHeader = () => {
-      if (!lobby) {
+      if (isLobbyVisible) {
         document.body.classList.add(
           "entrance-is-complete"
         );
@@ -224,13 +244,29 @@ const entranceStyle = [
 
       isLobbyVisible = true;
 
+      if (!lobby) {
+        document.body.classList.add(
+          "entrance-is-complete"
+        );
+
+        dispatchState(true);
+        return;
+      }
+
+      /*
+       * 透明なまま85%の開始位置へ準備する。
+       */
       lobby.style.transition = "none";
       lobby.style.opacity = "0";
       lobby.style.transform =
-        "scale(0.95)";
+        `scale(${LOBBY_ENTER_SCALE})`;
 
       forceReflow();
 
+      /*
+       * 幻想的で余韻のあるイーズアウトで、
+       * 700msかけて出現・拡大する。
+       */
       lobby.style.transition = [
         `opacity ${LOBBY_ENTER_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
         `transform ${LOBBY_ENTER_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`,
@@ -250,35 +286,38 @@ const entranceStyle = [
     /*
      * 退館開始直後の画像消失。
      *
-     * 画像だけは退館遷移から独立し、
-     * 固定200msで消失・縮小する。
-     *
-     * 入口ロゴへ戻る挙動自体は、
-     * progressとユーザー操作へ追従する。
+     * 画像演出だけは退館progressから独立し、
+     * 固定400msで消失・縮小する。
      */
     const hideLobbyAndHeader = () => {
       document.body.classList.remove(
         "entrance-is-complete"
       );
 
-      if (
-        !lobby ||
-        !isLobbyVisible
-      ) {
+      if (!isLobbyVisible) {
         dispatchState(false);
         return;
       }
 
+      /*
+       * この時点でfalseに戻す。
+       *
+       * 画像消失演出が一度開始されたあとなら、
+       * 次回の入館完了時に限り、
+       * 再び画像出現演出を実行できる。
+       */
       isLobbyVisible = false;
 
-      lobby.style.transition = [
-        `opacity ${LOBBY_EXIT_DURATION}ms linear`,
-        `transform ${LOBBY_EXIT_DURATION}ms linear`,
-      ].join(", ");
+      if (lobby) {
+        lobby.style.transition = [
+          `opacity ${LOBBY_EXIT_DURATION}ms linear`,
+          `transform ${LOBBY_EXIT_DURATION}ms linear`,
+        ].join(", ");
 
-      lobby.style.opacity = "0";
-      lobby.style.transform =
-        "scale(0.75)";
+        lobby.style.opacity = "0";
+        lobby.style.transform =
+          `scale(${LOBBY_EXIT_SCALE})`;
+      }
 
       dispatchState(false);
     };
@@ -371,8 +410,8 @@ const entranceStyle = [
 
       if (target === 1) {
         /*
-         * ロビー最奥へ完全到達してから、
-         * 画像の出現・拡大を開始する。
+         * showLobbyAndHeader()内部にも
+         * 再実行防止ガードがある。
          */
         showLobbyAndHeader();
       } else {
@@ -383,6 +422,34 @@ const entranceStyle = [
     const snapTo = (
       target: 0 | 1
     ) => {
+      /*
+       * 入館済みの状態で、
+       * さらに入館方向の自動遷移を
+       * 起動しない。
+       */
+      if (
+        target === 1 &&
+        progress >= 1 &&
+        isLobbyVisible
+      ) {
+        wheelTarget = 1;
+        return;
+      }
+
+      /*
+       * 入口へ完全に戻っている状態で、
+       * さらに退館方向の自動遷移を
+       * 起動しない。
+       */
+      if (
+        target === 0 &&
+        progress <= 0 &&
+        !isLobbyVisible
+      ) {
+        wheelTarget = 0;
+        return;
+      }
+
       if (
         isSnapping &&
         snapTarget === target
@@ -396,7 +463,7 @@ const entranceStyle = [
       /*
        * 退館時は、
        * 退館遷移の開始と同時に
-       * 画像の固定200ms演出を開始する。
+       * 画像の固定400ms演出を開始する。
        */
       if (target === 0) {
         hideLobbyAndHeader();
@@ -475,6 +542,32 @@ const entranceStyle = [
     const evaluateThreshold = (
       direction: number
     ) => {
+      /*
+       * すでに入館済みなら、
+       * 入館方向の入力で再びsnapTo(1)を
+       * 起動しない。
+       */
+      if (
+        direction > 0 &&
+        progress >= 1
+      ) {
+        wheelTarget = 1;
+        return false;
+      }
+
+      /*
+       * すでに入口なら、
+       * 退館方向の入力で再びsnapTo(0)を
+       * 起動しない。
+       */
+      if (
+        direction < 0 &&
+        progress <= 0
+      ) {
+        wheelTarget = 0;
+        return false;
+      }
+
       if (
         direction > 0 &&
         progress >=
@@ -531,10 +624,11 @@ const entranceStyle = [
           clamp(progress);
 
         /*
-         * ロビー最奥から少しでも戻り始めたら、
-         * 画像の固定200ms退館演出を開始する。
+         * 最奥から退館方向へ少しでも戻ったら、
+         * 画像の固定400ms退館演出を開始する。
          */
         if (
+          direction < 0 &&
           progress < 1 &&
           isLobbyVisible
         ) {
@@ -592,6 +686,34 @@ const entranceStyle = [
         Math.sign(
           event.deltaY
         );
+
+      /*
+       * 入館完了済みの状態で、
+       * さらに入館方向へ回しても何もしない。
+       *
+       * 画像出現演出も再実行しない。
+       */
+      if (
+        direction > 0 &&
+        progress >= 1 &&
+        isLobbyVisible
+      ) {
+        wheelTarget = 1;
+        return;
+      }
+
+      /*
+       * 入口へ戻り切った状態で、
+       * さらに退館方向へ回しても何もしない。
+       */
+      if (
+        direction < 0 &&
+        progress <= 0 &&
+        !isLobbyVisible
+      ) {
+        wheelTarget = 0;
+        return;
+      }
 
       if (isSnapping) {
         const isReversing =
@@ -711,14 +833,14 @@ const entranceStyle = [
       wheelTarget = progress;
 
       /*
-       * ロビー最奥から少しでも戻り始めたら、
-       * 画像だけ先に固定200msで
-       * フェードアウト・縮小する。
+       * 最奥から退館方向へ戻り始めた場合のみ、
+       * 画像の固定400ms退館演出を開始する。
        *
-       * 入口ロゴへ戻る遷移自体は、
-       * 引き続き指の動きとprogressへ追従する。
+       * 入館方向へ追加スワイプしても、
+       * 画像出現演出は再実行しない。
        */
       if (
+        touchDirection < 0 &&
         progress < 1 &&
         isLobbyVisible
       ) {
@@ -747,8 +869,7 @@ const entranceStyle = [
        * 閾値を超えていれば、
        * 残りを自動遷移させる。
        *
-       * 閾値未満なら、
-       * 現在位置に留まる。
+       * 閾値未満なら現在位置に留まる。
        */
       evaluateThreshold(
         touchDirection
@@ -789,6 +910,22 @@ const entranceStyle = [
       }
 
       event.preventDefault();
+
+      if (
+        isForward &&
+        progress >= 1 &&
+        isLobbyVisible
+      ) {
+        return;
+      }
+
+      if (
+        isBackward &&
+        progress <= 0 &&
+        !isLobbyVisible
+      ) {
+        return;
+      }
 
       if (isForward) {
         snapTo(1);
@@ -844,18 +981,23 @@ const entranceStyle = [
     /*
      * 初期状態。
      *
-     * 画像は非表示、
-     * 入口ロゴは表示状態から開始する。
+     * 画像は非表示。
+     * 入口ロゴは表示状態。
      */
     if (lobby) {
       lobby.style.transition = "none";
       lobby.style.opacity = "0";
       lobby.style.transform =
-        "scale(0.75)";
+        `scale(${LOBBY_EXIT_SCALE})`;
     }
 
     render();
-    hideLobbyAndHeader();
+
+    document.body.classList.remove(
+      "entrance-is-complete"
+    );
+
+    dispatchState(false);
 
     window.addEventListener(
       "wheel",
@@ -1039,10 +1181,6 @@ const entranceStyle = [
     letter-spacing: 0.08em;
   }
 
-  /*
-   * タブレット・スマホでは、
-   * 画像幅100%・高さ自動。
-   */
   @media (max-width: 1024px) {
     .entrance-experience__lobby-image {
       width: 100%;
@@ -1072,7 +1210,8 @@ const entranceStyle = [
     reduce
   ) {
     .entrance-experience__lobby {
-      transition-duration: 1ms !important;
+      transition-duration:
+        1ms !important;
     }
   }
 </style>

@@ -48,22 +48,38 @@ const entranceStyle = [
     aria-hidden="true"
   ></div>
 
-  <svg
-    class="entrance-experience__logo"
-    viewBox="0 0 1000 120"
-    role="img"
-    aria-label="Musée de l'Instant"
+  <!--
+    中央配置と拡大縮小を別要素へ分離。
+
+    将来、内部を外部SVGファイルのimgへ
+    変更してもアニメーション処理は共通。
+  -->
+  <div
+    class="entrance-experience__logo-position"
+    aria-hidden="true"
   >
-    <text
-      class="entrance-experience__logo-text"
-      x="500"
-      y="66"
-      text-anchor="middle"
-      dominant-baseline="middle"
+    <div
+      class="entrance-experience__logo-visual"
+      data-logo-visual
     >
-      Musée de l'Instant
-    </text>
-  </svg>
+      <svg
+        class="entrance-experience__logo"
+        viewBox="0 0 1000 120"
+        role="img"
+        aria-label="Musée de l'Instant"
+      >
+        <text
+          class="entrance-experience__logo-text"
+          x="500"
+          y="66"
+          text-anchor="middle"
+          dominant-baseline="middle"
+        >
+          Musée de l'Instant
+        </text>
+      </svg>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -83,6 +99,11 @@ const entranceStyle = [
         "[data-lobby]"
       );
 
+    const logoVisual =
+      root.querySelector<HTMLElement>(
+        "[data-logo-visual]"
+      );
+
     /*
      * progress:
      *
@@ -92,52 +113,27 @@ const entranceStyle = [
     const FORWARD_THRESHOLD = 0.42;
 
     /*
-     * 入館方向の操作感度。
-     *
-     * 入館側は完成済みのため、
-     * 現在の数値を維持する。
+     * 入館側は完成済みなので、
+     * 操作感度と自動遷移時間を維持する。
      */
     const FORWARD_TOUCH_DISTANCE = 345;
     const FORWARD_WHEEL_DISTANCE = 300;
-
-    /*
-     * 入館時の自動遷移時間基準。
-     */
     const FORWARD_SNAP_DURATION = 620;
 
     /*
-     * 退館時のロゴ遷移時間。
-     *
-     * 退館方向の入力を一度検知した時点から、
-     * 操作量にかかわらず固定500msで
-     * 必ず入口まで戻る。
+     * 退館開始後、ロゴは必ず固定500msで
+     * 入口の状態まで戻る。
      */
-    const BACKWARD_SNAP_DURATION = 500;
+    const EXIT_LOGO_DURATION = 500;
 
     /*
      * 入館画像演出。
-     *
-     * opacity:
-     * 0 → 1
-     *
-     * scale:
-     * 0.85 → 1
-     *
-     * 700ms
      */
     const LOBBY_ENTER_DURATION = 700;
     const LOBBY_ENTER_SCALE = 0.85;
 
     /*
      * 退館画像演出。
-     *
-     * opacity:
-     * 1 → 0
-     *
-     * scale:
-     * 1 → 0.75
-     *
-     * 400ms linear
      */
     const LOBBY_EXIT_DURATION = 400;
     const LOBBY_EXIT_SCALE = 0.75;
@@ -152,13 +148,23 @@ const entranceStyle = [
 
     let renderFrame = 0;
     let snapFrame = 0;
+    let exitFrame = 0;
     let wheelEndTimer = 0;
 
     let isTouching = false;
     let isSnapping = false;
+    let isExiting = false;
     let isLobbyVisible = false;
 
     let snapTarget: 0 | 1 | null = null;
+
+    /*
+     * 退館中はprogressからロゴを描画せず、
+     * こちらの値を直接使用する。
+     */
+    let exitLogoScale = 1;
+    let exitLogoOpacity = 1;
+    let exitVeilOpacity = 0;
 
     const clamp = (
       value: number,
@@ -175,17 +181,107 @@ const entranceStyle = [
     ) =>
       1 - Math.pow(1 - value, 5);
 
-    const easeInOutCubic = (
+    /*
+     * cubic-bezier(0.16, 1, 0.3, 1)に近い
+     * 滑らかな退館用カーブ。
+     *
+     * Newton法でベジェ曲線のx座標から
+     * 対応するy座標を求める。
+     */
+    const exitEase = (
       value: number
-    ) =>
-      value < 0.5
-        ? 4 * value * value * value
-        : 1 -
-          Math.pow(
-            -2 * value + 2,
-            3
-          ) /
-            2;
+    ) => {
+      const x1 = 0.16;
+      const y1 = 1;
+      const x2 = 0.3;
+      const y2 = 1;
+
+      const sampleCurve = (
+        t: number,
+        point1: number,
+        point2: number
+      ) => {
+        const inverse = 1 - t;
+
+        return (
+          3 *
+            inverse *
+            inverse *
+            t *
+            point1 +
+          3 *
+            inverse *
+            t *
+            t *
+            point2 +
+          t * t * t
+        );
+      };
+
+      const sampleDerivative = (
+        t: number,
+        point1: number,
+        point2: number
+      ) => {
+        const inverse = 1 - t;
+
+        return (
+          3 *
+            inverse *
+            inverse *
+            point1 +
+          6 *
+            inverse *
+            t *
+            (point2 - point1) +
+          3 *
+            t *
+            t *
+            (1 - point2)
+        );
+      };
+
+      let t = value;
+
+      for (
+        let index = 0;
+        index < 5;
+        index += 1
+      ) {
+        const currentX =
+          sampleCurve(
+            t,
+            x1,
+            x2
+          ) - value;
+
+        const derivative =
+          sampleDerivative(
+            t,
+            x1,
+            x2
+          );
+
+        if (
+          Math.abs(derivative) <
+          0.000001
+        ) {
+          break;
+        }
+
+        t = clamp(
+          t -
+            currentX /
+              derivative
+        );
+      }
+
+      return sampleCurve(
+        t,
+        y1,
+        y2
+      );
+    };
 
     const dispatchState = (
       complete: boolean
@@ -207,13 +303,45 @@ const entranceStyle = [
       lobby?.getBoundingClientRect();
     };
 
-    /*
-     * 入館完了後の画像表示。
-     *
-     * 一度表示済みになったあとは、
-     * 退館画像演出が始まるまで
-     * 再実行しない。
-     */
+    const getLogoValues = (
+      currentProgress: number
+    ) => {
+      /*
+       * 入館時のロゴ計算は従来のまま。
+       */
+      const forwardCurve =
+        currentProgress *
+        currentProgress;
+
+      const scale =
+        1 + forwardCurve * 13;
+
+      const opacity = clamp(
+        1 -
+          (currentProgress - 0.48) /
+            0.3
+      );
+
+      return {
+        scale,
+        opacity,
+      };
+    };
+
+    const getVeilOpacity = (
+      currentProgress: number
+    ) =>
+      currentProgress < 0.58
+        ? clamp(
+            currentProgress /
+              0.58
+          )
+        : clamp(
+            1 -
+              (currentProgress - 0.58) /
+                0.42
+          );
+
     const showLobbyAndHeader = () => {
       if (isLobbyVisible) {
         document.body.classList.add(
@@ -258,12 +386,6 @@ const entranceStyle = [
       dispatchState(true);
     };
 
-    /*
-     * 退館開始直後の画像消失。
-     *
-     * ロゴの退館遷移とは独立して、
-     * 固定400msで消失・縮小する。
-     */
     const hideLobbyAndHeader = () => {
       document.body.classList.remove(
         "entrance-is-complete"
@@ -290,38 +412,54 @@ const entranceStyle = [
       dispatchState(false);
     };
 
+    /*
+     * ロゴのscaleだけを内側コンテナへ適用。
+     *
+     * 中央配置のtranslateは外側要素へ固定されるため、
+     * 将来ロゴを外部SVGへ変更しても共通で動作する。
+     */
+    const applyLogoVisual = (
+      scale: number,
+      opacity: number
+    ) => {
+      if (!logoVisual) {
+        return;
+      }
+
+      logoVisual.style.transform =
+        `scale(${scale})`;
+
+      logoVisual.style.opacity =
+        String(opacity);
+    };
+
     const render = () => {
-      const forwardCurve =
-        progress * progress;
+      if (isExiting) {
+        applyLogoVisual(
+          exitLogoScale,
+          exitLogoOpacity
+        );
 
-      const logoScale =
-        1 + forwardCurve * 13;
+        root.style.setProperty(
+          "--veil-opacity",
+          String(
+            exitVeilOpacity
+          )
+        );
 
-      const logoOpacity = clamp(
-        1 -
-          (progress - 0.48) /
-            0.3
-      );
+        dispatchState(false);
+        return;
+      }
+
+      const logoValues =
+        getLogoValues(progress);
 
       const veilOpacity =
-        progress < 0.58
-          ? clamp(
-              progress / 0.58
-            )
-          : clamp(
-              1 -
-                (progress - 0.58) /
-                  0.42
-            );
+        getVeilOpacity(progress);
 
-      root.style.setProperty(
-        "--logo-scale",
-        String(logoScale)
-      );
-
-      root.style.setProperty(
-        "--logo-opacity",
-        String(logoOpacity)
+      applyLogoVisual(
+        logoValues.scale,
+        logoValues.opacity
       );
 
       root.style.setProperty(
@@ -356,40 +494,36 @@ const entranceStyle = [
       snapTarget = null;
     };
 
-    const completeSnap = (
-      target: 0 | 1
-    ) => {
-      progress = target;
-      wheelTarget = target;
+    const cancelExit = () => {
+      if (exitFrame) {
+        cancelAnimationFrame(
+          exitFrame
+        );
+      }
+
+      exitFrame = 0;
+      isExiting = false;
+    };
+
+    const completeEntranceSnap = () => {
+      progress = 1;
+      wheelTarget = 1;
 
       isSnapping = false;
       snapTarget = null;
       snapFrame = 0;
 
       render();
-
-      if (target === 1) {
-        showLobbyAndHeader();
-      } else {
-        hideLobbyAndHeader();
-      }
+      showLobbyAndHeader();
     };
 
     /*
-     * 入館・退館の自動遷移。
-     *
-     * 入館：
-     * 残り距離に応じて尺を調整する。
-     *
-     * 退館：
-     * 開始位置に関係なく固定500ms。
-     * 一度開始したらキャンセルしない。
+     * 入館用の自動遷移。
+
+     * 退館にはこのprogress補間を使用しない。
      */
-    const snapTo = (
-      target: 0 | 1
-    ) => {
+    const snapToEntrance = () => {
       if (
-        target === 1 &&
         progress >= 1 &&
         isLobbyVisible
       ) {
@@ -398,56 +532,33 @@ const entranceStyle = [
       }
 
       if (
-        target === 0 &&
-        progress <= 0 &&
-        !isLobbyVisible
-      ) {
-        wheelTarget = 0;
-        return;
-      }
-
-      if (
         isSnapping &&
-        snapTarget === target
+        snapTarget === 1
       ) {
         return;
       }
 
-      /*
-       * 退館遷移がすでに始まっている場合は、
-       * 別の入力で中断・反転させない。
-       */
-      if (
-        isSnapping &&
-        snapTarget === 0
-      ) {
+      if (isExiting) {
         return;
       }
 
       cancelRenderFrame();
       cancelSnap();
 
-      if (target === 0) {
-        hideLobbyAndHeader();
-      }
-
       isSnapping = true;
-      snapTarget = target;
+      snapTarget = 1;
 
       const startProgress =
         progress;
 
       const distance =
-        target - startProgress;
+        1 - startProgress;
 
-      const duration =
-        target === 0
-          ? BACKWARD_SNAP_DURATION
-          : Math.max(
-              260,
-              FORWARD_SNAP_DURATION *
-                Math.abs(distance)
-            );
+      const duration = Math.max(
+        260,
+        FORWARD_SNAP_DURATION *
+          Math.abs(distance)
+      );
 
       const startTime =
         performance.now();
@@ -464,13 +575,9 @@ const entranceStyle = [
           );
 
         const eased =
-          target === 1
-            ? easeOutQuint(
-                timeProgress
-              )
-            : easeInOutCubic(
-                timeProgress
-              );
+          easeOutQuint(
+            timeProgress
+          );
 
         progress = clamp(
           startProgress +
@@ -490,7 +597,7 @@ const entranceStyle = [
           return;
         }
 
-        completeSnap(target);
+        completeEntranceSnap();
       };
 
       snapFrame =
@@ -500,19 +607,16 @@ const entranceStyle = [
     };
 
     /*
-     * 退館方向の入力を一度検知した時点で、
-     * 画像とロゴの退館演出を同時に開始する。
-     *
-     * 以後は指・ホイールを止めても、
-     * 必ず500msで入口まで戻る。
+     * 退館ロゴをprogressから切り離して直接補間する。
+
+     * scaleは対数補間を使用するため、
+     * 巨大な状態から通常サイズへ戻る際も
+     * 視覚的な縮小速度が不自然に段階化しにくい。
      */
     const startExitTransition = () => {
       if (
-        progress <= 0 ||
-        (
-          isSnapping &&
-          snapTarget === 0
-        )
+        isExiting ||
+        progress <= 0
       ) {
         return;
       }
@@ -524,28 +628,121 @@ const entranceStyle = [
       );
 
       cancelRenderFrame();
+      cancelSnap();
+      cancelExit();
 
-      /*
-       * 入館方向への自動遷移中だった場合だけ、
-       * その遷移を中断して退館へ切り替える。
-       */
-      if (
-        isSnapping &&
-        snapTarget === 1
-      ) {
-        cancelSnap();
-      }
+      hideLobbyAndHeader();
 
-      snapTo(0);
+      const currentLogo =
+        getLogoValues(progress);
+
+      const startScale =
+        Math.max(
+          1,
+          currentLogo.scale
+        );
+
+      const startOpacity =
+        currentLogo.opacity;
+
+      const startVeilOpacity =
+        getVeilOpacity(progress);
+
+      exitLogoScale =
+        startScale;
+
+      exitLogoOpacity =
+        startOpacity;
+
+      exitVeilOpacity =
+        startVeilOpacity;
+
+      isExiting = true;
+
+      const startTime =
+        performance.now();
+
+      const animate = (
+        currentTime: number
+      ) => {
+        const elapsed =
+          currentTime - startTime;
+
+        const timeProgress =
+          clamp(
+            elapsed /
+              EXIT_LOGO_DURATION
+          );
+
+        const eased =
+          exitEase(
+            timeProgress
+          );
+
+        /*
+         * 対数補間：
+         *
+         * startScale → 1
+         *
+         * 倍率として均質に縮小するため、
+         * 大きなscaleから戻る場合も滑らか。
+         */
+        exitLogoScale =
+          Math.exp(
+            Math.log(startScale) *
+              (1 - eased)
+          );
+
+        exitLogoOpacity =
+          startOpacity +
+          (1 - startOpacity) *
+            eased;
+
+        exitVeilOpacity =
+          startVeilOpacity *
+          (1 - eased);
+
+        /*
+         * イベント利用側との整合性のため、
+         * progressも更新するが、
+         * ロゴ描画には使用しない。
+         */
+        progress =
+          1 - eased;
+
+        wheelTarget =
+          progress;
+
+        render();
+
+        if (timeProgress < 1) {
+          exitFrame =
+            requestAnimationFrame(
+              animate
+            );
+
+          return;
+        }
+
+        progress = 0;
+        wheelTarget = 0;
+
+        exitLogoScale = 1;
+        exitLogoOpacity = 1;
+        exitVeilOpacity = 0;
+
+        isExiting = false;
+        exitFrame = 0;
+
+        render();
+      };
+
+      exitFrame =
+        requestAnimationFrame(
+          animate
+        );
     };
 
-    /*
-     * 入館方向の閾値判定。
-     *
-     * 退館には閾値を使用しない。
-     * 退館方向入力の初回検知で即座に
-     * startExitTransition()を実行する。
-     */
     const evaluateForwardThreshold = (
       direction: number
     ) => {
@@ -564,24 +761,21 @@ const entranceStyle = [
         progress >=
           FORWARD_THRESHOLD
       ) {
-        snapTo(1);
+        snapToEntrance();
         return true;
       }
 
       return false;
     };
 
-    /*
-     * PCホイールによる入館操作。
-     *
-     * 退館方向はここを通らず、
-     * 検知直後に確定退館へ移行する。
-     */
     const startWheelInterpolation = () => {
       cancelRenderFrame();
 
       const animate = () => {
-        if (isSnapping) {
+        if (
+          isSnapping ||
+          isExiting
+        ) {
           renderFrame = 0;
           return;
         }
@@ -654,22 +848,15 @@ const entranceStyle = [
         );
 
       /*
-       * 退館方向のホイール入力を
-       * 一度でも検知したら即退館する。
+       * 退館方向入力を一度検知したら、
+       * 500msの確定退館へ移行する。
        */
       if (direction < 0) {
         startExitTransition();
         return;
       }
 
-      /*
-       * 退館確定遷移中は、
-       * 入館方向の追加入力も無視する。
-       */
-      if (
-        isSnapping &&
-        snapTarget === 0
-      ) {
+      if (isExiting) {
         return;
       }
 
@@ -717,18 +904,8 @@ const entranceStyle = [
       event: TouchEvent
     ) => {
       if (
-        event.touches.length !== 1
-      ) {
-        return;
-      }
-
-      /*
-       * 退館確定遷移中は、
-       * 新しいタッチ操作を受け付けない。
-       */
-      if (
-        isSnapping &&
-        snapTarget === 0
+        event.touches.length !== 1 ||
+        isExiting
       ) {
         return;
       }
@@ -745,11 +922,11 @@ const entranceStyle = [
       cancelRenderFrame();
 
       /*
-       * 入館方向の自動遷移中に
-       * 新しい操作が始まった場合だけ、
-       * その入館遷移を中断可能にする。
+       * 入館中の自動遷移だけは、
+       * 新しいタッチ操作で中断できる。
        *
-       * 退館遷移は中断しない。
+       * 退館はisExitingによって
+       * 一切中断されない。
        */
       if (
         isSnapping &&
@@ -764,6 +941,7 @@ const entranceStyle = [
     ) => {
       if (
         !isTouching ||
+        isExiting ||
         event.touches.length !== 1
       ) {
         return;
@@ -793,24 +971,20 @@ const entranceStyle = [
       }
 
       /*
-       * 退館方向のスワイプを
-       * 一度でも検知したら、
-       * その場で確定退館を開始する。
+       * 退館方向の動きを一度検知した時点で、
+       * 指の移動量との連動を終了する。
        *
-       * 指を止めても、
-       * 指を離しても、
-       * 必ず500msで入口まで戻る。
+       * 以後は固定500msの退館演出が
+       * 必ず最後まで進行する。
        */
-      if (
-        touchDirection < 0
-      ) {
+      if (touchDirection < 0) {
         startExitTransition();
         return;
       }
 
       /*
        * 入館方向のみ、
-       * 指の移動量へprogressを追従させる。
+       * 従来どおり指の移動量へ追従する。
        */
       progress = clamp(
         touchStartProgress +
@@ -832,19 +1006,18 @@ const entranceStyle = [
     };
 
     const handleTouchEnd = () => {
-      if (!isTouching) {
+      if (
+        !isTouching ||
+        isExiting
+      ) {
         return;
       }
 
       isTouching = false;
 
       /*
-       * 入館方向の操作だけ、
+       * 入館方向のみ、
        * 指を離した時点で閾値を判定する。
-       *
-       * 退館はすでに初回検知時点で
-       * 確定遷移へ入っているため、
-       * touchendでは何もしない。
        */
       evaluateForwardThreshold(
         touchDirection
@@ -887,13 +1060,10 @@ const entranceStyle = [
       event.preventDefault();
 
       /*
-       * 退館確定遷移中は、
-       * すべてのキー入力を無視する。
+       * 退館開始後は、
+       * 完了するまで全入力を無視する。
        */
-      if (
-        isSnapping &&
-        snapTarget === 0
-      ) {
+      if (isExiting) {
         return;
       }
 
@@ -914,7 +1084,7 @@ const entranceStyle = [
       }
 
       if (isForward) {
-        snapTo(1);
+        snapToEntrance();
       } else {
         startExitTransition();
       }
@@ -923,6 +1093,7 @@ const entranceStyle = [
     const cleanup = () => {
       cancelRenderFrame();
       cancelSnap();
+      cancelExit();
 
       window.clearTimeout(
         wheelEndTimer
@@ -966,9 +1137,6 @@ const entranceStyle = [
 
     /*
      * 初期状態。
-     *
-     * 画像は非表示。
-     * 入口ロゴは表示状態。
      */
     if (lobby) {
       lobby.style.transition = "none";
@@ -976,6 +1144,13 @@ const entranceStyle = [
       lobby.style.transform =
         `scale(${LOBBY_EXIT_SCALE})`;
     }
+
+    applyLogoVisual(1, 1);
+
+    root.style.setProperty(
+      "--veil-opacity",
+      "0"
+    );
 
     render();
 
@@ -1039,8 +1214,6 @@ const entranceStyle = [
 
 <style>
   .entrance-experience {
-    --logo-scale: 1;
-    --logo-opacity: 1;
     --veil-opacity: 0;
 
     --desktop-height-px: 620px;
@@ -1117,7 +1290,12 @@ const entranceStyle = [
     will-change: opacity;
   }
 
-  .entrance-experience__logo {
+  /*
+   * 中央配置専用。
+   *
+   * この要素はアニメーションさせない。
+   */
+  .entrance-experience__logo-position {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1127,28 +1305,43 @@ const entranceStyle = [
       calc(100vw - 48px)
     );
 
-    height: auto;
-    overflow: visible;
-
-    opacity:
-      var(
-        --logo-opacity
-      );
-
     transform:
-      translate(-50%, -50%)
-      scale(
-        var(--logo-scale)
-      );
-
-    transform-origin: center;
+      translate(-50%, -50%);
 
     pointer-events: none;
-    user-select: none;
+  }
+
+  /*
+   * 拡大縮小と透明度専用。
+   *
+   * 中身がインラインSVGでも、
+   * 外部SVG画像でも同じように動く。
+   */
+  .entrance-experience__logo-visual {
+    width: 100%;
+
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: center;
 
     will-change:
       transform,
       opacity;
+
+    backface-visibility: hidden;
+
+    pointer-events: none;
+  }
+
+  .entrance-experience__logo {
+    display: block;
+
+    width: 100%;
+    height: auto;
+    overflow: visible;
+
+    pointer-events: none;
+    user-select: none;
   }
 
   .entrance-experience__logo-text {
@@ -1167,6 +1360,28 @@ const entranceStyle = [
     letter-spacing: 0.08em;
   }
 
+  /*
+   * 将来、外部SVGファイルへ変更した場合も
+   * 以下のクラスを付ければ同じ寸法で表示できる。
+   *
+   * 例：
+   *
+   * <img
+   *   class="entrance-experience__logo-image"
+   *   src="/logo.svg"
+   *   alt="Musée de l'Instant"
+   * />
+   */
+  .entrance-experience__logo-image {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    pointer-events: none;
+    user-select: none;
+  }
+
   @media (max-width: 1024px) {
     .entrance-experience__lobby-image {
       width: 100%;
@@ -1180,7 +1395,7 @@ const entranceStyle = [
   }
 
   @media (max-width: 640px) {
-    .entrance-experience__logo {
+    .entrance-experience__logo-position {
       width: calc(
         100vw - 32px
       );

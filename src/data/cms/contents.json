@@ -1354,5 +1354,22 @@
     "category": "__site__",
     "desktopHeightPx": 1251,
     "desktopHeightVh": 33
+  },
+  {
+    "id": "content000110",
+    "categoryId": "category007",
+    "slug": "content000110",
+    "image": "",
+    "title": "ソリティアおじさんがいた頃",
+    "body": "",
+    "author": "村司侑",
+    "authorSort": "むらしゆう",
+    "titleSort": "そりてぃあおじさんがいたころ",
+    "authorFontSizeOverride": false,
+    "authorFontSize": null,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null,
+    "visible": true,
+    "order": 90
   }
 ]

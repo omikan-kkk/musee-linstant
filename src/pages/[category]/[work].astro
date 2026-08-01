@@ -7,9 +7,12 @@ export function getStaticPaths() {
   return CONTENTS
     .filter((item) => item.visible)
     .map((item) => {
-      const category = CATEGORIES.find(
-        (category) => category.id === item.categoryId
-      );
+      const category =
+        CATEGORIES.find(
+          (category) =>
+            category.id ===
+            item.categoryId
+        );
 
       return {
         item,
@@ -17,89 +20,336 @@ export function getStaticPaths() {
       };
     })
     .filter(({ category }) => {
-      if (!category) return false;
+      if (!category) {
+        return false;
+      }
 
-      return (category.type || "gallery") === "gallery";
+      return (
+        category.type ||
+        "gallery"
+      ) === "gallery";
     })
-    .map(({ item, category }) => ({
-      params: {
-        category: category.slug,
-        work: item.id,
-      },
-      props: {
+    .map(
+      ({
         item,
-      },
-    }));
+        category,
+      }) => ({
+        params: {
+          category:
+            category.slug,
+          work: item.id,
+        },
+        props: {
+          item,
+        },
+      })
+    );
 }
 
-const { item } = Astro.props;
+const {
+  item,
+} = Astro.props;
 ---
 
-<Layout title={`${item.title} | Musée de l'Instant`} showHeader={true}>
+<Layout
+  title={`${item.title} | Musée de l'Instant`}
+  showHeader={true}
+>
   <main class="work-page">
-    {item.image && (
-      <img
-        src={item.image}
-        alt={item.title}
-      />
-    )}
+    {
+      item.image && (
+        <div class="work-image-area">
+          <img
+            src={item.image}
+            alt={item.title}
+          />
+        </div>
+      )
+    }
 
-    {(item.title || item.body) && (
-      <div class="work-caption">
-        {item.title && (
-          <p class="work-title">
-            {item.title}
-          </p>
-        )}
+    {
+      (
+        item.title ||
+        item.body
+      ) && (
+        <div class="work-caption">
+          {
+            item.title && (
+              <p class="work-title">
+                {item.title}
+              </p>
+            )
+          }
 
-        {item.body && (
-          <p class="work-body">
-            {item.body}
-          </p>
-        )}
-      </div>
-    )}
+          {
+            item.body && (
+              <p class="work-body">
+                {item.body}
+              </p>
+            )
+          }
+        </div>
+      )
+    }
   </main>
+
+  <script>
+    const DETAIL_PAGE_CLASS =
+      "is-gallery-detail-page";
+
+    const applyDetailPageState =
+      () => {
+        document.documentElement
+          .classList.add(
+            DETAIL_PAGE_CLASS
+          );
+
+        document.body.classList.add(
+          DETAIL_PAGE_CLASS
+        );
+      };
+
+    const removeDetailPageState =
+      () => {
+        document.documentElement
+          .classList.remove(
+            DETAIL_PAGE_CLASS
+          );
+
+        document.body.classList.remove(
+          DETAIL_PAGE_CLASS
+        );
+      };
+
+    /*
+     * この詳細ページにいる間だけ、
+     * スマホのページスクロールと
+     * pull-to-refreshを抑止する。
+     */
+    applyDetailPageState();
+
+    /*
+     * Astroのページ遷移前に、
+     * 専用クラスを確実に解除する。
+     *
+     * これにより、一覧ページや
+     * 他カテゴリへ影響を残さない。
+     */
+    document.addEventListener(
+      "astro:before-swap",
+      removeDetailPageState,
+      {
+        once: true,
+      }
+    );
+  </script>
 </Layout>
 
 <style>
-.work-page{
-  min-height:100vh;
-  padding:120px 24px;
-  display:grid;
-  place-items:center;
-  background:#fff;
-}
+  .work-page {
+    min-height: 100vh;
 
-.work-page img{
-  display:block;
-  width:min(100%,900px);
-  height:auto;
-}
+    padding:
+      120px
+      24px;
 
-.work-caption{
-  margin:24px 0 0;
-  width:min(100%,900px);
-  text-align:right;
-}
+    display: grid;
+    place-items: center;
 
-.work-title,
-.work-body{
-  margin:0;
-  font-family:var(--site-font-family);
-  letter-spacing:.08em;
-  line-height:1.8;
-  white-space:pre-line;
-}
+    background: #fff;
+  }
 
-.work-title{
-  color:var(--gallery-detail-title-color);
-  font-size:var(--gallery-detail-title-size);
-}
+  .work-image-area {
+    display: grid;
+    place-items: center;
 
-.work-body{
-  margin-top:4px;
-  color:var(--gallery-detail-caption-color);
-  font-size:var(--gallery-detail-caption-size);
-}
+    width: min(
+      100%,
+      900px
+    );
+  }
+
+  .work-image-area img {
+    display: block;
+
+    width: 100%;
+    height: auto;
+  }
+
+  .work-caption {
+    width: min(
+      100%,
+      900px
+    );
+
+    margin:
+      24px
+      0
+      0;
+
+    text-align: right;
+  }
+
+  .work-title,
+  .work-body {
+    margin: 0;
+
+    font-family:
+      var(
+        --site-font-family
+      );
+
+    letter-spacing: 0.08em;
+    line-height: 1.8;
+    white-space: pre-line;
+  }
+
+  .work-title {
+    color:
+      var(
+        --gallery-detail-title-color
+      );
+
+    font-size:
+      var(
+        --gallery-detail-title-size
+      );
+  }
+
+  .work-body {
+    margin-top: 4px;
+
+    color:
+      var(
+        --gallery-detail-caption-color
+      );
+
+    font-size:
+      var(
+        --gallery-detail-caption-size
+      );
+  }
+
+  /*
+   * スマホ版のみ変更。
+   *
+   * PC版は上記の従来仕様を
+   * そのまま維持する。
+   */
+  @media (max-width: 640px) {
+    :global(
+      html.is-gallery-detail-page
+    ),
+    :global(
+      body.is-gallery-detail-page
+    ) {
+      width: 100%;
+      height: 100%;
+
+      overflow: hidden;
+      overscroll-behavior-y: none;
+    }
+
+    :global(
+      body.is-gallery-detail-page
+    ) {
+      position: fixed;
+      inset: 0;
+
+      /*
+       * ページ全体の縦移動を止める。
+       *
+       * touch-action:noneは使用しないため、
+       * ブラウザ標準のピンチズームは
+       * 禁止しない。
+       */
+      touch-action: auto;
+    }
+
+    .work-page {
+      width: 100%;
+      height: 100dvh;
+      min-height: 0;
+
+      padding:
+        calc(
+          88px +
+          env(
+            safe-area-inset-top,
+            0px
+          )
+        )
+        20px
+        calc(
+          24px +
+          env(
+            safe-area-inset-bottom,
+            0px
+          )
+        );
+
+      display: grid;
+
+      /*
+       * 画像がない場合や
+       * キャプションがない場合にも
+       * 自然に中央へ配置する。
+       */
+      grid-template-rows:
+        minmax(0, 1fr)
+        auto;
+
+      align-items: center;
+      justify-items: center;
+
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    .work-image-area {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+
+      display: grid;
+      place-items: center;
+
+      overflow: hidden;
+    }
+
+    .work-image-area img {
+      display: block;
+
+      width: auto;
+      max-width: 100%;
+
+      height: auto;
+      max-height: 100%;
+
+      object-fit: contain;
+
+      /*
+       * 画像自体のドラッグ操作を
+       * 独自に固定しない。
+       *
+       * ブラウザのピンチズーム後は、
+       * visual viewport上で自由に
+       * パンできる状態を維持する。
+       */
+      touch-action: auto;
+    }
+
+    .work-caption {
+      width: 100%;
+
+      margin:
+        18px
+        0
+        0;
+
+      flex: none;
+
+      text-align: right;
+    }
+  }
 </style>

@@ -56,46 +56,79 @@ const {
   showHeader={true}
 >
   <main class="work-page">
-    {
-      item.image && (
-        <div class="work-image-area">
-          <img
-            src={item.image}
-            alt={item.title}
-          />
-        </div>
-      )
-    }
+    <!--
+      画像とキャプションを、
+      一つの展示ユニットとして扱う。
 
-    {
-      (
-        item.title ||
-        item.body
-      ) && (
-        <div class="work-caption">
-          {
-            item.title && (
-              <p class="work-title">
-                {item.title}
-              </p>
-            )
-          }
+      スマホではユニット全体を中央へ置き、
+      キャプションを画像の直下・右端へ揃える。
+    -->
+    <div
+      class="work-display"
+      data-work-display
+    >
+      {
+        item.image && (
+          <div class="work-image-area">
+            <img
+              src={item.image}
+              alt={item.title}
+              data-work-image
+            />
+          </div>
+        )
+      }
 
-          {
-            item.body && (
-              <p class="work-body">
-                {item.body}
-              </p>
-            )
-          }
-        </div>
-      )
-    }
+      {
+        (
+          item.title ||
+          item.body
+        ) && (
+          <div
+            class="work-caption"
+            data-work-caption
+          >
+            {
+              item.title && (
+                <p class="work-title">
+                  {item.title}
+                </p>
+              )
+            }
+
+            {
+              item.body && (
+                <p class="work-body">
+                  {item.body}
+                </p>
+              )
+            }
+          </div>
+        )
+      }
+    </div>
   </main>
 
   <script>
     const DETAIL_PAGE_CLASS =
       "is-gallery-detail-page";
+
+    const workDisplay =
+      document.querySelector<HTMLElement>(
+        "[data-work-display]"
+      );
+
+    const workImage =
+      document.querySelector<HTMLImageElement>(
+        "[data-work-image]"
+      );
+
+    const workCaption =
+      document.querySelector<HTMLElement>(
+        "[data-work-caption]"
+      );
+
+    let resizeFrame = 0;
 
     const applyDetailPageState =
       () => {
@@ -122,30 +155,135 @@ const {
       };
 
     /*
+     * スマホでは、キャプション幅を
+     * 実際に描画された画像幅へ合わせる。
+     *
+     * これによりキャプションの右端が、
+     * 画面右端ではなく画像右端へ揃う。
+     */
+    const syncMobileCaptionWidth =
+      () => {
+        if (
+          !workDisplay ||
+          !workImage ||
+          !workCaption
+        ) {
+          return;
+        }
+
+        if (
+          !window.matchMedia(
+            "(max-width: 640px)"
+          ).matches
+        ) {
+          workDisplay.style
+            .removeProperty(
+              "--rendered-image-width"
+            );
+
+          return;
+        }
+
+        const imageWidth =
+          workImage.getBoundingClientRect()
+            .width;
+
+        if (imageWidth <= 0) {
+          return;
+        }
+
+        workDisplay.style.setProperty(
+          "--rendered-image-width",
+          `${imageWidth}px`
+        );
+      };
+
+    const scheduleCaptionSync =
+      () => {
+        if (resizeFrame) {
+          cancelAnimationFrame(
+            resizeFrame
+          );
+        }
+
+        resizeFrame =
+          requestAnimationFrame(
+            () => {
+              resizeFrame = 0;
+              syncMobileCaptionWidth();
+            }
+          );
+      };
+
+    /*
      * この詳細ページにいる間だけ、
      * スマホのページスクロールと
      * pull-to-refreshを抑止する。
      */
     applyDetailPageState();
 
-    /*
-     * Astroのページ遷移前に、
-     * 専用クラスを確実に解除する。
-     *
-     * これにより、一覧ページや
-     * 他カテゴリへ影響を残さない。
-     */
+    if (workImage) {
+      if (workImage.complete) {
+        scheduleCaptionSync();
+      } else {
+        workImage.addEventListener(
+          "load",
+          scheduleCaptionSync,
+          {
+            once: true,
+          }
+        );
+      }
+    }
+
+    window.addEventListener(
+      "resize",
+      scheduleCaptionSync
+    );
+
+    window.addEventListener(
+      "orientationchange",
+      scheduleCaptionSync
+    );
+
+    const cleanup = () => {
+      if (resizeFrame) {
+        cancelAnimationFrame(
+          resizeFrame
+        );
+      }
+
+      resizeFrame = 0;
+
+      window.removeEventListener(
+        "resize",
+        scheduleCaptionSync
+      );
+
+      window.removeEventListener(
+        "orientationchange",
+        scheduleCaptionSync
+      );
+
+      removeDetailPageState();
+
+      document.removeEventListener(
+        "astro:before-swap",
+        cleanup
+      );
+    };
+
     document.addEventListener(
       "astro:before-swap",
-      removeDetailPageState,
-      {
-        once: true,
-      }
+      cleanup
     );
   </script>
 </Layout>
 
 <style>
+  /*
+   * PC版は、これまでの表示を維持する。
+   */
   .work-page {
     min-height: 100vh;
 
@@ -159,14 +297,18 @@ const {
     background: #fff;
   }
 
-  .work-image-area {
-    display: grid;
-    place-items: center;
-
+  .work-display {
     width: min(
       100%,
       900px
     );
+  }
+
+  .work-image-area {
+    display: grid;
+    place-items: center;
+
+    width: 100%;
   }
 
   .work-image-area img {
@@ -177,10 +319,7 @@ const {
   }
 
   .work-caption {
-    width: min(
-      100%,
-      900px
-    );
+    width: 100%;
 
     margin:
       24px
@@ -229,12 +368,12 @@ const {
         --gallery-detail-caption-size
       );
   }
-
-  /*
+    /*
    * スマホ版のみ変更。
    *
-   * PC版は上記の従来仕様を
-   * そのまま維持する。
+   * 縦スクロール抑止と
+   * pull-to-refresh対策は維持しつつ、
+   * 画像とキャプションを一つの展示ユニットとして扱う。
    */
   @media (max-width: 640px) {
     :global(
@@ -256,13 +395,6 @@ const {
       position: fixed;
       inset: 0;
 
-      /*
-       * ページ全体の縦移動を止める。
-       *
-       * touch-action:noneは使用しないため、
-       * ブラウザ標準のピンチズームは
-       * 禁止しない。
-       */
       touch-action: auto;
     }
 
@@ -288,31 +420,49 @@ const {
           )
         );
 
-      display: grid;
-
-      /*
-       * 画像がない場合や
-       * キャプションがない場合にも
-       * 自然に中央へ配置する。
-       */
-      grid-template-rows:
-        minmax(0, 1fr)
-        auto;
-
+      display: flex;
       align-items: center;
-      justify-items: center;
+      justify-content: center;
 
       overflow: hidden;
       overscroll-behavior: none;
     }
 
-    .work-image-area {
+    /*
+     * 画像とキャプションを、
+     * 一つの展示ユニットとして中央へ置く。
+     *
+     * 高さは内容に合わせ、
+     * 画面全体へ引き伸ばさない。
+     */
+    .work-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
       width: 100%;
-      height: 100%;
+      max-width: 100%;
+
+      max-height: 100%;
+      min-height: 0;
+    }
+
+    /*
+     * キャプション分の高さを残しつつ、
+     * 画像が画面内へ収まるようにする。
+     */
+    .work-image-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 100%;
       min-height: 0;
 
-      display: grid;
-      place-items: center;
+      flex:
+        1
+        1
+        auto;
 
       overflow: hidden;
     }
@@ -328,26 +478,35 @@ const {
 
       object-fit: contain;
 
-      /*
-       * 画像自体のドラッグ操作を
-       * 独自に固定しない。
-       *
-       * ブラウザのピンチズーム後は、
-       * visual viewport上で自由に
-       * パンできる状態を維持する。
-       */
       touch-action: auto;
     }
 
+    /*
+     * キャプション幅は、
+     * JavaScriptで取得した実描画画像幅へ合わせる。
+     *
+     * これにより、
+     * キャプションの右端が画像右端へ揃う。
+     */
     .work-caption {
-      width: 100%;
+      width:
+        min(
+          100%,
+          var(
+            --rendered-image-width,
+            100%
+          )
+        );
+
+      flex:
+        0
+        0
+        auto;
 
       margin:
-        18px
+        28px
         0
         0;
-
-      flex: none;
 
       text-align: right;
     }

@@ -43,6 +43,9 @@ const items = CONTENTS
 
 const categoryType =
   category.type || "gallery";
+
+const isBookCategory =
+  categoryType === "book";
 ---
 
 <Layout
@@ -51,7 +54,10 @@ const categoryType =
   showEdgeFade={true}
   edgeFadeHorizontal={false}
   lockVerticalScroll={
-    categoryType === "book"
+    isBookCategory
+  }
+  documentHorizontalScroll={
+    isBookCategory
   }
 >
   {

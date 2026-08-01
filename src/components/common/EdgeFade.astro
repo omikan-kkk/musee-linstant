@@ -1,16 +1,17 @@
 ---
 const {
   horizontal = false,
-  horizontalOnly = false,
+  fixedHorizontal = false,
 } = Astro.props;
 ---
 
 <div
   class:list={[
     "edge-fade",
-    horizontal && "has-horizontal",
-    horizontalOnly &&
-      "is-horizontal-only",
+    horizontal &&
+      "has-horizontal",
+    fixedHorizontal &&
+      "is-fixed-horizontal",
   ]}
   aria-hidden="true"
 >
@@ -22,10 +23,17 @@ const {
 
 <style>
   .edge-fade {
-    --edge-fade-size-top: 80px;
-    --edge-fade-size-bottom: 42px;
-    --edge-fade-size-x: 32px;
-    --edge-fade-scrollbar-clearance: 0px;
+    --edge-fade-size-top:
+      80px;
+
+    --edge-fade-size-bottom:
+      42px;
+
+    --edge-fade-size-x:
+      32px;
+
+    --edge-fade-scrollbar-clearance:
+      0px;
 
     position: sticky;
     top: 0;
@@ -33,19 +41,67 @@ const {
     width: 100%;
     height: 100dvh;
 
-    margin-bottom: -100dvh;
+    margin-bottom:
+      -100dvh;
 
     overflow: hidden;
 
     pointer-events: none;
+
     z-index: 900;
+  }
+
+  /*
+   * type:book専用。
+   *
+   * 横長の文書とは独立し、
+   * viewportの四辺へ固定する。
+   */
+  .edge-fade.is-fixed-horizontal {
+    position: fixed;
+
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100dvh;
+
+    margin: 0;
+
+    overflow: hidden;
+
+    /*
+     * 本棚より確実に前、
+     * ヘッダーのz-index:2000より後ろ。
+     */
+    z-index: 1900;
+
+    /*
+     * iOS Safariを含め、
+     * 固定フェードを独立した合成レイヤーへ置く。
+     */
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      );
+
+    backface-visibility:
+      hidden;
+
+    will-change:
+      transform;
   }
 
   .edge-fade span {
     position: absolute;
 
     pointer-events: none;
-    z-index: 900;
+
+    z-index: 1;
   }
 
   .edge-fade-top {
@@ -329,8 +385,6 @@ const {
   }
 
   .edge-fade.has-horizontal
-    .edge-fade-left,
-  .edge-fade.is-horizontal-only
     .edge-fade-left {
     display: block;
 
@@ -383,8 +437,6 @@ const {
   }
 
   .edge-fade.has-horizontal
-    .edge-fade-right,
-  .edge-fade.is-horizontal-only
     .edge-fade-right {
     display: block;
 
@@ -437,62 +489,37 @@ const {
   }
 
   /*
-   * type: book専用の左右フェード。
+   * PCでは横スクロールバーの領域を
+   * 左右・下フェードで覆わない。
    *
-   * 実際に横スクロールする
-   * .book-scrollの子要素として配置する。
-   *
-   * 縦版と同様に通常のブロックフローへ置き、
-   * margin-bottomで占有した高さを相殺する。
-   *
-   * 横方向について変更するのは、
-   * stickyの基準をleft: 0にすることだけ。
-   */
-  .edge-fade.is-horizontal-only {
-    position: sticky;
-
-    top: 0;
-    left: 0;
-
-    width: 100vw;
-    height: 100dvh;
-
-    margin-right: 0;
-    margin-bottom: -100dvh;
-
-    overflow: hidden;
-  }
-
-  .edge-fade.is-horizontal-only
-    .edge-fade-top,
-  .edge-fade.is-horizontal-only
-    .edge-fade-bottom {
-    display: none;
-  }
-
-  /*
-   * type: bookでは外側のfade-scrollが
-   * is-y-lockedになる。
-   *
-   * PCだけ最下部18pxを空けて、
-   * 横スクロールバーを見せる。
+   * Layout側のバー高さ14pxと揃える。
    */
   @media (
     hover: hover
   ) and (
     pointer: fine
   ) {
-    :global(
-      .fade-scroll.is-y-locked
-    )
-      > .edge-fade {
+    .edge-fade.is-fixed-horizontal {
       --edge-fade-scrollbar-clearance:
-        18px;
+        14px;
     }
+  }
 
-    .edge-fade.is-horizontal-only {
+  /*
+   * スマホではSafariが管理する
+   * 最下部の表示領域を覆わない。
+   */
+  @media (
+    hover: none
+  ) and (
+    pointer: coarse
+  ) {
+    .edge-fade.is-fixed-horizontal {
       --edge-fade-scrollbar-clearance:
-        18px;
+        env(
+          safe-area-inset-bottom,
+          0px
+        );
     }
   }
 </style>

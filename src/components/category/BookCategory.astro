@@ -1,80 +1,74 @@
 ---
-import EdgeFade from "../common/EdgeFade.astro";
-
-const { items = [] } = Astro.props;
+const {
+  items = [],
+} = Astro.props;
 
 const grouped = Object.values(
-  items.reduce((groups, item) => {
-    const author =
-      item.author || "Unknown";
+  items.reduce(
+    (groups, item) => {
+      const author =
+        item.author ||
+        "Unknown";
 
-    const authorSort =
-      item.authorSort || author;
+      const authorSort =
+        item.authorSort ||
+        author;
 
-    if (!groups[author]) {
-      groups[author] = {
-        author,
-        authorSort,
-        authorFontSizeOverride:
-          item.authorFontSizeOverride ||
-          false,
-        authorFontSize:
-          item.authorFontSize || null,
-        books: [],
-      };
-    }
+      if (!groups[author]) {
+        groups[author] = {
+          author,
+          authorSort,
+          authorFontSizeOverride:
+            item.authorFontSizeOverride ||
+            false,
+          authorFontSize:
+            item.authorFontSize ||
+            null,
+          books: [],
+        };
+      }
 
-    groups[author].books.push(
-      item
-    );
+      groups[author].books.push(
+        item
+      );
 
-    return groups;
-  }, {})
-);
-
-grouped.sort((a, b) =>
-  a.authorSort.localeCompare(
-    b.authorSort,
-    "ja"
+      return groups;
+    },
+    {}
   )
 );
 
-grouped.forEach((group) => {
-  group.books.sort((a, b) =>
-    (
-      a.titleSort ||
-      a.title
-    ).localeCompare(
-      b.titleSort ||
-        b.title,
+grouped.sort(
+  (a, b) =>
+    a.authorSort.localeCompare(
+      b.authorSort,
       "ja"
     )
+);
+
+grouped.forEach((group) => {
+  group.books.sort(
+    (a, b) =>
+      (
+        a.titleSort ||
+        a.title
+      ).localeCompare(
+        b.titleSort ||
+          b.title,
+        "ja"
+      )
   );
 });
 ---
 
-<section class="book-section">
-  <div
-    class="book-scroll"
-    id="book-scroll"
-    data-book-scroll
-  >
-    <!--
-      左右フェードは、
-      実際に横スクロールする
-      .book-scrollの子要素として配置する。
-
-      スクロールバー自体は
-      .book-scrollが描画するため、
-      フェードより外側に残る。
-    -->
-    <EdgeFade
-      horizontalOnly={true}
-    />
-
-    <div class="bookshelf">
-      {
-        grouped.map((group) => (
+<section
+  class="book-section"
+  data-book-section
+>
+  <div class="bookshelf">
+    {
+      grouped.map(
+        (group) => (
           <div class="author-group">
             <div class="author-column">
               <p
@@ -113,17 +107,12 @@ grouped.forEach((group) => {
               }
             </div>
           </div>
-        ))
-      }
-    </div>
+        )
+      )
+    }
   </div>
 
   <script>
-    const scrollArea =
-      document.querySelector<HTMLElement>(
-        "[data-book-scroll]"
-      );
-
     const books = [
       ...document.querySelectorAll<HTMLElement>(
         "[data-book-item]"
@@ -132,14 +121,42 @@ grouped.forEach((group) => {
 
     let wheelFrame = 0;
     let pendingWheelDelta = 0;
+    let initialPositionFrame = 0;
+
+    const getDocumentScrollLeft =
+      () =>
+        window.scrollX ||
+        document.documentElement
+          .scrollLeft ||
+        document.body.scrollLeft ||
+        0;
+
+    const getDocumentScrollWidth =
+      () =>
+        Math.max(
+          document.documentElement
+            .scrollWidth,
+          document.body.scrollWidth
+        );
+
+    const setDocumentScrollLeft = (
+      value: number
+    ) => {
+      window.scrollTo({
+        left: value,
+        top: 0,
+        behavior: "auto",
+      });
+    };
 
     /*
-     * 初回表示時に、
-     * ランダムな本を画面中央付近へ配置する。
+     * 初期表示時に、
+     * ランダムな本を画面中央付近へ置く。
      */
     const centerRandomBook = () => {
+      initialPositionFrame = 0;
+
       if (
-        !scrollArea ||
         books.length === 0
       ) {
         return;
@@ -153,82 +170,103 @@ grouped.forEach((group) => {
           )
         ];
 
-      const scrollBox =
-        scrollArea.getBoundingClientRect();
-
       const bookBox =
         randomBook.getBoundingClientRect();
 
       const bookCenter =
-        bookBox.left -
-        scrollBox.left +
-        scrollArea.scrollLeft +
+        bookBox.left +
+        getDocumentScrollLeft() +
         bookBox.width / 2;
 
       const targetScroll =
         bookCenter -
-        scrollArea.clientWidth / 2;
+        window.innerWidth / 2;
 
       const maxScrollLeft =
         Math.max(
           0,
-          scrollArea.scrollWidth -
-            scrollArea.clientWidth
+          getDocumentScrollWidth() -
+            window.innerWidth
         );
 
-      scrollArea.scrollLeft =
+      setDocumentScrollLeft(
         Math.min(
           maxScrollLeft,
           Math.max(
             0,
             targetScroll
           )
-        );
+        )
+      );
     };
 
+    const scheduleInitialPosition =
+      () => {
+        if (
+          initialPositionFrame
+        ) {
+          cancelAnimationFrame(
+            initialPositionFrame
+          );
+        }
+
+        initialPositionFrame =
+          requestAnimationFrame(
+            () => {
+              initialPositionFrame =
+                requestAnimationFrame(
+                  centerRandomBook
+                );
+            }
+          );
+      };
+
     /*
-     * 同じフレーム内に届いたwheel入力をまとめて、
-     * 横スクロールへ反映する。
+     * PCの縦ホイール入力を、
+     * 文書自体の横スクロールへ変換する。
      */
-    const applyWheelScroll = () => {
-      if (!scrollArea) {
+    const applyWheelScroll =
+      () => {
         wheelFrame = 0;
+
+        const currentScroll =
+          getDocumentScrollLeft();
+
+        const maxScrollLeft =
+          Math.max(
+            0,
+            getDocumentScrollWidth() -
+              window.innerWidth
+          );
+
+        setDocumentScrollLeft(
+          Math.min(
+            maxScrollLeft,
+            Math.max(
+              0,
+              currentScroll +
+                pendingWheelDelta
+            )
+          )
+        );
+
         pendingWheelDelta = 0;
-        return;
-      }
+      };
 
-      scrollArea.scrollLeft +=
-        pendingWheelDelta;
-
-      pendingWheelDelta = 0;
-      wheelFrame = 0;
-    };
-
-    /*
-     * PCの通常ホイール操作を、
-     * type: bookページの横移動へ変換する。
-     *
-     * スマホのtouch操作には干渉しない。
-     */
     const handleWheel = (
       event: WheelEvent
     ) => {
-      if (
-        !scrollArea ||
-        event.ctrlKey
-      ) {
+      if (event.ctrlKey) {
         return;
       }
 
-      /*
-       * 横入力が強いトラックパッドではdeltaX、
-       * 通常のマウスホイールではdeltaYを使う。
-       *
-       * Shiftキーは不要。
-       */
       const horizontalDelta =
-        Math.abs(event.deltaX) >
-        Math.abs(event.deltaY)
+        Math.abs(
+          event.deltaX
+        ) >
+        Math.abs(
+          event.deltaY
+        )
           ? event.deltaX
           : event.deltaY;
 
@@ -237,44 +275,6 @@ grouped.forEach((group) => {
           horizontalDelta
         ) < 0.5
       ) {
-        return;
-      }
-
-      const maxScrollLeft =
-        Math.max(
-          0,
-          scrollArea.scrollWidth -
-            scrollArea.clientWidth
-        );
-
-      const isAtStart =
-        scrollArea.scrollLeft <= 0;
-
-      const isAtEnd =
-        scrollArea.scrollLeft >=
-        maxScrollLeft - 1;
-
-      const isMovingBackward =
-        horizontalDelta < 0;
-
-      const isMovingForward =
-        horizontalDelta > 0;
-
-      /*
-       * 横方向の端に達していても、
-       * bookページ全体を縦へ動かさない。
-       */
-      if (
-        (
-          isAtStart &&
-          isMovingBackward
-        ) ||
-        (
-          isAtEnd &&
-          isMovingForward
-        )
-      ) {
-        event.preventDefault();
         return;
       }
 
@@ -298,12 +298,31 @@ grouped.forEach((group) => {
         );
       }
 
+      if (
+        initialPositionFrame
+      ) {
+        cancelAnimationFrame(
+          initialPositionFrame
+        );
+      }
+
       wheelFrame = 0;
+      initialPositionFrame = 0;
       pendingWheelDelta = 0;
 
-      scrollArea?.removeEventListener(
+      window.removeEventListener(
         "wheel",
         handleWheel
+      );
+
+      window.removeEventListener(
+        "resize",
+        scheduleInitialPosition
+      );
+
+      window.removeEventListener(
+        "orientationchange",
+        scheduleInitialPosition
       );
 
       document.removeEventListener(
@@ -312,16 +331,24 @@ grouped.forEach((group) => {
       );
     };
 
-    requestAnimationFrame(
-      centerRandomBook
-    );
+    scheduleInitialPosition();
 
-    scrollArea?.addEventListener(
+    window.addEventListener(
       "wheel",
       handleWheel,
       {
         passive: false,
       }
+    );
+
+    window.addEventListener(
+      "resize",
+      scheduleInitialPosition
+    );
+
+    window.addEventListener(
+      "orientationchange",
+      scheduleInitialPosition
     );
 
     document.addEventListener(
@@ -333,15 +360,26 @@ grouped.forEach((group) => {
 
 <style>
   .book-section {
-    --author-height: 115px;
-    --author-gap: 10px;
-    --book-column-width: calc(
-      var(--book-list-size, 13px) *
-        1.8
-    );
+    --author-height:
+      115px;
 
-    width: 100%;
-    min-height: 100vh;
+    --author-gap:
+      10px;
+
+    --book-column-width:
+      calc(
+        var(
+            --book-list-size,
+            13px
+          ) *
+          1.8
+      );
+
+    width: max-content;
+    min-width: 100vw;
+
+    height: 100dvh;
+    min-height: 100dvh;
 
     background: #fff;
 
@@ -357,54 +395,18 @@ grouped.forEach((group) => {
       );
   }
 
-  /*
-   * 実際に横スクロールする要素。
-   *
-   * flexにはせず、
-   * 縦スクロール版と同じ通常のブロックフローで、
-   * stickyフェードとコンテンツを重ねる。
-   */
-  .book-scroll {
-    position: relative;
-
-    width: 100vw;
-    height: 100vh;
-    min-height: 100vh;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    -webkit-overflow-scrolling:
-      touch;
-
-    overscroll-behavior-x:
-      contain;
-
-    /*
-     * ネイティブ横スクロールバーを
-     * 非表示にしない。
-     */
-    scrollbar-width: auto;
-  }
-
-  /*
-   * 横方向用EdgeFadeは、
-   * height:100dvhと
-   * margin-bottom:-100dvhによって、
-   * 本棚の上に重なる。
-   *
-   * 本棚自体の横幅計算には影響させない。
-   */
   .bookshelf {
     display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-start;
+    flex-direction:
+      row-reverse;
+    align-items:
+      flex-start;
 
     gap: 72px;
 
     width: max-content;
-    min-width: max-content;
-    min-height: 100%;
+    min-width: 100vw;
+    min-height: 100dvh;
 
     padding:
       155px
@@ -413,28 +415,45 @@ grouped.forEach((group) => {
 
   .author-group {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction:
+      column;
+    align-items:
+      flex-end;
+
+    flex:
+      0
+      0
+      auto;
   }
 
   .author-column,
   .book-column {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    align-items:
+      flex-start;
+    justify-content:
+      center;
 
     width:
       var(
         --book-column-width
       );
+
+    flex:
+      0
+      0
+      auto;
   }
 
   .author,
   .book {
     margin: 0;
 
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+    writing-mode:
+      vertical-rl;
+
+    text-orientation:
+      mixed;
 
     font-family:
       var(
@@ -454,7 +473,8 @@ grouped.forEach((group) => {
       );
 
     line-height: 1.8;
-    letter-spacing: 0.08em;
+    letter-spacing:
+      0.08em;
   }
 
   .author-column {
@@ -473,18 +493,22 @@ grouped.forEach((group) => {
   }
 
   .author {
-    white-space: nowrap;
+    white-space:
+      nowrap;
   }
 
   .book-list {
     display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-start;
+    flex-direction:
+      row-reverse;
+    align-items:
+      flex-start;
 
     gap: 45px;
   }
 
   .book {
-    white-space: nowrap;
+    white-space:
+      nowrap;
   }
 </style>

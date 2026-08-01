@@ -1,11 +1,17 @@
 ---
 const {
   horizontal = false,
+  horizontalOnly = false,
 } = Astro.props;
 ---
 
 <div
-  class:list={["edge-fade", horizontal && "has-horizontal"]}
+  class:list={[
+    "edge-fade",
+    horizontal && "has-horizontal",
+    horizontalOnly &&
+      "is-horizontal-only",
+  ]}
   aria-hidden="true"
 >
   <span class="edge-fade-top"></span>
@@ -15,98 +21,478 @@ const {
 </div>
 
 <style>
-.edge-fade{
-  --edge-fade-size-top:80px;
-  --edge-fade-size-bottom:42px;
-  --edge-fade-size-x:32px;
+  .edge-fade {
+    --edge-fade-size-top: 80px;
+    --edge-fade-size-bottom: 42px;
+    --edge-fade-size-x: 32px;
+    --edge-fade-scrollbar-clearance: 0px;
 
-  position:sticky;
-  top:0;
-  width:100%;
-  height:100dvh;
-  margin-bottom:-100dvh;
-  overflow:hidden;
-  pointer-events:none;
-  z-index:900;
-}
+    position: sticky;
+    top: 0;
 
-.edge-fade span{
-  position:absolute;
-  pointer-events:none;
-  z-index:900;
-}
+    width: 100%;
+    height: 100dvh;
 
-.edge-fade-top{
-  top:0;
-  left:0;
-  right:0;
-  height:calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top));
-  background:linear-gradient(
-    to bottom,
-    #fff 0,
-    #fff env(safe-area-inset-top, 0px),
-    rgba(255,255,255,.98) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.15),
-    rgba(255,255,255,.88) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.35),
-    rgba(255,255,255,.55) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top) * 0.72),
-    rgba(255,255,255,0) calc(env(safe-area-inset-top, 0px) + var(--edge-fade-size-top))
-  );
-}
+    margin-bottom: -100dvh;
 
-.edge-fade-bottom{
-  bottom:0;
-  left:0;
-  right:0;
-  height:calc(env(safe-area-inset-bottom, 0px) + var(--edge-fade-size-bottom));
-  background:linear-gradient(
-    to top,
-    #fff 0,
-    rgba(255,255,255,.99) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.10),
-    rgba(255,255,255,.98) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.20),
-    rgba(255,255,255,.95) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.30),
-    rgba(255,255,255,.90) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.40),
-    rgba(255,255,255,.81) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.50),
-    rgba(255,255,255,.67) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.60),
-    rgba(255,255,255,.50) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.70),
-    rgba(255,255,255,.30) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.80),
-    rgba(255,255,255,.05) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom) * 0.90),
-    rgba(255,255,255,0) calc(env(safe-area-inset-bottom,0px) + var(--edge-fade-size-bottom))
-  );
-}
+    overflow: hidden;
 
-.edge-fade-left,
-.edge-fade-right{
-  display:none;
-}
+    pointer-events: none;
+    z-index: 900;
+  }
 
-.edge-fade.has-horizontal .edge-fade-left{
-  display:block;
-  top:0;
-  bottom:0;
-  left:0;
-  width:var(--edge-fade-size-x);
-  background:linear-gradient(
-    to right,
-    #fff 0%,
-    rgba(255,255,255,.98) 12%,
-    rgba(255,255,255,.88) 28%,
-    rgba(255,255,255,.55) 58%,
-    rgba(255,255,255,0) 100%
-  );
-}
+  .edge-fade span {
+    position: absolute;
 
-.edge-fade.has-horizontal .edge-fade-right{
-  display:block;
-  top:0;
-  bottom:0;
-  right:0;
-  width:var(--edge-fade-size-x);
-  background:linear-gradient(
-    to left,
-    #fff 0%,
-    rgba(255,255,255,.98) 12%,
-    rgba(255,255,255,.88) 28%,
-    rgba(255,255,255,.55) 58%,
-    rgba(255,255,255,0) 100%
-  );
-}
+    pointer-events: none;
+    z-index: 900;
+  }
+
+  .edge-fade-top {
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: calc(
+      env(
+          safe-area-inset-top,
+          0px
+        ) +
+        var(
+          --edge-fade-size-top
+        )
+    );
+
+    background:
+      linear-gradient(
+        to bottom,
+        #fff 0,
+        #fff
+          env(
+            safe-area-inset-top,
+            0px
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.98
+          )
+          calc(
+            env(
+                safe-area-inset-top,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-top
+                ) *
+                0.15
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.88
+          )
+          calc(
+            env(
+                safe-area-inset-top,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-top
+                ) *
+                0.35
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+          )
+          calc(
+            env(
+                safe-area-inset-top,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-top
+                ) *
+                0.72
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0
+          )
+          calc(
+            env(
+                safe-area-inset-top,
+                0px
+              ) +
+              var(
+                --edge-fade-size-top
+              )
+          )
+      );
+  }
+
+  .edge-fade-bottom {
+    bottom:
+      var(
+        --edge-fade-scrollbar-clearance
+      );
+
+    left: 0;
+    right: 0;
+
+    height: calc(
+      env(
+          safe-area-inset-bottom,
+          0px
+        ) +
+        var(
+          --edge-fade-size-bottom
+        )
+    );
+
+    background:
+      linear-gradient(
+        to top,
+        #fff 0,
+        rgba(
+            255,
+            255,
+            255,
+            0.99
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.10
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.98
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.20
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.95
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.30
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.90
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.40
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.81
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.50
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.67
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.60
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.50
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.70
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.30
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.80
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0.05
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                  --edge-fade-size-bottom
+                ) *
+                0.90
+          ),
+        rgba(
+            255,
+            255,
+            255,
+            0
+          )
+          calc(
+            env(
+                safe-area-inset-bottom,
+                0px
+              ) +
+              var(
+                --edge-fade-size-bottom
+              )
+          )
+      );
+  }
+
+  .edge-fade-left,
+  .edge-fade-right {
+    display: none;
+  }
+
+  .edge-fade.has-horizontal
+    .edge-fade-left,
+  .edge-fade.is-horizontal-only
+    .edge-fade-left {
+    display: block;
+
+    top: 0;
+    bottom:
+      var(
+        --edge-fade-scrollbar-clearance
+      );
+
+    left: 0;
+
+    width:
+      var(
+        --edge-fade-size-x
+      );
+
+    background:
+      linear-gradient(
+        to right,
+        #fff 0%,
+        rgba(
+            255,
+            255,
+            255,
+            0.98
+          )
+          12%,
+        rgba(
+            255,
+            255,
+            255,
+            0.88
+          )
+          28%,
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+          )
+          58%,
+        rgba(
+            255,
+            255,
+            255,
+            0
+          )
+          100%
+      );
+  }
+
+  .edge-fade.has-horizontal
+    .edge-fade-right,
+  .edge-fade.is-horizontal-only
+    .edge-fade-right {
+    display: block;
+
+    top: 0;
+    right: 0;
+
+    bottom:
+      var(
+        --edge-fade-scrollbar-clearance
+      );
+
+    width:
+      var(
+        --edge-fade-size-x
+      );
+
+    background:
+      linear-gradient(
+        to left,
+        #fff 0%,
+        rgba(
+            255,
+            255,
+            255,
+            0.98
+          )
+          12%,
+        rgba(
+            255,
+            255,
+            255,
+            0.88
+          )
+          28%,
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+          )
+          58%,
+        rgba(
+            255,
+            255,
+            255,
+            0
+          )
+          100%
+      );
+  }
+
+  /*
+   * type: book専用の左右フェード。
+   *
+   * 実際に横スクロールする
+   * .book-scrollの子要素として配置する。
+   *
+   * 縦版と同様に通常のブロックフローへ置き、
+   * margin-bottomで占有した高さを相殺する。
+   *
+   * 横方向について変更するのは、
+   * stickyの基準をleft: 0にすることだけ。
+   */
+  .edge-fade.is-horizontal-only {
+    position: sticky;
+
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100dvh;
+
+    margin-right: 0;
+    margin-bottom: -100dvh;
+
+    overflow: hidden;
+  }
+
+  .edge-fade.is-horizontal-only
+    .edge-fade-top,
+  .edge-fade.is-horizontal-only
+    .edge-fade-bottom {
+    display: none;
+  }
+
+  /*
+   * type: bookでは外側のfade-scrollが
+   * is-y-lockedになる。
+   *
+   * PCだけ最下部18pxを空けて、
+   * 横スクロールバーを見せる。
+   */
+  @media (
+    hover: hover
+  ) and (
+    pointer: fine
+  ) {
+    :global(
+      .fade-scroll.is-y-locked
+    )
+      > .edge-fade {
+      --edge-fade-scrollbar-clearance:
+        18px;
+    }
+
+    .edge-fade.is-horizontal-only {
+      --edge-fade-scrollbar-clearance:
+        18px;
+    }
+  }
 </style>

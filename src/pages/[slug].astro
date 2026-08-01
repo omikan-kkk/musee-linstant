@@ -8,43 +8,87 @@ import { CONTENTS } from "../data/contents";
 
 export function getStaticPaths() {
   return CATEGORIES
-    .filter((category) => category.visible)
+    .filter(
+      (category) =>
+        category.visible
+    )
     .map((category) => ({
-      params: { slug: category.slug },
-      props: { category },
+      params: {
+        slug: category.slug,
+      },
+      props: {
+        category,
+      },
     }));
 }
 
-const { category } = Astro.props;
+const {
+  category,
+} = Astro.props;
 
 const items = CONTENTS
-  .filter((item) => item.categoryId === category.id)
-  .filter((item) => item.visible)
-  .sort((a, b) => a.order - b.order);
+  .filter(
+    (item) =>
+      item.categoryId ===
+      category.id
+  )
+  .filter(
+    (item) =>
+      item.visible
+  )
+  .sort(
+    (a, b) =>
+      a.order - b.order
+  );
 
-const categoryType = category.type || "gallery";
+const categoryType =
+  category.type || "gallery";
 ---
 
 <Layout
   title={`${category.title} | Musée de l'Instant`}
   showHeader={true}
   showEdgeFade={true}
-  edgeFadeHorizontal={categoryType === "book"}
-  lockVerticalScroll={categoryType === "book"}
+  edgeFadeHorizontal={false}
+  lockVerticalScroll={
+    categoryType === "book"
+  }
 >
-  {categoryType === "gallery" && (
-    <GalleryCategory category={category} items={items} />
-  )}
+  {
+    categoryType ===
+      "gallery" && (
+      <GalleryCategory
+        category={category}
+        items={items}
+      />
+    )
+  }
 
-  {categoryType === "book" && (
-    <BookCategory items={items} />
-  )}
+  {
+    categoryType ===
+      "book" && (
+      <BookCategory
+        items={items}
+      />
+    )
+  }
 
-  {categoryType === "coffee" && (
-    <CoffeeCategory items={items} />
-  )}
+  {
+    categoryType ===
+      "coffee" && (
+      <CoffeeCategory
+        items={items}
+      />
+    )
+  }
 
-  {categoryType === "music" && (
-    <GalleryCategory category={category} items={items} />
-  )}
+  {
+    categoryType ===
+      "music" && (
+      <GalleryCategory
+        category={category}
+        items={items}
+      />
+    )
+  }
 </Layout>

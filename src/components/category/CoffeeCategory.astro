@@ -67,9 +67,9 @@ const sortedItems = [
                   {item.coffeeName}
                 </span>
 
-                <p class="coffee-notes">
+                <span class="coffee-notes">
                   {item.notes}
-                </p>
+                </span>
               </article>
             )
           )
@@ -368,13 +368,6 @@ const sortedItems = [
           `${nextReserve}px`
         );
 
-        /*
-         * shellのcontent-boxは
-         * 通常表示時のCoffee全高を維持する。
-         *
-         * padding-top／padding-bottomによって
-         * 拡大分の上下移動領域が加算される。
-         */
         scaleShell.style.height =
           `${fittedHeight}px`;
 
@@ -383,13 +376,6 @@ const sortedItems = [
           `${totalLayoutHeight}px`
         );
 
-        /*
-         * 上側領域が増えたぶんだけ
-         * scrollTopも進める。
-         *
-         * これにより表示位置を保ちながら、
-         * 上方向にも追加分だけ戻れる。
-         */
         if (
           Math.abs(
             reserveDelta
@@ -454,9 +440,6 @@ const sortedItems = [
     /*
      * 元倍率へ戻ったら、
      * 動的に追加していた上下領域を撤去する。
-     *
-     * そのぶんscrollTopも戻すため、
-     * 表示位置が大きく飛ばない。
      */
     const exitZoomMode =
       () => {
@@ -517,8 +500,12 @@ const sortedItems = [
       };
 
     /*
-     * Coffee一覧全体へ、
+     * Coffeeページ全体へ、
      * 一つだけ共通倍率を適用する。
+     *
+     * Date・Brand・Name・Notesだけでなく、
+     * 行間、列間、アイテム間隔も
+     * coffee-stageの子孫として同比率で縮小される。
      */
     const applyCoffeeFit =
       () => {
@@ -534,6 +521,10 @@ const sortedItems = [
           return;
         }
 
+        /*
+         * 実測前はページ全体の倍率を
+         * 一度だけ1へ戻す。
+         */
         coffeeStage.style.setProperty(
           "--coffee-stage-scale",
           "1"
@@ -575,6 +566,10 @@ const sortedItems = [
           naturalHeight *
           fittedScale;
 
+        /*
+         * この一か所だけで、
+         * Coffeeコンテンツ全体を縮小する。
+         */
         coffeeStage.style.setProperty(
           "--coffee-stage-scale",
           String(
@@ -794,11 +789,15 @@ const sortedItems = [
         --site-font-family
       );
 
+    /*
+     * Coffeeカテゴリ全体で、
+     * iOSの文字自動拡大を無効化する。
+     */
     -webkit-text-size-adjust:
-      none;
+      100%;
 
     text-size-adjust:
-      none;
+      100%;
   }
 
   .coffee-scale-shell {
@@ -808,11 +807,6 @@ const sortedItems = [
     position:
       relative;
 
-    /*
-     * JavaScriptが設定するheightに、
-     * 上下paddingを加算するため
-     * content-boxを明示する。
-     */
     box-sizing:
       content-box;
 
@@ -837,12 +831,51 @@ const sortedItems = [
       auto;
   }
 
+  /*
+   * CMSの文字サイズ・文字属性を、
+   * Coffeeページ全体の単一基準として
+   * この要素へ一度だけ設定する。
+   *
+   * 子要素はすべてこれを継承する。
+   */
   .coffee-stage {
     --coffee-stage-scale:
       1;
 
     width:
       max-content;
+
+    color:
+      var(
+        --coffee-list-color,
+        #555
+      );
+
+    font-family:
+      var(
+        --site-font-family
+      );
+
+    font-size:
+      var(
+        --coffee-list-size,
+        14px
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      1.8;
+
+    letter-spacing:
+      0.08em;
+
+    -webkit-text-size-adjust:
+      100%;
+
+    text-size-adjust:
+      100%;
 
     transform:
       scale(
@@ -915,6 +948,19 @@ const sortedItems = [
 
     width:
       max-content;
+
+    /*
+     * item単位の文字サイズ補正を作らず、
+     * stageの値をそのまま継承する。
+     */
+    font:
+      inherit;
+
+    color:
+      inherit;
+
+    letter-spacing:
+      inherit;
   }
 
   .coffee-date {
@@ -932,6 +978,12 @@ const sortedItems = [
       5;
   }
 
+  /*
+   * すべて同じHTMLテキスト基準・
+   * 同じ継承値で描画する。
+   *
+   * ここには個別のfont-sizeを置かない。
+   */
   .coffee-date,
   .coffee-brand,
   .coffee-name,
@@ -939,37 +991,26 @@ const sortedItems = [
     margin:
       0;
 
+    padding:
+      0;
+
+    border:
+      0;
+
     color:
-      var(
-        --coffee-list-color,
-        #555
-      );
+      inherit;
 
-    font-family:
-      var(
-        --site-font-family
-      );
-
-    font-size:
-      var(
-        --coffee-list-size,
-        14px
-      );
-
-    font-weight:
-      400;
-
-    line-height:
-      1.8;
+    font:
+      inherit;
 
     letter-spacing:
-      0.08em;
+      inherit;
 
     -webkit-text-size-adjust:
-      none;
+      100%;
 
     text-size-adjust:
-      none;
+      100%;
   }
 
   .coffee-date,
@@ -980,8 +1021,14 @@ const sortedItems = [
   }
 
   .coffee-notes {
+    display:
+      block;
+
     grid-column:
       1 / -1;
+
+    min-width:
+      0;
 
     width:
       100%;

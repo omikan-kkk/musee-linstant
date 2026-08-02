@@ -172,6 +172,21 @@ grouped.forEach((group) => {
     const ORIENTATION_SETTLE_MS =
       260;
 
+    /*
+     * 指を離した後もSafariの慣性が続くため、
+     * 最後のscrollイベントからこの時間が
+     * 経過するまではレイアウト補正を行わない。
+     */
+    const HORIZONTAL_SCROLL_SETTLE_MS =
+      180;
+
+    /*
+     * Safariの小数誤差程度では
+     * 再レイアウトを起こさない。
+     */
+    const VIEWPORT_CHANGE_EPSILON =
+      1;
+
     type ZoomPhase =
       | "idle"
       | "zooming"
@@ -182,14 +197,20 @@ grouped.forEach((group) => {
 
     let currentScale = 1;
 
-    /*
-     * visualViewport.scaleの変化だけでなく、
-     * 実際に二本指操作が行われているかも見る。
-     *
-     * これにより画面回転時の一時的なscale変化を
-     * ピンチ拡大と誤認しない。
-     */
     let pinchGestureActive =
+      false;
+
+    /*
+     * 一本指の横操作と、
+     * 指を離した後の慣性移動を管理する。
+     */
+    let horizontalGestureActive =
+      false;
+
+    let horizontalScrollActive =
+      false;
+
+    let pendingAdaptiveLayout =
       false;
 
     let wheelFrame = 0;
@@ -201,6 +222,15 @@ grouped.forEach((group) => {
 
     let resetTimer = 0;
     let orientationTimer = 0;
+    let horizontalScrollTimer = 0;
+
+    /*
+     * 自分で実行したscrollToによる
+     * scrollイベントを、ユーザー操作と
+     * 誤認しないための抑制時刻。
+     */
+    let suppressScrollActivityUntil =
+      0;
 
     let initialPositionComplete =
       false;
@@ -236,6 +266,12 @@ grouped.forEach((group) => {
         visualViewport?.scale ||
         1;
 
+    let lastViewportWidth =
+      getViewportWidth();
+
+    let lastViewportHeight =
+      getViewportHeight();
+
     const clamp = (
       value: number,
       minimum: number,
@@ -253,6 +289,13 @@ grouped.forEach((group) => {
       left: number,
       top: number
     ) => {
+      /*
+       * このscrollToで発生するscrollイベントが
+       * 慣性判定へ入らないよう短時間だけ抑制する。
+       */
+      suppressScrollActivityUntil =
+        performance.now() + 120;
+
       window.scrollTo({
         left,
         top,
@@ -399,9 +442,17 @@ grouped.forEach((group) => {
         };
       };
 
+    const isNativeHorizontalMotionActive =
+      () =>
+        horizontalGestureActive ||
+        horizontalScrollActive;
+
     /*
      * 通常状態では、現在の実描画可能高に
-     * 本棚全体が収まる倍率を毎回算出する。
+     * 本棚全体が収まる倍率を算出する。
+     *
+     * ネイティブ横スクロール／慣性中には
+     * window.scrollToを絶対に実行しない。
      */
     const applyAdaptiveLayout = (
       preserveCenter = true
@@ -410,11 +461,15 @@ grouped.forEach((group) => {
 
       if (
         zoomPhase !== "idle" ||
+        isNativeHorizontalMotionActive() ||
         !bookSection ||
         !scaleShell ||
         !bookStage ||
         !bookshelf
       ) {
+        pendingAdaptiveLayout =
+          true;
+
         return;
       }
 
@@ -424,6 +479,9 @@ grouped.forEach((group) => {
       if (!naturalSize) {
         return;
       }
+
+      pendingAdaptiveLayout =
+        false;
 
       const unscaledCenter =
         preserveCenter
@@ -482,11 +540,15 @@ grouped.forEach((group) => {
         requestAnimationFrame(
           () => {
             if (
-              zoomPhase === "idle"
+              zoomPhase === "idle" &&
+              !isNativeHorizontalMotionActive()
             ) {
               restoreCenter(
                 unscaledCenter
               );
+            } else {
+              pendingAdaptiveLayout =
+                true;
             }
           }
         );
@@ -494,10 +556,16 @@ grouped.forEach((group) => {
     };
 
     const scheduleAdaptiveLayout =
-      () => {
+      (
+        preserveCenter = true
+      ) => {
         if (
-          zoomPhase !== "idle"
+          zoomPhase !== "idle" ||
+          isNativeHorizontalMotionActive()
         ) {
+          pendingAdaptiveLayout =
+            true;
+
           return;
         }
 
@@ -511,8 +579,53 @@ grouped.forEach((group) => {
           requestAnimationFrame(
             () =>
               applyAdaptiveLayout(
-                true
+                preserveCenter
               )
+          );
+      };
+
+    /*
+     * 慣性スクロールが完全に止まった後、
+     * 保留中のレイアウト変更がある場合だけ
+     * 一度実行する。
+     */
+    const finishHorizontalMotion =
+      () => {
+        horizontalScrollTimer = 0;
+        horizontalScrollActive =
+          false;
+
+        if (
+          pendingAdaptiveLayout &&
+          zoomPhase === "idle" &&
+          !horizontalGestureActive
+        ) {
+          scheduleAdaptiveLayout(
+            true
+          );
+        }
+      };
+
+    const markHorizontalScrollActivity =
+      () => {
+        if (
+          performance.now() <
+          suppressScrollActivityUntil
+        ) {
+          return;
+        }
+
+        horizontalScrollActive =
+          true;
+
+        window.clearTimeout(
+          horizontalScrollTimer
+        );
+
+        horizontalScrollTimer =
+          window.setTimeout(
+            finishHorizontalMotion,
+            HORIZONTAL_SCROLL_SETTLE_MS
           );
       };
 
@@ -535,6 +648,18 @@ grouped.forEach((group) => {
     const beginZoom = () => {
       cancelReset();
 
+      horizontalGestureActive =
+        false;
+
+      horizontalScrollActive =
+        false;
+
+      window.clearTimeout(
+        horizontalScrollTimer
+      );
+
+      horizontalScrollTimer = 0;
+
       if (
         zoomPhase === "zooming"
       ) {
@@ -546,11 +671,6 @@ grouped.forEach((group) => {
       );
     };
 
-    /*
-     * 元倍率へ戻ったあとは、
-     * 複数の補正を同時並行で走らせず
-     * 数フレームに分けて一度だけ確定する。
-     */
     const performAtomicZoomReset =
       () => {
         resetTimer = 0;
@@ -574,6 +694,9 @@ grouped.forEach((group) => {
         setZoomPhase(
           "resetting"
         );
+
+        pendingAdaptiveLayout =
+          false;
 
         if (layoutFrame) {
           cancelAnimationFrame(
@@ -620,6 +743,12 @@ grouped.forEach((group) => {
                               () => {
                                 resetFrame = 0;
 
+                                lastViewportWidth =
+                                  getViewportWidth();
+
+                                lastViewportHeight =
+                                  getViewportHeight();
+
                                 notifyZoomPhase(
                                   "idle"
                                 );
@@ -647,8 +776,10 @@ grouped.forEach((group) => {
       };
 
     /*
-     * 二本指操作が行われている場合だけ、
-     * scale上昇をピンチズーム開始として扱う。
+     * ズーム状態だけを同期する。
+     *
+     * 通常のvisualViewport.scrollでは
+     * 自動フィットを起動しない。
      */
     const syncZoomState =
       () => {
@@ -689,13 +820,54 @@ grouped.forEach((group) => {
           );
 
           resetTimer = 0;
+        }
+      };
+
+    /*
+     * viewportの実寸が本当に変わった場合だけ、
+     * 自動フィットを予約する。
+     */
+    const syncViewportSize =
+      () => {
+        const nextWidth =
+          getViewportWidth();
+
+        const nextHeight =
+          getViewportHeight();
+
+        const widthChanged =
+          Math.abs(
+            nextWidth -
+              lastViewportWidth
+          ) >
+          VIEWPORT_CHANGE_EPSILON;
+
+        const heightChanged =
+          Math.abs(
+            nextHeight -
+              lastViewportHeight
+          ) >
+          VIEWPORT_CHANGE_EPSILON;
+
+        if (
+          !widthChanged &&
+          !heightChanged
+        ) {
           return;
         }
+
+        lastViewportWidth =
+          nextWidth;
+
+        lastViewportHeight =
+          nextHeight;
 
         if (
           zoomPhase === "idle"
         ) {
-          scheduleAdaptiveLayout();
+          scheduleAdaptiveLayout(
+            true
+          );
         }
       };
 
@@ -705,6 +877,9 @@ grouped.forEach((group) => {
       if (
         event.touches.length >= 2
       ) {
+        horizontalGestureActive =
+          false;
+
         pinchGestureActive =
           true;
 
@@ -714,6 +889,23 @@ grouped.forEach((group) => {
         ) {
           beginZoom();
         }
+
+        return;
+      }
+
+      if (
+        event.touches.length === 1 &&
+        zoomPhase === "idle"
+      ) {
+        horizontalGestureActive =
+          true;
+
+        horizontalScrollActive =
+          true;
+
+        window.clearTimeout(
+          horizontalScrollTimer
+        );
       }
     };
 
@@ -723,6 +915,9 @@ grouped.forEach((group) => {
       if (
         event.touches.length >= 2
       ) {
+        horizontalGestureActive =
+          false;
+
         pinchGestureActive =
           true;
 
@@ -733,27 +928,61 @@ grouped.forEach((group) => {
     const handleTouchEnd = (
       event: TouchEvent
     ) => {
+      const wasPinching =
+        pinchGestureActive;
+
       if (
         event.touches.length < 2
       ) {
         pinchGestureActive =
           false;
+      }
 
+      if (
+        event.touches.length === 0
+      ) {
+        horizontalGestureActive =
+          false;
+
+        /*
+         * 慣性がある場合はwindowのscrollイベントが
+         * タイマーを延長する。
+         */
+        window.clearTimeout(
+          horizontalScrollTimer
+        );
+
+        horizontalScrollTimer =
+          window.setTimeout(
+            finishHorizontalMotion,
+            HORIZONTAL_SCROLL_SETTLE_MS
+          );
+      }
+
+      if (wasPinching) {
         syncZoomState();
       }
     };
 
-    /*
-     * 端末回転はピンチズームとは別処理にする。
-     *
-     * 一度通常状態へ戻し、
-     * Safariの新しい描画可能高が確定してから
-     * 横画面フィットを再計算する。
-     */
     const handleOrientationChange =
       () => {
         pinchGestureActive =
           false;
+
+        horizontalGestureActive =
+          false;
+
+        horizontalScrollActive =
+          false;
+
+        pendingAdaptiveLayout =
+          false;
+
+        window.clearTimeout(
+          horizontalScrollTimer
+        );
+
+        horizontalScrollTimer = 0;
 
         cancelReset();
 
@@ -780,24 +1009,28 @@ grouped.forEach((group) => {
           0
         );
 
-        /*
-         * まず次フレームで暫定反映する。
-         */
         requestAnimationFrame(
           () => {
+            lastViewportWidth =
+              getViewportWidth();
+
+            lastViewportHeight =
+              getViewportHeight();
+
             scheduleAdaptiveLayout();
           }
         );
 
-        /*
-         * iPad／iPhoneで回転後の
-         * visualViewport確定を待ち、
-         * 最終値でもう一度合わせる。
-         */
         orientationTimer =
           window.setTimeout(
             () => {
               orientationTimer = 0;
+
+              lastViewportWidth =
+                getViewportWidth();
+
+              lastViewportHeight =
+                getViewportHeight();
 
               applyAdaptiveLayout(
                 true
@@ -882,6 +1115,12 @@ grouped.forEach((group) => {
         notifyZoomPhase(
           "idle"
         );
+
+        lastViewportWidth =
+          getViewportWidth();
+
+        lastViewportHeight =
+          getViewportHeight();
 
         scheduleAdaptiveLayout();
 
@@ -989,11 +1228,37 @@ grouped.forEach((group) => {
     const handleWindowResize =
       () => {
         syncZoomState();
+        syncViewportSize();
       };
 
-    const handleVisualViewportChange =
+    const handleVisualViewportResize =
       () => {
         syncZoomState();
+
+        if (
+          zoomPhase === "idle"
+        ) {
+          syncViewportSize();
+        }
+      };
+
+    /*
+     * Visual Viewportのscrollは、
+     * ピンチ中のフェード追従やズーム判定には必要だが、
+     * 通常時の自動フィットには使わない。
+     */
+    const handleVisualViewportScroll =
+      () => {
+        syncZoomState();
+      };
+
+    const handleWindowScroll =
+      () => {
+        if (
+          zoomPhase === "idle"
+        ) {
+          markHorizontalScrollActivity();
+        }
       };
 
     const cleanup = () => {
@@ -1031,15 +1296,32 @@ grouped.forEach((group) => {
         orientationTimer
       );
 
+      window.clearTimeout(
+        horizontalScrollTimer
+      );
+
       wheelFrame = 0;
       layoutFrame = 0;
       initialPositionFrame = 0;
       resetFrame = 0;
+
       resetTimer = 0;
       orientationTimer = 0;
+      horizontalScrollTimer = 0;
 
       pendingWheelDelta = 0;
-      pinchGestureActive = false;
+
+      pinchGestureActive =
+        false;
+
+      horizontalGestureActive =
+        false;
+
+      horizontalScrollActive =
+        false;
+
+      pendingAdaptiveLayout =
+        false;
 
       resizeObserver?.disconnect();
 
@@ -1057,6 +1339,11 @@ grouped.forEach((group) => {
       window.removeEventListener(
         "wheel",
         handleWheel
+      );
+
+      window.removeEventListener(
+        "scroll",
+        handleWindowScroll
       );
 
       window.removeEventListener(
@@ -1091,12 +1378,12 @@ grouped.forEach((group) => {
 
       visualViewport?.removeEventListener(
         "resize",
-        handleVisualViewportChange
+        handleVisualViewportResize
       );
 
       visualViewport?.removeEventListener(
         "scroll",
-        handleVisualViewportChange
+        handleVisualViewportScroll
       );
 
       document.removeEventListener(
@@ -1112,6 +1399,14 @@ grouped.forEach((group) => {
       handleWheel,
       {
         passive: false,
+      }
+    );
+
+    window.addEventListener(
+      "scroll",
+      handleWindowScroll,
+      {
+        passive: true,
       }
     );
 
@@ -1159,12 +1454,12 @@ grouped.forEach((group) => {
 
     visualViewport?.addEventListener(
       "resize",
-      handleVisualViewportChange
+      handleVisualViewportResize
     );
 
     visualViewport?.addEventListener(
       "scroll",
-      handleVisualViewportChange
+      handleVisualViewportScroll
     );
 
     document.addEventListener(

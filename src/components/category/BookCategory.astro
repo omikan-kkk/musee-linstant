@@ -62,12 +62,13 @@ grouped.forEach((group) => {
 ---
 
 <section
-  class="book-section"
+  class="book-section is-initializing"
   data-book-section
 >
   <div
     class="book-scale-shell"
     data-book-scale-shell
+    style="visibility:hidden;"
   >
     <div
       class="book-stage"
@@ -172,20 +173,25 @@ grouped.forEach((group) => {
     const ORIENTATION_SETTLE_MS =
       260;
 
-    /*
-     * 指を離した後もSafariの慣性が続くため、
-     * 最後のscrollイベントからこの時間が
-     * 経過するまではレイアウト補正を行わない。
-     */
     const HORIZONTAL_SCROLL_SETTLE_MS =
       180;
 
-    /*
-     * Safariの小数誤差程度では
-     * 再レイアウトを起こさない。
-     */
     const VIEWPORT_CHANGE_EPSILON =
       1;
+
+    /*
+     * 初期位置確認時に許容する
+     * Safariの小数座標誤差。
+     */
+    const INITIAL_POSITION_EPSILON =
+      1;
+
+    /*
+     * Safari側の反映が遅れた場合に備える
+     * 最大確認フレーム数。
+     */
+    const INITIAL_POSITION_MAX_ATTEMPTS =
+      12;
 
     type ZoomPhase =
       | "idle"
@@ -200,10 +206,6 @@ grouped.forEach((group) => {
     let pinchGestureActive =
       false;
 
-    /*
-     * 一本指の横操作と、
-     * 指を離した後の慣性移動を管理する。
-     */
     let horizontalGestureActive =
       false;
 
@@ -224,11 +226,6 @@ grouped.forEach((group) => {
     let orientationTimer = 0;
     let horizontalScrollTimer = 0;
 
-    /*
-     * 自分で実行したscrollToによる
-     * scrollイベントを、ユーザー操作と
-     * 誤認しないための抑制時刻。
-     */
     let suppressScrollActivityUntil =
       0;
 
@@ -289,10 +286,6 @@ grouped.forEach((group) => {
       left: number,
       top: number
     ) => {
-      /*
-       * このscrollToで発生するscrollイベントが
-       * 慣性判定へ入らないよう短時間だけ抑制する。
-       */
       suppressScrollActivityUntil =
         performance.now() + 120;
 
@@ -447,13 +440,6 @@ grouped.forEach((group) => {
         horizontalGestureActive ||
         horizontalScrollActive;
 
-    /*
-     * 通常状態では、現在の実描画可能高に
-     * 本棚全体が収まる倍率を算出する。
-     *
-     * ネイティブ横スクロール／慣性中には
-     * window.scrollToを絶対に実行しない。
-     */
     const applyAdaptiveLayout = (
       preserveCenter = true
     ) => {
@@ -584,11 +570,6 @@ grouped.forEach((group) => {
           );
       };
 
-    /*
-     * 慣性スクロールが完全に止まった後、
-     * 保留中のレイアウト変更がある場合だけ
-     * 一度実行する。
-     */
     const finishHorizontalMotion =
       () => {
         horizontalScrollTimer = 0;
@@ -775,12 +756,6 @@ grouped.forEach((group) => {
           );
       };
 
-    /*
-     * ズーム状態だけを同期する。
-     *
-     * 通常のvisualViewport.scrollでは
-     * 自動フィットを起動しない。
-     */
     const syncZoomState =
       () => {
         const viewportScale =
@@ -823,10 +798,6 @@ grouped.forEach((group) => {
         }
       };
 
-    /*
-     * viewportの実寸が本当に変わった場合だけ、
-     * 自動フィットを予約する。
-     */
     const syncViewportSize =
       () => {
         const nextWidth =
@@ -944,10 +915,6 @@ grouped.forEach((group) => {
         horizontalGestureActive =
           false;
 
-        /*
-         * 慣性がある場合はwindowのscrollイベントが
-         * タイマーを延長する。
-         */
         window.clearTimeout(
           horizontalScrollTimer
         );
@@ -1040,6 +1007,86 @@ grouped.forEach((group) => {
           );
       };
 
+    /*
+     * 初期位置の確定後にのみ、
+     * 本棚を描画可能な状態へする。
+     */
+    const revealInitialBookshelf =
+      () => {
+        initialPositionComplete =
+          true;
+
+        if (scaleShell) {
+          scaleShell.style.visibility =
+            "visible";
+        }
+
+        bookSection?.classList.remove(
+          "is-initializing"
+        );
+      };
+
+    /*
+     * window.scrollTo()の結果が、
+     * Safariの実際のスクロール座標へ
+     * 反映されたことを確認する。
+     */
+    const confirmInitialPosition =
+      (
+        targetScroll: number,
+        attempt = 0
+      ) => {
+        initialPositionFrame = 0;
+
+        const currentScroll =
+          getDocumentScrollLeft();
+
+        const positionIsReady =
+          Math.abs(
+            currentScroll -
+              targetScroll
+          ) <=
+          INITIAL_POSITION_EPSILON;
+
+        if (
+          positionIsReady ||
+          attempt >=
+            INITIAL_POSITION_MAX_ATTEMPTS
+        ) {
+          /*
+           * 座標確認後、さらに次の描画フレームで
+           * visibilityを解除する。
+           */
+          initialPositionFrame =
+            requestAnimationFrame(
+              () => {
+                initialPositionFrame = 0;
+
+                revealInitialBookshelf();
+              }
+            );
+
+          return;
+        }
+
+        /*
+         * Safariがまだ反映していない場合だけ、
+         * 同じ目標位置を再指定して次フレームで確認。
+         */
+        setDocumentScrollLeft(
+          targetScroll
+        );
+
+        initialPositionFrame =
+          requestAnimationFrame(
+            () =>
+              confirmInitialPosition(
+                targetScroll,
+                attempt + 1
+              )
+          );
+      };
+
     const centerRandomBook =
       () => {
         initialPositionFrame = 0;
@@ -1047,9 +1094,7 @@ grouped.forEach((group) => {
         if (
           books.length === 0
         ) {
-          initialPositionComplete =
-            true;
-
+          revealInitialBookshelf();
           return;
         }
 
@@ -1083,16 +1128,24 @@ grouped.forEach((group) => {
               viewportWidth
           );
 
-        setDocumentScrollLeft(
+        const clampedTarget =
           clamp(
             targetScroll,
             0,
             maxScrollLeft
-          )
+          );
+
+        setDocumentScrollLeft(
+          clampedTarget
         );
 
-        initialPositionComplete =
-          true;
+        initialPositionFrame =
+          requestAnimationFrame(
+            () =>
+              confirmInitialPosition(
+                clampedTarget
+              )
+          );
       };
 
     const scheduleInitialPosition =
@@ -1242,11 +1295,6 @@ grouped.forEach((group) => {
         }
       };
 
-    /*
-     * Visual Viewportのscrollは、
-     * ピンチ中のフェード追従やズーム判定には必要だが、
-     * 通常時の自動フィットには使わない。
-     */
     const handleVisualViewportScroll =
       () => {
         syncZoomState();
@@ -1504,6 +1552,16 @@ grouped.forEach((group) => {
       var(
         --site-font-family
       );
+  }
+
+  /*
+   * インラインvisibility:hiddenを
+   * 補助する初期化中の非表示指定。
+   */
+  .book-section.is-initializing
+    .book-scale-shell {
+    visibility:
+      hidden;
   }
 
   .book-scale-shell {

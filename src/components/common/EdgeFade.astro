@@ -17,9 +17,287 @@ const {
 >
   <span class="edge-fade-top"></span>
   <span class="edge-fade-bottom"></span>
-  <span class="edge-fade-left"></span>
-  <span class="edge-fade-right"></span>
+
+  <span
+    class="edge-fade-left"
+    data-edge-fade-left
+  ></span>
+
+  <span
+    class="edge-fade-right"
+    data-edge-fade-right
+  ></span>
 </div>
+
+{
+  fixedHorizontal && (
+    <script>
+      const leftFade =
+        document.querySelector<HTMLElement>(
+          "[data-edge-fade-left]"
+        );
+
+      const rightFade =
+        document.querySelector<HTMLElement>(
+          "[data-edge-fade-right]"
+        );
+
+      const visualViewport =
+        window.visualViewport;
+
+      type ZoomPhase =
+        | "idle"
+        | "zooming"
+        | "resetting";
+
+      let zoomPhase: ZoomPhase =
+        document.documentElement
+          .classList.contains(
+            "is-book-zoomed"
+          )
+          ? "zooming"
+          : "idle";
+
+      let syncFrame = 0;
+
+      /*
+       * 左右フェードを同じ計算方法で、
+       * Visual Viewportの両端へ配置する。
+       */
+      const syncHorizontalFades =
+        () => {
+          syncFrame = 0;
+
+          if (
+            !visualViewport ||
+            zoomPhase !== "zooming"
+          ) {
+            return;
+          }
+
+          const visualLeft =
+            visualViewport.offsetLeft;
+
+          const visualRight =
+            visualViewport.offsetLeft +
+            visualViewport.width;
+
+          leftFade?.style.setProperty(
+            "--edge-fade-left-position",
+            `${visualLeft}px`
+          );
+
+          rightFade?.style.setProperty(
+            "--edge-fade-right-position",
+            `${visualRight}px`
+          );
+        };
+
+      const scheduleHorizontalFadeSync =
+        () => {
+          if (
+            zoomPhase !== "zooming"
+          ) {
+            return;
+          }
+
+          if (syncFrame) {
+            cancelAnimationFrame(
+              syncFrame
+            );
+          }
+
+          syncFrame =
+            requestAnimationFrame(
+              syncHorizontalFades
+            );
+        };
+
+      const resetHorizontalFades =
+        () => {
+          if (syncFrame) {
+            cancelAnimationFrame(
+              syncFrame
+            );
+
+            syncFrame = 0;
+          }
+
+          leftFade?.classList.remove(
+            "is-visual-viewport-tracking"
+          );
+
+          rightFade?.classList.remove(
+            "is-visual-viewport-tracking"
+          );
+
+          leftFade?.style.removeProperty(
+            "--edge-fade-left-position"
+          );
+
+          rightFade?.style.removeProperty(
+            "--edge-fade-right-position"
+          );
+
+          /*
+           * SafariへCSS既定位置への復帰を
+           * その場で認識させる。
+           */
+          leftFade?.getBoundingClientRect();
+          rightFade?.getBoundingClientRect();
+        };
+
+      const handleZoomPhaseChange =
+        (
+          event: Event
+        ) => {
+          const customEvent =
+            event as CustomEvent<{
+              phase?: ZoomPhase;
+            }>;
+
+          const nextPhase =
+            customEvent.detail
+              ?.phase;
+
+          if (!nextPhase) {
+            return;
+          }
+
+          zoomPhase =
+            nextPhase;
+
+          if (
+            nextPhase === "zooming"
+          ) {
+            leftFade?.classList.add(
+              "is-visual-viewport-tracking"
+            );
+
+            rightFade?.classList.add(
+              "is-visual-viewport-tracking"
+            );
+
+            scheduleHorizontalFadeSync();
+
+            return;
+          }
+
+          /*
+           * resetting開始時点で追従を止め、
+           * idle時の通常位置へ戻す。
+           */
+          resetHorizontalFades();
+        };
+
+      const handleViewportChange =
+        () => {
+          if (
+            zoomPhase === "zooming"
+          ) {
+            scheduleHorizontalFadeSync();
+          }
+        };
+
+      const cleanupHorizontalFades =
+        () => {
+          if (syncFrame) {
+            cancelAnimationFrame(
+              syncFrame
+            );
+          }
+
+          syncFrame = 0;
+
+          resetHorizontalFades();
+
+          window.removeEventListener(
+            "book-zoom-phase-change",
+            handleZoomPhaseChange
+          );
+
+          window.removeEventListener(
+            "resize",
+            handleViewportChange
+          );
+
+          window.removeEventListener(
+            "orientationchange",
+            handleViewportChange
+          );
+
+          visualViewport?.removeEventListener(
+            "resize",
+            handleViewportChange
+          );
+
+          visualViewport?.removeEventListener(
+            "scroll",
+            handleViewportChange
+          );
+
+          document.removeEventListener(
+            "astro:before-swap",
+            cleanupHorizontalFades
+          );
+        };
+
+      if (
+        document.documentElement
+          .classList.contains(
+            "is-book-zoomed"
+          )
+      ) {
+        zoomPhase =
+          "zooming";
+
+        leftFade?.classList.add(
+          "is-visual-viewport-tracking"
+        );
+
+        rightFade?.classList.add(
+          "is-visual-viewport-tracking"
+        );
+
+        requestAnimationFrame(
+          scheduleHorizontalFadeSync
+        );
+      } else {
+        resetHorizontalFades();
+      }
+
+      window.addEventListener(
+        "book-zoom-phase-change",
+        handleZoomPhaseChange
+      );
+
+      window.addEventListener(
+        "resize",
+        handleViewportChange
+      );
+
+      window.addEventListener(
+        "orientationchange",
+        handleViewportChange
+      );
+
+      visualViewport?.addEventListener(
+        "resize",
+        handleViewportChange
+      );
+
+      visualViewport?.addEventListener(
+        "scroll",
+        handleViewportChange
+      );
+
+      document.addEventListener(
+        "astro:before-swap",
+        cleanupHorizontalFades
+      );
+    </script>
+  )
+}
 
 <style>
   .edge-fade {
@@ -51,12 +329,6 @@ const {
     z-index: 900;
   }
 
-  /*
-   * type: book専用。
-   *
-   * 横長の文書とは独立し、
-   * viewportの四辺へ固定する。
-   */
   .edge-fade.is-fixed-horizontal {
     position: fixed;
 
@@ -72,16 +344,8 @@ const {
 
     overflow: hidden;
 
-    /*
-     * 本棚より確実に前、
-     * ヘッダーのz-index:2000より後ろ。
-     */
     z-index: 1900;
 
-    /*
-     * iOS Safariを含め、
-     * 固定フェードを独立した合成レイヤーへ置く。
-     */
     transform:
       translate3d(
         0,
@@ -380,11 +644,7 @@ const {
   }
 
   /*
-   * type: bookでは上下フェードを使用しない。
-   *
-   * fixedHorizontalは現在、
-   * type: bookの文書横スクロール画面だけで
-   * 有効になっている。
+   * type: bookでは上下フェードなし。
    */
   .edge-fade.is-fixed-horizontal
     .edge-fade-top,
@@ -403,12 +663,12 @@ const {
     display: block;
 
     top: 0;
+    left: 0;
+
     bottom:
       var(
         --edge-fade-scrollbar-clearance
       );
-
-    left: 0;
 
     width:
       var(
@@ -456,6 +716,7 @@ const {
 
     top: 0;
     right: 0;
+    left: auto;
 
     bottom:
       var(
@@ -503,11 +764,47 @@ const {
   }
 
   /*
-   * PCでは横スクロールバーの領域を
-   * 左右フェードで覆わない。
+   * 拡大中の左フェード。
    *
-   * Layout側のバー高さ14pxと揃える。
+   * 右フェードと同じく、
+   * Visual Viewportの実座標を使う。
    */
+  .edge-fade.is-fixed-horizontal
+    .edge-fade-left.is-visual-viewport-tracking {
+    right: auto;
+
+    left:
+      var(
+        --edge-fade-left-position,
+        0px
+      );
+
+    will-change:
+      left;
+  }
+
+  /*
+   * 拡大中の右フェード。
+   */
+  .edge-fade.is-fixed-horizontal
+    .edge-fade-right.is-visual-viewport-tracking {
+    right: auto;
+
+    left:
+      calc(
+        var(
+            --edge-fade-right-position,
+            100vw
+          ) -
+        var(
+          --edge-fade-size-x
+        )
+      );
+
+    will-change:
+      left;
+  }
+
   @media (
     hover: hover
   ) and (
@@ -519,11 +816,6 @@ const {
     }
   }
 
-  /*
-   * スマホではSafariが管理する
-   * 最下部の表示領域を
-   * 左右フェードで覆わない。
-   */
   @media (
     hover: none
   ) and (

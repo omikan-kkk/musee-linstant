@@ -1388,5 +1388,19 @@
     "titleFontSize": null,
     "visible": true,
     "order": 91
+  },
+  {
+    "id": "content000112",
+    "categoryId": "category008",
+    "slug": "content000112",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-02",
+    "brand": "test",
+    "coffeeName": "test1",
+    "notes": "DNyW7UB7U9CT4DWQJz9Q",
+    "visible": true,
+    "order": 4
   }
 ]

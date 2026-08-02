@@ -1371,5 +1371,22 @@
     "titleFontSize": null,
     "visible": true,
     "order": 90
+  },
+  {
+    "id": "content000111",
+    "categoryId": "category007",
+    "slug": "content000111",
+    "image": "",
+    "title": "あなたはここにいなくとも",
+    "body": "",
+    "author": "町田そのこ",
+    "authorSort": "まちだそのこ",
+    "titleSort": "あなたはここにいなくとも",
+    "authorFontSizeOverride": false,
+    "authorFontSize": null,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null,
+    "visible": true,
+    "order": 91
   }
 ]

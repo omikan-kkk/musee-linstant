@@ -1,127 +1,995 @@
 ---
-const { items = [] } = Astro.props;
+const {
+  items = [],
+} = Astro.props;
 
-function formatDate(date = "") {
-  return date.replaceAll("-", "/");
+function formatDate(
+  date = ""
+) {
+  return date.replaceAll(
+    "-",
+    "/"
+  );
 }
 
-const sortedItems = [...items].sort((a, b) =>
-  (b.date || "").localeCompare(a.date || "")
+const sortedItems = [
+  ...items,
+].sort(
+  (a, b) =>
+    (
+      b.date ||
+      ""
+    ).localeCompare(
+      a.date ||
+        ""
+    )
 );
 ---
 
-<section class="coffee-section">
-  <div class="coffee-list">
-    {sortedItems.map((item) => (
-      <article class="coffee-item">
-        <time class="coffee-date" datetime={item.date}>
-          {formatDate(item.date)}
-        </time>
+<section
+  class="coffee-section"
+  data-coffee-section
+>
+  <div
+    class="coffee-scale-shell"
+    data-coffee-scale-shell
+  >
+    <div
+      class="coffee-stage"
+      data-coffee-stage
+    >
+      <div
+        class="coffee-list"
+        data-coffee-list
+      >
+        {
+          sortedItems.map(
+            (item) => (
+              <article class="coffee-item">
+                <time
+                  class="coffee-date"
+                  datetime={item.date}
+                >
+                  {formatDate(item.date)}
+                </time>
 
-        <span class="coffee-brand">
-          {item.brand}
-        </span>
+                <span
+                  class="coffee-brand"
+                  data-coffee-brand
+                >
+                  {item.brand}
+                </span>
 
-        <span class="coffee-name">
-          {item.coffeeName}
-        </span>
+                <span
+                  class="coffee-name"
+                  data-coffee-name
+                >
+                  {item.coffeeName}
+                </span>
 
-        <p class="coffee-notes">
-          {item.notes}
-        </p>
-      </article>
-    ))}
+                <p class="coffee-notes">
+                  {item.notes}
+                </p>
+              </article>
+            )
+          )
+        }
+      </div>
+    </div>
   </div>
+
+  <script>
+    const coffeeSection =
+      document.querySelector<HTMLElement>(
+        "[data-coffee-section]"
+      );
+
+    const scaleShell =
+      document.querySelector<HTMLElement>(
+        "[data-coffee-scale-shell]"
+      );
+
+    const coffeeStage =
+      document.querySelector<HTMLElement>(
+        "[data-coffee-stage]"
+      );
+
+    const coffeeList =
+      document.querySelector<HTMLElement>(
+        "[data-coffee-list]"
+      );
+
+    /*
+     * type: coffeeでは、
+     * Layout内の.fade-scrollが
+     * 実際の縦スクロール主体。
+     */
+    const scrollRoot =
+      document.querySelector<HTMLElement>(
+        "[data-scroll-root]"
+      );
+
+    const brandElements = [
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-coffee-brand]"
+      ),
+    ];
+
+    const nameElements = [
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-coffee-name]"
+      ),
+    ];
+
+    const visualViewport =
+      window.visualViewport;
+
+    const ZOOM_ENTER_THRESHOLD =
+      1.02;
+
+    const ZOOM_EXIT_THRESHOLD =
+      1.005;
+
+    const ZOOM_EXIT_SETTLE_MS =
+      180;
+
+    let layoutFrame = 0;
+    let zoomFrame = 0;
+    let zoomExitTimer = 0;
+
+    let naturalWidth = 0;
+    let naturalHeight = 0;
+
+    let fittedWidth = 0;
+    let fittedHeight = 0;
+    let fittedScale = 1;
+
+    let isZoomed = false;
+
+    /*
+     * 現在、上側と下側へ追加している
+     * 動的な閲覧領域。
+     *
+     * 固定値ではなく、
+     * コンテンツ全高とズーム倍率から算出する。
+     */
+    let currentZoomReserve = 0;
+
+    const getViewportWidth =
+      () =>
+        visualViewport?.width ||
+        window.innerWidth;
+
+    const getViewportScale =
+      () =>
+        visualViewport?.scale ||
+        1;
+
+    const getScrollTop =
+      () =>
+        scrollRoot?.scrollTop ||
+        window.scrollY ||
+        0;
+
+    const setScrollTop = (
+      value: number
+    ) => {
+      const nextValue =
+        Math.max(
+          0,
+          value
+        );
+
+      if (scrollRoot) {
+        scrollRoot.scrollTo({
+          top: nextValue,
+          behavior: "auto",
+        });
+
+        return;
+      }
+
+      window.scrollTo({
+        top: nextValue,
+        behavior: "auto",
+      });
+    };
+
+    const getMaximumWidth =
+      (
+        elements: HTMLElement[]
+      ) =>
+        elements.reduce(
+          (
+            maximum,
+            element
+          ) =>
+            Math.max(
+              maximum,
+              element.scrollWidth
+            ),
+          0
+        );
+
+    const getAvailableWidth =
+      () => {
+        if (!coffeeSection) {
+          return Math.max(
+            1,
+            getViewportWidth()
+          );
+        }
+
+        const sectionStyle =
+          window.getComputedStyle(
+            coffeeSection
+          );
+
+        const paddingLeft =
+          Number.parseFloat(
+            sectionStyle.paddingLeft
+          ) || 0;
+
+        const paddingRight =
+          Number.parseFloat(
+            sectionStyle.paddingRight
+          ) || 0;
+
+        return Math.max(
+          1,
+          getViewportWidth() -
+            paddingLeft -
+            paddingRight
+        );
+      };
+
+    /*
+     * 最長Brandと最長Nameを測定し、
+     * 全行へ同じ列幅を適用する。
+     */
+    const applyDynamicColumns =
+      () => {
+        if (!coffeeList) {
+          return;
+        }
+
+        coffeeList.style.setProperty(
+          "--coffee-brand-column",
+          "max-content"
+        );
+
+        coffeeList.style.setProperty(
+          "--coffee-name-column",
+          "max-content"
+        );
+
+        const maximumBrandWidth =
+          getMaximumWidth(
+            brandElements
+          );
+
+        const maximumNameWidth =
+          getMaximumWidth(
+            nameElements
+          );
+
+        coffeeList.style.setProperty(
+          "--coffee-brand-column",
+          `${Math.ceil(
+            maximumBrandWidth
+          )}px`
+        );
+
+        coffeeList.style.setProperty(
+          "--coffee-name-column",
+          `${Math.ceil(
+            maximumNameWidth
+          )}px`
+        );
+      };
+
+    /*
+     * 現在のピンチ倍率に必要な
+     * 上下それぞれの追加領域を算出する。
+     *
+     * 拡大後の全高：
+     * fittedHeight × viewportScale
+     *
+     * 元の高さとの差分を
+     * 上下へ半分ずつ割り振る。
+     */
+    const calculateZoomReserve =
+      (
+        viewportScale: number
+      ) => {
+        if (fittedHeight <= 0) {
+          return 0;
+        }
+
+        const normalizedScale =
+          Math.max(
+            1,
+            viewportScale
+          );
+
+        const zoomedHeight =
+          fittedHeight *
+          normalizedScale;
+
+        const additionalHeight =
+          Math.max(
+            0,
+            zoomedHeight -
+              fittedHeight
+          );
+
+        return (
+          additionalHeight / 2
+        );
+      };
+
+    /*
+     * 動的な上下領域を反映する。
+     *
+     * 前回から増減した分だけscrollTopも
+     * 同量補正することで、
+     * 画面内で見ている場所を維持する。
+     */
+    const applyZoomGeometry =
+      (
+        viewportScale: number
+      ) => {
+        if (
+          !coffeeSection ||
+          !scaleShell ||
+          fittedHeight <= 0
+        ) {
+          return;
+        }
+
+        const nextReserve =
+          calculateZoomReserve(
+            viewportScale
+          );
+
+        const reserveDelta =
+          nextReserve -
+          currentZoomReserve;
+
+        const totalLayoutHeight =
+          fittedHeight +
+          nextReserve * 2;
+
+        currentZoomReserve =
+          nextReserve;
+
+        scaleShell.style.setProperty(
+          "--coffee-zoom-reserve",
+          `${nextReserve}px`
+        );
+
+        /*
+         * shellのcontent-boxは
+         * 通常表示時のCoffee全高を維持する。
+         *
+         * padding-top／padding-bottomによって
+         * 拡大分の上下移動領域が加算される。
+         */
+        scaleShell.style.height =
+          `${fittedHeight}px`;
+
+        coffeeSection.style.setProperty(
+          "--coffee-content-layout-height",
+          `${totalLayoutHeight}px`
+        );
+
+        /*
+         * 上側領域が増えたぶんだけ
+         * scrollTopも進める。
+         *
+         * これにより表示位置を保ちながら、
+         * 上方向にも追加分だけ戻れる。
+         */
+        if (
+          Math.abs(
+            reserveDelta
+          ) > 0.1
+        ) {
+          setScrollTop(
+            getScrollTop() +
+            reserveDelta
+          );
+        }
+      };
+
+    const enterZoomMode =
+      () => {
+        if (
+          isZoomed ||
+          fittedHeight <= 0
+        ) {
+          return;
+        }
+
+        isZoomed = true;
+
+        window.clearTimeout(
+          zoomExitTimer
+        );
+
+        zoomExitTimer = 0;
+
+        applyZoomGeometry(
+          getViewportScale()
+        );
+      };
+
+    const updateZoomMode =
+      () => {
+        zoomFrame = 0;
+
+        if (!isZoomed) {
+          return;
+        }
+
+        applyZoomGeometry(
+          getViewportScale()
+        );
+      };
+
+    const scheduleZoomUpdate =
+      () => {
+        if (zoomFrame) {
+          cancelAnimationFrame(
+            zoomFrame
+          );
+        }
+
+        zoomFrame =
+          requestAnimationFrame(
+            updateZoomMode
+          );
+      };
+
+    /*
+     * 元倍率へ戻ったら、
+     * 動的に追加していた上下領域を撤去する。
+     *
+     * そのぶんscrollTopも戻すため、
+     * 表示位置が大きく飛ばない。
+     */
+    const exitZoomMode =
+      () => {
+        zoomExitTimer = 0;
+
+        if (
+          !isZoomed ||
+          getViewportScale() >
+            ZOOM_EXIT_THRESHOLD
+        ) {
+          return;
+        }
+
+        const previousReserve =
+          currentZoomReserve;
+
+        isZoomed = false;
+        currentZoomReserve = 0;
+
+        scaleShell?.style.setProperty(
+          "--coffee-zoom-reserve",
+          "0px"
+        );
+
+        if (fittedHeight > 0) {
+          scaleShell!.style.height =
+            `${fittedHeight}px`;
+
+          coffeeSection?.style.setProperty(
+            "--coffee-content-layout-height",
+            `${fittedHeight}px`
+          );
+        }
+
+        if (
+          previousReserve > 0
+        ) {
+          setScrollTop(
+            getScrollTop() -
+            previousReserve
+          );
+        }
+
+        scheduleCoffeeFit();
+      };
+
+    const scheduleZoomExit =
+      () => {
+        window.clearTimeout(
+          zoomExitTimer
+        );
+
+        zoomExitTimer =
+          window.setTimeout(
+            exitZoomMode,
+            ZOOM_EXIT_SETTLE_MS
+          );
+      };
+
+    /*
+     * Coffee一覧全体へ、
+     * 一つだけ共通倍率を適用する。
+     */
+    const applyCoffeeFit =
+      () => {
+        layoutFrame = 0;
+
+        if (
+          isZoomed ||
+          !coffeeSection ||
+          !scaleShell ||
+          !coffeeStage ||
+          !coffeeList
+        ) {
+          return;
+        }
+
+        coffeeStage.style.setProperty(
+          "--coffee-stage-scale",
+          "1"
+        );
+
+        applyDynamicColumns();
+
+        naturalWidth =
+          Math.max(
+            coffeeStage.scrollWidth,
+            coffeeList.scrollWidth
+          );
+
+        naturalHeight =
+          Math.max(
+            coffeeStage.scrollHeight,
+            coffeeList.scrollHeight
+          );
+
+        if (
+          naturalWidth <= 0 ||
+          naturalHeight <= 0
+        ) {
+          return;
+        }
+
+        fittedScale =
+          Math.min(
+            1,
+            getAvailableWidth() /
+              naturalWidth
+          );
+
+        fittedWidth =
+          naturalWidth *
+          fittedScale;
+
+        fittedHeight =
+          naturalHeight *
+          fittedScale;
+
+        coffeeStage.style.setProperty(
+          "--coffee-stage-scale",
+          String(
+            fittedScale
+          )
+        );
+
+        scaleShell.style.width =
+          `${fittedWidth}px`;
+
+        currentZoomReserve = 0;
+
+        scaleShell.style.setProperty(
+          "--coffee-zoom-reserve",
+          "0px"
+        );
+
+        scaleShell.style.height =
+          `${fittedHeight}px`;
+
+        coffeeSection.style.setProperty(
+          "--coffee-content-layout-height",
+          `${fittedHeight}px`
+        );
+      };
+
+    const scheduleCoffeeFit =
+      () => {
+        if (isZoomed) {
+          return;
+        }
+
+        if (layoutFrame) {
+          cancelAnimationFrame(
+            layoutFrame
+          );
+        }
+
+        layoutFrame =
+          requestAnimationFrame(
+            applyCoffeeFit
+          );
+      };
+
+    /*
+     * ピンチ中はCoffee本体の縮小倍率を変えず、
+     * 上下の移動領域だけ動的に更新する。
+     */
+    const handleViewportResize =
+      () => {
+        const viewportScale =
+          getViewportScale();
+
+        if (
+          viewportScale >
+          ZOOM_ENTER_THRESHOLD
+        ) {
+          enterZoomMode();
+          scheduleZoomUpdate();
+          return;
+        }
+
+        if (isZoomed) {
+          scheduleZoomExit();
+          return;
+        }
+
+        scheduleCoffeeFit();
+      };
+
+    const cleanup = () => {
+      if (layoutFrame) {
+        cancelAnimationFrame(
+          layoutFrame
+        );
+      }
+
+      if (zoomFrame) {
+        cancelAnimationFrame(
+          zoomFrame
+        );
+      }
+
+      window.clearTimeout(
+        zoomExitTimer
+      );
+
+      layoutFrame = 0;
+      zoomFrame = 0;
+      zoomExitTimer = 0;
+
+      window.removeEventListener(
+        "resize",
+        handleViewportResize
+      );
+
+      window.removeEventListener(
+        "orientationchange",
+        handleViewportResize
+      );
+
+      visualViewport?.removeEventListener(
+        "resize",
+        handleViewportResize
+      );
+
+      document.removeEventListener(
+        "astro:before-swap",
+        cleanup
+      );
+    };
+
+    requestAnimationFrame(
+      () => {
+        requestAnimationFrame(
+          applyCoffeeFit
+        );
+      }
+    );
+
+    document.fonts?.ready.then(
+      scheduleCoffeeFit
+    );
+
+    window.addEventListener(
+      "resize",
+      handleViewportResize
+    );
+
+    window.addEventListener(
+      "orientationchange",
+      handleViewportResize
+    );
+
+    visualViewport?.addEventListener(
+      "resize",
+      handleViewportResize
+    );
+
+    document.addEventListener(
+      "astro:before-swap",
+      cleanup
+    );
+  </script>
 </section>
 
 <style>
-.coffee-section{
-  --coffee-date-column:110px;
-  --coffee-brand-column:180px;
-  --coffee-column-gap:32px;
-  --coffee-row-gap:8px;
+  .coffee-section {
+    /*
+     * すべてのデバイスで共通。
+     */
+    --coffee-date-column:
+      56px;
 
-  min-height:100vh;
-  padding:140px 8vw;
-  background:#fff;
-  color:var(--coffee-list-color, #555);
-  font-family:var(--site-font-family);
-  font-size:var(--coffee-list-size, 14px);
-}
+    --coffee-date-brand-gap:
+      30px;
 
-.coffee-list{
-  display:flex;
-  flex-direction:column;
-  gap:36px;
-  width:min(100%, 960px);
-  margin:0 auto;
-}
+    --coffee-brand-name-gap:
+      16px;
 
-.coffee-item{
-  display:grid;
-  grid-template-columns:
-    var(--coffee-date-column)
-    var(--coffee-brand-column)
-    minmax(0, 1fr);
-  column-gap:var(--coffee-column-gap);
-  row-gap:var(--coffee-row-gap);
-  align-items:baseline;
-}
+    --coffee-row-gap:
+      8px;
 
-.coffee-date,
-.coffee-brand,
-.coffee-name,
-.coffee-notes{
-  margin:0;
-  color:var(--coffee-list-color, #555);
-  font-family:var(--site-font-family);
-  font-size:var(--coffee-list-size, 14px);
-  font-weight:400;
-  line-height:1.8;
-  letter-spacing:.08em;
-}
+    --coffee-item-gap:
+      36px;
 
-.coffee-date,
-.coffee-brand,
-.coffee-name{
-  white-space:nowrap;
-}
+    --coffee-side-padding:
+      clamp(
+        24px,
+        8vw,
+        120px
+      );
 
-.coffee-notes{
-  grid-column:1 / -1;
-  white-space:pre-line;
-}
+    --coffee-vertical-padding:
+      clamp(
+        120px,
+        12vh,
+        140px
+      );
 
-@media (max-width:700px){
-  .coffee-section{
-    --coffee-date-column:100px;
-    --coffee-brand-column:150px;
-    --coffee-column-gap:20px;
+    --coffee-content-layout-height:
+      0px;
 
-    padding:120px 24px;
-    overflow-x:auto;
+    min-height:
+      max(
+        100vh,
+        calc(
+          var(
+            --coffee-content-layout-height
+          ) +
+          var(
+            --coffee-vertical-padding
+          ) *
+          2
+        )
+      );
+
+    padding:
+      var(
+        --coffee-vertical-padding
+      )
+      var(
+        --coffee-side-padding
+      );
+
+    background:
+      #fff;
+
+    color:
+      var(
+        --coffee-list-color,
+        #555
+      );
+
+    font-family:
+      var(
+        --site-font-family
+      );
+
+    -webkit-text-size-adjust:
+      none;
+
+    text-size-adjust:
+      none;
   }
 
-  .coffee-list{
-    gap:30px;
-    width:max-content;
-    min-width:100%;
+  .coffee-scale-shell {
+    --coffee-zoom-reserve:
+      0px;
+
+    position:
+      relative;
+
+    /*
+     * JavaScriptが設定するheightに、
+     * 上下paddingを加算するため
+     * content-boxを明示する。
+     */
+    box-sizing:
+      content-box;
+
+    width:
+      max-content;
+
+    height:
+      auto;
+
+    padding-top:
+      var(
+        --coffee-zoom-reserve
+      );
+
+    padding-bottom:
+      var(
+        --coffee-zoom-reserve
+      );
+
+    margin:
+      0
+      auto;
   }
 
-  .coffee-item{
+  .coffee-stage {
+    --coffee-stage-scale:
+      1;
+
+    width:
+      max-content;
+
+    transform:
+      scale(
+        var(
+          --coffee-stage-scale
+        )
+      );
+
+    transform-origin:
+      top
+      left;
+
+    will-change:
+      transform;
+  }
+
+  .coffee-list {
+    --coffee-brand-column:
+      180px;
+
+    --coffee-name-column:
+      max-content;
+
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    gap:
+      var(
+        --coffee-item-gap
+      );
+
+    width:
+      max-content;
+
+    margin:
+      0;
+  }
+
+  .coffee-item {
+    display:
+      grid;
+
     grid-template-columns:
-      var(--coffee-date-column)
-      var(--coffee-brand-column)
-      minmax(180px, 1fr);
+      var(
+        --coffee-date-column
+      )
+      var(
+        --coffee-date-brand-gap
+      )
+      var(
+        --coffee-brand-column
+      )
+      var(
+        --coffee-brand-name-gap
+      )
+      var(
+        --coffee-name-column
+      );
+
+    row-gap:
+      var(
+        --coffee-row-gap
+      );
+
+    align-items:
+      baseline;
+
+    width:
+      max-content;
   }
 
-  .coffee-notes{
-    max-width:calc(
-      var(--coffee-date-column) +
-      var(--coffee-brand-column) +
-      180px +
-      var(--coffee-column-gap) * 2
-    );
+  .coffee-date {
+    grid-column:
+      1;
   }
-}
+
+  .coffee-brand {
+    grid-column:
+      3;
+  }
+
+  .coffee-name {
+    grid-column:
+      5;
+  }
+
+  .coffee-date,
+  .coffee-brand,
+  .coffee-name,
+  .coffee-notes {
+    margin:
+      0;
+
+    color:
+      var(
+        --coffee-list-color,
+        #555
+      );
+
+    font-family:
+      var(
+        --site-font-family
+      );
+
+    font-size:
+      var(
+        --coffee-list-size,
+        14px
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      1.8;
+
+    letter-spacing:
+      0.08em;
+
+    -webkit-text-size-adjust:
+      none;
+
+    text-size-adjust:
+      none;
+  }
+
+  .coffee-date,
+  .coffee-brand,
+  .coffee-name {
+    white-space:
+      nowrap;
+  }
+
+  .coffee-notes {
+    grid-column:
+      1 / -1;
+
+    width:
+      100%;
+
+    white-space:
+      pre-line;
+
+    overflow-wrap:
+      anywhere;
+  }
 </style>

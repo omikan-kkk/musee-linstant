@@ -65,63 +65,120 @@ grouped.forEach((group) => {
   class="book-section"
   data-book-section
 >
-  <div class="bookshelf">
-    {
-      grouped.map(
-        (group) => (
-          <div class="author-group">
-            <div class="author-column">
-              <p
-                class="author"
-                style={
-                  group.authorFontSizeOverride &&
-                  group.authorFontSize
-                    ? `font-size:${group.authorFontSize}px;`
-                    : undefined
-                }
-              >
-                {group.author}
-              </p>
-            </div>
+  <div
+    class="book-scale-shell"
+    data-book-scale-shell
+  >
+    <div
+      class="book-stage"
+      data-book-stage
+    >
+      <div
+        class="bookshelf"
+        data-bookshelf
+      >
+        {
+          grouped.map(
+            (group) => (
+              <div class="author-group">
+                <div class="author-column">
+                  <p
+                    class="author"
+                    style={
+                      group.authorFontSizeOverride &&
+                      group.authorFontSize
+                        ? `font-size:${group.authorFontSize}px;`
+                        : undefined
+                    }
+                  >
+                    {group.author}
+                  </p>
+                </div>
 
-            <div class="book-list">
-              {
-                group.books.map(
-                  (book) => (
-                    <div class="book-column">
-                      <p
-                        class="book"
-                        data-book-item
-                        style={
-                          book.titleFontSizeOverride &&
-                          book.titleFontSize
-                            ? `font-size:${book.titleFontSize}px;`
-                            : undefined
-                        }
-                      >
-                        {book.title}
-                      </p>
-                    </div>
-                  )
-                )
-              }
-            </div>
-          </div>
-        )
-      )
-    }
+                <div class="book-list">
+                  {
+                    group.books.map(
+                      (book) => (
+                        <div class="book-column">
+                          <p
+                            class="book"
+                            data-book-item
+                            style={
+                              book.titleFontSizeOverride &&
+                              book.titleFontSize
+                                ? `font-size:${book.titleFontSize}px;`
+                                : undefined
+                            }
+                          >
+                            {book.title}
+                          </p>
+                        </div>
+                      )
+                    )
+                  }
+                </div>
+              </div>
+            )
+          )
+        }
+      </div>
+    </div>
   </div>
 
   <script>
+    const bookSection =
+      document.querySelector<HTMLElement>(
+        "[data-book-section]"
+      );
+
+    const scaleShell =
+      document.querySelector<HTMLElement>(
+        "[data-book-scale-shell]"
+      );
+
+    const bookStage =
+      document.querySelector<HTMLElement>(
+        "[data-book-stage]"
+      );
+
+    const bookshelf =
+      document.querySelector<HTMLElement>(
+        "[data-bookshelf]"
+      );
+
     const books = [
       ...document.querySelectorAll<HTMLElement>(
         "[data-book-item]"
       ),
     ];
 
+    const visualViewport =
+      window.visualViewport;
+
+    const landscapeMedia =
+      window.matchMedia(
+        "(orientation: landscape)"
+      );
+
+    /*
+     * Safariではscaleが完全に1へ戻るまで
+     * 小数誤差が残ることがあるため、
+     * 1.01を拡大開始の境界にする。
+     */
+    const ZOOM_THRESHOLD =
+      1.01;
+
+    let currentScale = 1;
+    let isZoomed = false;
+
     let wheelFrame = 0;
     let pendingWheelDelta = 0;
+
+    let layoutFrame = 0;
     let initialPositionFrame = 0;
+
+    let initialPositionComplete =
+      false;
 
     const getDocumentScrollLeft =
       () =>
@@ -139,66 +196,356 @@ grouped.forEach((group) => {
           document.body.scrollWidth
         );
 
+    const getViewportWidth =
+      () =>
+        visualViewport?.width ||
+        window.innerWidth;
+
+    const getViewportHeight =
+      () =>
+        visualViewport?.height ||
+        window.innerHeight;
+
+    const getViewportScale =
+      () =>
+        visualViewport?.scale ||
+        1;
+
     const setDocumentScrollLeft = (
       value: number
     ) => {
       window.scrollTo({
         left: value,
-        top: 0,
+        top: isZoomed
+          ? window.scrollY
+          : 0,
         behavior: "auto",
       });
     };
 
+    const clamp = (
+      value: number,
+      minimum: number,
+      maximum: number
+    ) =>
+      Math.min(
+        maximum,
+        Math.max(
+          minimum,
+          value
+        )
+      );
+
     /*
-     * 初期表示時に、
-     * ランダムな本を画面中央付近へ置く。
+     * タッチ操作が可能な端末の
+     * 横画面だけを自動フィット対象にする。
      */
-    const centerRandomBook = () => {
-      initialPositionFrame = 0;
+    const shouldFitLandscape =
+      () =>
+        navigator.maxTouchPoints >
+          0 &&
+        landscapeMedia.matches;
 
-      if (
-        books.length === 0
-      ) {
-        return;
-      }
+    /*
+     * ピンチ拡大中かどうかを
+     * htmlとbodyの専用クラスへ反映する。
+     */
+    const applyZoomState = (
+      zoomed: boolean
+    ) => {
+      isZoomed = zoomed;
 
-      const randomBook =
-        books[
-          Math.floor(
-            Math.random() *
-              books.length
+      document.documentElement
+        .classList.toggle(
+          "is-book-zoomed",
+          zoomed
+        );
+
+      document.body.classList.toggle(
+        "is-book-zoomed",
+        zoomed
+      );
+    };
+
+    const getUnscaledCenter =
+      () => {
+        const viewportWidth =
+          getViewportWidth();
+
+        return (
+          (
+            getDocumentScrollLeft() +
+            viewportWidth / 2
+          ) /
+          Math.max(
+            currentScale,
+            0.0001
           )
-        ];
+        );
+      };
 
-      const bookBox =
-        randomBook.getBoundingClientRect();
-
-      const bookCenter =
-        bookBox.left +
-        getDocumentScrollLeft() +
-        bookBox.width / 2;
-
-      const targetScroll =
-        bookCenter -
-        window.innerWidth / 2;
+    const restoreCenter = (
+      unscaledCenter: number
+    ) => {
+      const viewportWidth =
+        getViewportWidth();
 
       const maxScrollLeft =
         Math.max(
           0,
           getDocumentScrollWidth() -
-            window.innerWidth
+            viewportWidth
         );
 
+      const targetScroll =
+        unscaledCenter *
+          currentScale -
+        viewportWidth / 2;
+
       setDocumentScrollLeft(
-        Math.min(
-          maxScrollLeft,
-          Math.max(
-            0,
-            targetScroll
-          )
+        clamp(
+          targetScroll,
+          0,
+          maxScrollLeft
         )
       );
     };
+
+    /*
+     * 通常倍率のときだけ、
+     * 実際の描画可能高へ本棚を収める。
+     *
+     * ピンチ拡大中は現在のフィット倍率を固定し、
+     * visualViewport.heightの変化では
+     * 縮小率を更新しない。
+     */
+    const applyAdaptiveLayout =
+      () => {
+        layoutFrame = 0;
+
+        if (
+          isZoomed ||
+          !bookSection ||
+          !scaleShell ||
+          !bookStage ||
+          !bookshelf
+        ) {
+          return;
+        }
+
+        const unscaledCenter =
+          getUnscaledCenter();
+
+        const naturalWidth =
+          Math.max(
+            bookStage.scrollWidth,
+            bookshelf.scrollWidth
+          );
+
+        const naturalHeight =
+          Math.max(
+            bookStage.scrollHeight,
+            bookshelf.scrollHeight
+          );
+
+        if (
+          naturalWidth <= 0 ||
+          naturalHeight <= 0
+        ) {
+          return;
+        }
+
+        const availableHeight =
+          Math.max(
+            1,
+            getViewportHeight()
+          );
+
+        const nextScale =
+          shouldFitLandscape()
+            ? Math.min(
+                1,
+                availableHeight /
+                  naturalHeight
+              )
+            : 1;
+
+        currentScale =
+          nextScale;
+
+        bookStage.style.setProperty(
+          "--book-stage-scale",
+          String(nextScale)
+        );
+
+        scaleShell.style.width =
+          `${naturalWidth *
+            nextScale}px`;
+
+        scaleShell.style.height =
+          `${naturalHeight *
+            nextScale}px`;
+
+        bookSection.style.width =
+          `${Math.max(
+            getViewportWidth(),
+            naturalWidth *
+              nextScale
+          )}px`;
+
+        /*
+         * 通常倍率では縦方向へ
+         * 余分な文書領域を作らない。
+         */
+        bookSection.style.height =
+          `${Math.max(
+            getViewportHeight(),
+            naturalHeight *
+              nextScale
+          )}px`;
+
+        requestAnimationFrame(
+          () => {
+            if (
+              initialPositionComplete &&
+              !isZoomed
+            ) {
+              restoreCenter(
+                unscaledCenter
+              );
+            }
+          }
+        );
+      };
+
+    const scheduleAdaptiveLayout =
+      () => {
+        if (isZoomed) {
+          return;
+        }
+
+        if (layoutFrame) {
+          cancelAnimationFrame(
+            layoutFrame
+          );
+        }
+
+        layoutFrame =
+          requestAnimationFrame(
+            applyAdaptiveLayout
+          );
+      };
+
+    /*
+     * visualViewport.scaleを監視し、
+     * 拡大開始・終了を判定する。
+     */
+    const syncZoomState =
+      () => {
+        const nextZoomed =
+          getViewportScale() >
+          ZOOM_THRESHOLD;
+
+        if (
+          nextZoomed ===
+          isZoomed
+        ) {
+          /*
+           * 拡大中は自動フィットを更新しない。
+           * 通常倍率のときだけ描画域変化へ追従する。
+           */
+          if (!nextZoomed) {
+            scheduleAdaptiveLayout();
+          }
+
+          return;
+        }
+
+        if (nextZoomed) {
+          /*
+           * 拡大開始時：
+           * 現在のフィット倍率をそのまま固定する。
+           */
+          applyZoomState(true);
+
+          return;
+        }
+
+        /*
+         * 元倍率へ戻ったとき：
+         * 縦位置を先頭へ戻し、
+         * 現在の描画可能高で再フィットする。
+         */
+        applyZoomState(false);
+
+        window.scrollTo({
+          left:
+            getDocumentScrollLeft(),
+          top: 0,
+          behavior: "auto",
+        });
+
+        scheduleAdaptiveLayout();
+      };
+
+    /*
+     * 初回表示時に、
+     * ランダムな本を画面中央付近へ置く。
+     */
+    const centerRandomBook =
+      () => {
+        initialPositionFrame = 0;
+
+        if (
+          books.length === 0
+        ) {
+          initialPositionComplete =
+            true;
+
+          return;
+        }
+
+        const randomBook =
+          books[
+            Math.floor(
+              Math.random() *
+                books.length
+            )
+          ];
+
+        const bookBox =
+          randomBook.getBoundingClientRect();
+
+        const bookCenter =
+          bookBox.left +
+          getDocumentScrollLeft() +
+          bookBox.width / 2;
+
+        const viewportWidth =
+          getViewportWidth();
+
+        const targetScroll =
+          bookCenter -
+          viewportWidth / 2;
+
+        const maxScrollLeft =
+          Math.max(
+            0,
+            getDocumentScrollWidth() -
+              viewportWidth
+          );
+
+        setDocumentScrollLeft(
+          clamp(
+            targetScroll,
+            0,
+            maxScrollLeft
+          )
+        );
+
+        initialPositionComplete =
+          true;
+      };
 
     const scheduleInitialPosition =
       () => {
@@ -210,12 +557,19 @@ grouped.forEach((group) => {
           );
         }
 
+        scheduleAdaptiveLayout();
+
         initialPositionFrame =
           requestAnimationFrame(
             () => {
               initialPositionFrame =
                 requestAnimationFrame(
-                  centerRandomBook
+                  () => {
+                    initialPositionFrame =
+                      requestAnimationFrame(
+                        centerRandomBook
+                      );
+                  }
                 );
             }
           );
@@ -232,21 +586,22 @@ grouped.forEach((group) => {
         const currentScroll =
           getDocumentScrollLeft();
 
+        const viewportWidth =
+          getViewportWidth();
+
         const maxScrollLeft =
           Math.max(
             0,
             getDocumentScrollWidth() -
-              window.innerWidth
+              viewportWidth
           );
 
         setDocumentScrollLeft(
-          Math.min(
-            maxScrollLeft,
-            Math.max(
-              0,
-              currentScroll +
-                pendingWheelDelta
-            )
+          clamp(
+            currentScroll +
+              pendingWheelDelta,
+            0,
+            maxScrollLeft
           )
         );
 
@@ -291,10 +646,50 @@ grouped.forEach((group) => {
       }
     };
 
+    /*
+     * 通常倍率のときだけ、
+     * フォントや内容寸法の変化へ追従する。
+     */
+    const resizeObserver =
+      typeof ResizeObserver !==
+      "undefined"
+        ? new ResizeObserver(
+            () => {
+              if (!isZoomed) {
+                scheduleAdaptiveLayout();
+              }
+            }
+          )
+        : null;
+
+    resizeObserver?.observe(
+      bookshelf
+    );
+
+    const handleWindowResize =
+      () => {
+        syncZoomState();
+
+        if (!isZoomed) {
+          scheduleAdaptiveLayout();
+        }
+      };
+
+    const handleVisualViewportChange =
+      () => {
+        syncZoomState();
+      };
+
     const cleanup = () => {
       if (wheelFrame) {
         cancelAnimationFrame(
           wheelFrame
+        );
+      }
+
+      if (layoutFrame) {
+        cancelAnimationFrame(
+          layoutFrame
         );
       }
 
@@ -307,8 +702,13 @@ grouped.forEach((group) => {
       }
 
       wheelFrame = 0;
+      layoutFrame = 0;
       initialPositionFrame = 0;
       pendingWheelDelta = 0;
+
+      resizeObserver?.disconnect();
+
+      applyZoomState(false);
 
       window.removeEventListener(
         "wheel",
@@ -317,12 +717,22 @@ grouped.forEach((group) => {
 
       window.removeEventListener(
         "resize",
-        scheduleInitialPosition
+        handleWindowResize
       );
 
       window.removeEventListener(
         "orientationchange",
-        scheduleInitialPosition
+        handleWindowResize
+      );
+
+      visualViewport?.removeEventListener(
+        "resize",
+        handleVisualViewportChange
+      );
+
+      visualViewport?.removeEventListener(
+        "scroll",
+        handleVisualViewportChange
       );
 
       document.removeEventListener(
@@ -330,6 +740,14 @@ grouped.forEach((group) => {
         cleanup
       );
     };
+
+    /*
+     * 初期状態を明示的に通常倍率へする。
+     */
+    applyZoomState(
+      getViewportScale() >
+        ZOOM_THRESHOLD
+    );
 
     scheduleInitialPosition();
 
@@ -343,12 +761,22 @@ grouped.forEach((group) => {
 
     window.addEventListener(
       "resize",
-      scheduleInitialPosition
+      handleWindowResize
     );
 
     window.addEventListener(
       "orientationchange",
-      scheduleInitialPosition
+      handleWindowResize
+    );
+
+    visualViewport?.addEventListener(
+      "resize",
+      handleVisualViewportChange
+    );
+
+    visualViewport?.addEventListener(
+      "scroll",
+      handleVisualViewportChange
     );
 
     document.addEventListener(
@@ -395,6 +823,42 @@ grouped.forEach((group) => {
       );
   }
 
+  .book-scale-shell {
+    position: relative;
+
+    width: max-content;
+    height: auto;
+
+    min-width: 100vw;
+  }
+
+  /*
+   * この倍率は通常時の自動フィット値。
+   *
+   * Safariのピンチ拡大は、
+   * この値を基準としてブラウザ側で
+   * さらに拡大表示される。
+   */
+  .book-stage {
+    --book-stage-scale: 1;
+
+    width: max-content;
+    height: max-content;
+
+    transform:
+      scale(
+        var(
+          --book-stage-scale
+        )
+      );
+
+    transform-origin:
+      top left;
+
+    will-change:
+      transform;
+  }
+
   .bookshelf {
     display: flex;
     flex-direction:
@@ -406,7 +870,6 @@ grouped.forEach((group) => {
 
     width: max-content;
     min-width: 100vw;
-    min-height: 100dvh;
 
     padding:
       155px

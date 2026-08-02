@@ -52,7 +52,7 @@ const {
   }
 
   /*
-   * type:book専用。
+   * type: book専用。
    *
    * 横長の文書とは独立し、
    * viewportの四辺へ固定する。
@@ -379,6 +379,20 @@ const {
       );
   }
 
+  /*
+   * type: bookでは上下フェードを使用しない。
+   *
+   * fixedHorizontalは現在、
+   * type: bookの文書横スクロール画面だけで
+   * 有効になっている。
+   */
+  .edge-fade.is-fixed-horizontal
+    .edge-fade-top,
+  .edge-fade.is-fixed-horizontal
+    .edge-fade-bottom {
+    display: none;
+  }
+
   .edge-fade-left,
   .edge-fade-right {
     display: none;
@@ -490,7 +504,7 @@ const {
 
   /*
    * PCでは横スクロールバーの領域を
-   * 左右・下フェードで覆わない。
+   * 左右フェードで覆わない。
    *
    * Layout側のバー高さ14pxと揃える。
    */
@@ -507,7 +521,8 @@ const {
 
   /*
    * スマホではSafariが管理する
-   * 最下部の表示領域を覆わない。
+   * 最下部の表示領域を
+   * 左右フェードで覆わない。
    */
   @media (
     hover: none

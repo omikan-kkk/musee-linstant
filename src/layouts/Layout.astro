@@ -179,7 +179,8 @@ const siteFontFamily =
   /*
    * type: book専用。
    *
-   * htmlを画面幅の横スクロール窓として使う。
+   * 通常倍率では横方向だけを
+   * 文書スクロールとして利用する。
    */
   :global(
     html.has-document-horizontal-scroll
@@ -193,8 +194,31 @@ const siteFontFamily =
     overscroll-behavior-x:
       contain;
 
+    overscroll-behavior-y:
+      none;
+
     -webkit-overflow-scrolling:
       touch;
+  }
+
+  /*
+   * Bookページでピンチ拡大されている間だけ、
+   * 縦方向の移動を許可する。
+   *
+   * このクラスはBookCategory側で
+   * visualViewport.scaleを監視して切り替える。
+   */
+  :global(
+    html.has-document-horizontal-scroll.is-book-zoomed
+  ) {
+    overflow-x: auto;
+    overflow-y: auto;
+
+    overscroll-behavior-x:
+      contain;
+
+    overscroll-behavior-y:
+      contain;
   }
 
   /*
@@ -227,8 +251,6 @@ const siteFontFamily =
   /*
    * Chrome・Edge・Safari系の
    * PCスクロールバー。
-   *
-   * 白いトラック＋グレーのつまみに統一する。
    */
   :global(
     html.has-document-horizontal-scroll::-webkit-scrollbar
@@ -310,10 +332,8 @@ const siteFontFamily =
   }
 
   /*
-   * bodyは画面幅のままにする。
-   *
-   * 横方向のはみ出しは
-   * .document-horizontal-contentだけが作る。
+   * 通常倍率では、横方向の指操作と
+   * ピンチズームを許可する。
    */
   :global(
     body.has-document-horizontal-scroll
@@ -336,6 +356,26 @@ const siteFontFamily =
   }
 
   /*
+   * ピンチ拡大中は縦方向も許可する。
+   *
+   * 横方向は引き続き、
+   * Bookページの文書横スクロールとして残す。
+   */
+  :global(
+    body.has-document-horizontal-scroll.is-book-zoomed
+  ) {
+    height: auto;
+    min-height: 100dvh;
+
+    overflow: visible;
+
+    touch-action:
+      pan-x
+      pan-y
+      pinch-zoom;
+  }
+
+  /*
    * 通常ページ用の
    * body.has-edge-fadeによる
    * overflow:hiddenをbookページだけ解除する。
@@ -347,6 +387,15 @@ const siteFontFamily =
     min-width: 100%;
 
     height: 100dvh;
+    min-height: 100dvh;
+
+    overflow: visible;
+  }
+
+  :global(
+    body.has-edge-fade.has-document-horizontal-scroll.is-book-zoomed
+  ) {
+    height: auto;
     min-height: 100dvh;
 
     overflow: visible;
@@ -372,8 +421,18 @@ const siteFontFamily =
   }
 
   /*
+   * 拡大中は内容の自然高を妨げない。
+   */
+  :global(
+    body.is-book-zoomed
+  )
+    .document-horizontal-content {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  /*
    * 以下は通常カテゴリ用。
-   * gallery、coffee、musicには影響しない。
    */
   .fade-viewport {
     position: fixed;

@@ -133,6 +133,13 @@ const sortedItems = [
     const ZOOM_EXIT_SETTLE_MS =
       180;
 
+    /*
+     * Safariの小数座標程度では
+     * Coffeeの再フィットを起こさない。
+     */
+    const VIEWPORT_WIDTH_EPSILON =
+      1;
+
     let layoutFrame = 0;
     let measureFrame = 0;
     let applyFrame = 0;
@@ -149,13 +156,6 @@ const sortedItems = [
 
     let isZoomed = false;
 
-    /*
-     * 現在、上側と下側へ追加している
-     * 動的な閲覧領域。
-     *
-     * 固定値ではなく、
-     * コンテンツ全高とズーム倍率から算出する。
-     */
     let currentZoomReserve = 0;
 
     const getViewportWidth =
@@ -167,6 +167,19 @@ const sortedItems = [
       () =>
         visualViewport?.scale ||
         1;
+
+    /*
+     * 最後に通常倍率で
+     * Coffeeフィットの基準とした横幅。
+     *
+     * iPhone Safariでは
+     * アドレスバー等によって高さだけが
+     * 頻繁に変化するため、
+     * 横幅が変わっていなければ
+     * 再フィットしない。
+     */
+    let lastFitViewportWidth =
+      getViewportWidth();
 
     const getScrollTop =
       () =>
@@ -469,6 +482,13 @@ const sortedItems = [
           );
         }
 
+        /*
+         * ピンチ終了後の通常倍率の横幅を
+         * 新しい基準として記録する。
+         */
+        lastFitViewportWidth =
+          getViewportWidth();
+
         scheduleCoffeeFit();
       };
 
@@ -526,10 +546,6 @@ const sortedItems = [
           naturalHeight *
           fittedScale;
 
-        /*
-         * Coffee全体へ適用するscaleは
-         * この一か所だけ。
-         */
         coffeeStage.style.setProperty(
           "--coffee-stage-scale",
           String(
@@ -554,13 +570,19 @@ const sortedItems = [
           "--coffee-content-layout-height",
           `${fittedHeight}px`
         );
+
+        /*
+         * このフィットが完走した時点の横幅を
+         * 正式な基準値として保存する。
+         */
+        lastFitViewportWidth =
+          getViewportWidth();
       };
 
     /*
      * Phase 2
      *
-     * Phase 1の列幅変更をブラウザが
-     * レイアウトへ反映した次のフレームで、
+     * Phase 1の変更がレイアウトへ反映された後、
      * 自然幅・自然高を測定する。
      */
     const measureCoffeeLayout =
@@ -594,10 +616,6 @@ const sortedItems = [
           return;
         }
 
-        /*
-         * 測定とtransform適用も
-         * 同一フレームでは行わない。
-         */
         applyFrame =
           requestAnimationFrame(
             applyMeasuredCoffeeFit
@@ -607,10 +625,8 @@ const sortedItems = [
     /*
      * Phase 1
      *
-     * まずCoffee全体を自然倍率へ戻し、
+     * Coffee全体を自然倍率へ戻し、
      * Brand / Name列幅を更新する。
-     *
-     * ここではまだ最終寸法を測らない。
      */
     const prepareCoffeeLayout =
       () => {
@@ -633,10 +649,6 @@ const sortedItems = [
 
         applyDynamicColumns();
 
-        /*
-         * 列幅変更後のレイアウト確定を
-         * 1フレーム待ってから測定する。
-         */
         measureFrame =
           requestAnimationFrame(
             measureCoffeeLayout
@@ -645,9 +657,6 @@ const sortedItems = [
 
     /*
      * Coffeeフィット処理の入口。
-     *
-     * 古い予約済み処理をすべて破棄してから、
-     * Phase 1を予約する。
      */
     const scheduleCoffeeFit =
       () => {
@@ -683,6 +692,18 @@ const sortedItems = [
           );
       };
 
+    /*
+     * viewport変化の処理。
+     *
+     * ピンチ中は従来のZoom処理。
+     *
+     * 通常倍率では、
+     * 横幅が本当に変わった場合だけ
+     * Coffeeを再フィットする。
+     *
+     * iPhone Safariのアドレスバー等による
+     * 高さだけの変化では何もしない。
+     */
     const handleViewportResize =
       () => {
         const viewportScale =
@@ -701,6 +722,23 @@ const sortedItems = [
           scheduleZoomExit();
           return;
         }
+
+        const nextViewportWidth =
+          getViewportWidth();
+
+        const widthChanged =
+          Math.abs(
+            nextViewportWidth -
+              lastFitViewportWidth
+          ) >
+          VIEWPORT_WIDTH_EPSILON;
+
+        if (!widthChanged) {
+          return;
+        }
+
+        lastFitViewportWidth =
+          nextViewportWidth;
 
         scheduleCoffeeFit();
       };
@@ -762,17 +800,13 @@ const sortedItems = [
     };
 
     /*
-     * 初回も同じ3段階処理だけを使う。
-     *
-     * 初回専用の別ルートを作らないことで、
-     * dev / productionで処理順が
-     * 分岐しないようにする。
+     * 初回だけはviewport変化の有無に関係なく、
+     * 必ず一度フィット処理を完走させる。
      */
     scheduleCoffeeFit();
 
     /*
-     * Webフォント確定後も、
-     * 同じ3段階処理でもう一度測定する。
+     * フォント確定後も同じ処理で再計測する。
      */
     document.fonts?.ready.then(
       scheduleCoffeeFit
@@ -802,9 +836,6 @@ const sortedItems = [
 
 <style>
   .coffee-section {
-    /*
-     * すべてのデバイスで共通。
-     */
     --coffee-date-column:
       56px;
 

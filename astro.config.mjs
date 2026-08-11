@@ -1,6 +1,12 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  site: 'https://musee-linstant.com',
+  site: "https://musee-linstant.com",
+
+  vite: {
+    build: {
+      cssMinify: false,
+    },
+  },
 });

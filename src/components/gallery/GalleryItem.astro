@@ -1,6 +1,7 @@
 ---
 import { THEME } from "../../config/theme";
 
+
 const {
   image = "",
   title = "",
@@ -8,10 +9,12 @@ const {
   href = "",
 } = Astro.props;
 
+
 const hasImage = image !== "";
 const hasTitle = title !== "";
 const hasBody = body !== "";
 ---
+
 
 {href ? (
   <a class="gallery-item" href={href}>
@@ -24,10 +27,12 @@ const hasBody = body !== "";
           src={image}
           alt={title}
           loading="lazy"
+          data-gallery-image
           style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
         />
       )}
     </div>
+
 
     {(hasTitle || hasBody) && (
       <div
@@ -39,6 +44,7 @@ const hasBody = body !== "";
             {title}
           </p>
         )}
+
 
         {hasBody && (
           <p class="gallery-body">
@@ -59,10 +65,12 @@ const hasBody = body !== "";
           src={image}
           alt={title}
           loading="lazy"
+          data-gallery-image
           style={`max-width:${THEME.gallery.artworkMaxSize};max-height:${THEME.gallery.artworkMaxSize};`}
         />
       )}
     </div>
+
 
     {(hasTitle || hasBody) && (
       <div
@@ -75,6 +83,7 @@ const hasBody = body !== "";
           </p>
         )}
 
+
         {hasBody && (
           <p class="gallery-body">
             {body}
@@ -85,12 +94,89 @@ const hasBody = body !== "";
   </article>
 )}
 
+
+<script>
+  const galleryImages = [
+    ...document.querySelectorAll<HTMLImageElement>(
+      "[data-gallery-image]"
+    ),
+  ];
+
+
+  /*
+   * 画像データそのもののロードが完了したら、
+   * 画像自身だけをlinearでフェードインする。
+   *
+   * img要素そのものへopacityを掛けるため、
+   * アスペクト比・解像度・表示サイズに関係なく
+   * 実画像の位置へ完全に一致する。
+   */
+  const revealGalleryImage =
+    (
+      image: HTMLImageElement
+    ) => {
+      if (
+        image.classList.contains(
+          "is-gallery-image-loaded"
+        )
+      ) {
+        return;
+      }
+
+
+      image.classList.add(
+        "is-gallery-image-loaded"
+      );
+    };
+
+
+  galleryImages.forEach(
+    (image) => {
+      if (image.complete) {
+        /*
+         * キャッシュ済み画像でも
+         * opacity:0の初期状態を
+         * 一度描画してからフェードさせる。
+         */
+        requestAnimationFrame(
+          () => {
+            requestAnimationFrame(
+              () => {
+                revealGalleryImage(
+                  image
+                );
+              }
+            );
+          }
+        );
+
+        return;
+      }
+
+
+      image.addEventListener(
+        "load",
+        () => {
+          revealGalleryImage(
+            image
+          );
+        },
+        {
+          once: true,
+        }
+      );
+    }
+  );
+</script>
+
+
 <style>
 .gallery-item{
   display:block;
   color:inherit;
   text-decoration:none;
 }
+
 
 .artwork-frame{
   position:relative;
@@ -99,6 +185,7 @@ const hasBody = body !== "";
   overflow:hidden;
 }
 
+
 .artwork-frame::before{
   content:"";
   display:block;
@@ -106,20 +193,51 @@ const hasBody = body !== "";
   aspect-ratio:var(--artwork-ratio);
 }
 
+
 .artwork-frame img{
   position:absolute;
   top:50%;
   left:50%;
-  transform:translate(-50%, -50%);
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
   display:block;
+
   width:auto;
   height:auto;
+
   object-fit:contain;
+
+  /*
+   * Gallery画像自身だけのフェード。
+   *
+   * 時間はLayout.astroの
+   * --page-enter-durationを共有する。
+   */
+  opacity:0;
+
+  transition:
+    opacity
+    var(
+      --page-enter-duration
+    )
+    linear;
 }
+
+
+.artwork-frame img.is-gallery-image-loaded{
+  opacity:1;
+}
+
 
 .gallery-caption{
   text-align:right;
 }
+
 
 .gallery-title,
 .gallery-body{
@@ -130,10 +248,12 @@ const hasBody = body !== "";
   white-space:pre-line;
 }
 
+
 .gallery-title{
   color:var(--gallery-list-title-color);
   font-size:var(--gallery-list-title-size);
 }
+
 
 .gallery-body{
   margin-top:4px;

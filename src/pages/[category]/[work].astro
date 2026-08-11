@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { CATEGORIES } from "../../config/site";
 import { CONTENTS } from "../../data/contents";
 
+
 export function getStaticPaths() {
   return CONTENTS
     .filter((item) => item.visible)
@@ -14,6 +15,7 @@ export function getStaticPaths() {
             item.categoryId
         );
 
+
       return {
         item,
         category,
@@ -23,6 +25,7 @@ export function getStaticPaths() {
       if (!category) {
         return false;
       }
+
 
       return (
         category.type ||
@@ -46,23 +49,18 @@ export function getStaticPaths() {
     );
 }
 
+
 const {
   item,
 } = Astro.props;
 ---
+
 
 <Layout
   title={`${item.title} | Musée de l'Instant`}
   showHeader={true}
 >
   <main class="work-page">
-    <!--
-      画像とキャプションを、
-      一つの展示ユニットとして扱う。
-
-      スマホではユニット全体を中央へ置き、
-      キャプションを画像の直下・右端へ揃える。
-    -->
     <div
       class="work-display"
       data-work-display
@@ -78,6 +76,7 @@ const {
           </div>
         )
       }
+
 
       {
         (
@@ -96,6 +95,7 @@ const {
               )
             }
 
+
             {
               item.body && (
                 <p class="work-body">
@@ -109,26 +109,33 @@ const {
     </div>
   </main>
 
+
   <script>
     const DETAIL_PAGE_CLASS =
       "is-gallery-detail-page";
+
 
     const workDisplay =
       document.querySelector<HTMLElement>(
         "[data-work-display]"
       );
 
+
     const workImage =
       document.querySelector<HTMLImageElement>(
         "[data-work-image]"
       );
+
 
     const workCaption =
       document.querySelector<HTMLElement>(
         "[data-work-caption]"
       );
 
+
     let resizeFrame = 0;
+    let imageRevealFrame = 0;
+
 
     const applyDetailPageState =
       () => {
@@ -137,10 +144,12 @@ const {
             DETAIL_PAGE_CLASS
           );
 
+
         document.body.classList.add(
           DETAIL_PAGE_CLASS
         );
       };
+
 
     const removeDetailPageState =
       () => {
@@ -149,17 +158,65 @@ const {
             DETAIL_PAGE_CLASS
           );
 
+
         document.body.classList.remove(
           DETAIL_PAGE_CLASS
         );
       };
 
+
+    /*
+     * 詳細画像自身をフェードインする。
+     *
+     * imgそのもののopacityを変えるため、
+     * アスペクト比や実描画サイズに関係なく
+     * 画像の位置へ完全に一致する。
+     */
+    const revealWorkImage =
+      () => {
+        if (!workImage) {
+          return;
+        }
+
+
+        workImage.classList.add(
+          "is-work-image-loaded"
+        );
+      };
+
+
+    const scheduleImageReveal =
+      () => {
+        if (imageRevealFrame) {
+          cancelAnimationFrame(
+            imageRevealFrame
+          );
+        }
+
+
+        /*
+         * 初期opacity:0を確実に描画してから
+         * linearフェードへ入る。
+         */
+        imageRevealFrame =
+          requestAnimationFrame(
+            () => {
+              imageRevealFrame =
+                requestAnimationFrame(
+                  () => {
+                    imageRevealFrame = 0;
+
+                    revealWorkImage();
+                  }
+                );
+            }
+          );
+      };
+
+
     /*
      * スマホでは、キャプション幅を
      * 実際に描画された画像幅へ合わせる。
-     *
-     * これによりキャプションの右端が、
-     * 画面右端ではなく画像右端へ揃う。
      */
     const syncMobileCaptionWidth =
       () => {
@@ -171,6 +228,7 @@ const {
           return;
         }
 
+
         if (
           !window.matchMedia(
             "(max-width: 640px)"
@@ -181,22 +239,28 @@ const {
               "--rendered-image-width"
             );
 
+
           return;
         }
 
+
         const imageWidth =
-          workImage.getBoundingClientRect()
+          workImage
+            .getBoundingClientRect()
             .width;
+
 
         if (imageWidth <= 0) {
           return;
         }
+
 
         workDisplay.style.setProperty(
           "--rendered-image-width",
           `${imageWidth}px`
         );
       };
+
 
     const scheduleCaptionSync =
       () => {
@@ -206,29 +270,32 @@ const {
           );
         }
 
+
         resizeFrame =
           requestAnimationFrame(
             () => {
               resizeFrame = 0;
+
               syncMobileCaptionWidth();
             }
           );
       };
 
-    /*
-     * この詳細ページにいる間だけ、
-     * スマホのページスクロールと
-     * pull-to-refreshを抑止する。
-     */
+
     applyDetailPageState();
+
 
     if (workImage) {
       if (workImage.complete) {
         scheduleCaptionSync();
+        scheduleImageReveal();
       } else {
         workImage.addEventListener(
           "load",
-          scheduleCaptionSync,
+          () => {
+            scheduleCaptionSync();
+            scheduleImageReveal();
+          },
           {
             once: true,
           }
@@ -236,15 +303,18 @@ const {
       }
     }
 
+
     window.addEventListener(
       "resize",
       scheduleCaptionSync
     );
 
+
     window.addEventListener(
       "orientationchange",
       scheduleCaptionSync
     );
+
 
     const cleanup = () => {
       if (resizeFrame) {
@@ -253,25 +323,39 @@ const {
         );
       }
 
+
+      if (imageRevealFrame) {
+        cancelAnimationFrame(
+          imageRevealFrame
+        );
+      }
+
+
       resizeFrame = 0;
+      imageRevealFrame = 0;
+
 
       window.removeEventListener(
         "resize",
         scheduleCaptionSync
       );
 
+
       window.removeEventListener(
         "orientationchange",
         scheduleCaptionSync
       );
 
+
       removeDetailPageState();
+
 
       document.removeEventListener(
         "astro:before-swap",
         cleanup
       );
     };
+
 
     document.addEventListener(
       "astro:before-swap",
@@ -280,22 +364,24 @@ const {
   </script>
 </Layout>
 
+
 <style>
-  /*
-   * PC版は、これまでの表示を維持する。
-   */
   .work-page {
     min-height: 100vh;
+
 
     padding:
       120px
       24px;
 
+
     display: grid;
     place-items: center;
 
+
     background: #fff;
   }
+
 
   .work-display {
     width: min(
@@ -304,44 +390,78 @@ const {
     );
   }
 
+
   .work-image-area {
     display: grid;
     place-items: center;
 
+
     width: 100%;
   }
+
 
   .work-image-area img {
     display: block;
 
+
     width: 100%;
     height: auto;
+
+
+    /*
+     * Gallery詳細画像自身だけを
+     * ロード完了後にlinearで出現させる。
+     *
+     * 共通時間はLayout.astroの
+     * --page-enter-duration。
+     */
+    opacity: 0;
+
+    transition:
+      opacity
+      var(
+        --page-enter-duration
+      )
+      linear;
   }
+
+
+  .work-image-area
+    img.is-work-image-loaded {
+    opacity: 1;
+  }
+
 
   .work-caption {
     width: 100%;
+
 
     margin:
       24px
       0
       0;
 
+
     text-align: right;
   }
+
 
   .work-title,
   .work-body {
     margin: 0;
+
 
     font-family:
       var(
         --site-font-family
       );
 
+
     letter-spacing: 0.08em;
     line-height: 1.8;
     white-space: pre-line;
   }
+
 
   .work-title {
     color:
@@ -349,32 +469,31 @@ const {
         --gallery-detail-title-color
       );
 
+
     font-size:
       var(
         --gallery-detail-title-size
       );
   }
 
+
   .work-body {
     margin-top: 4px;
+
 
     color:
       var(
         --gallery-detail-caption-color
       );
 
+
     font-size:
       var(
         --gallery-detail-caption-size
       );
   }
-    /*
-   * スマホ版のみ変更。
-   *
-   * 縦スクロール抑止と
-   * pull-to-refresh対策は維持しつつ、
-   * 画像とキャプションを一つの展示ユニットとして扱う。
-   */
+
+
   @media (max-width: 640px) {
     :global(
       html.is-gallery-detail-page
@@ -385,9 +504,11 @@ const {
       width: 100%;
       height: 100%;
 
+
       overflow: hidden;
       overscroll-behavior-y: none;
     }
+
 
     :global(
       body.is-gallery-detail-page
@@ -395,13 +516,16 @@ const {
       position: fixed;
       inset: 0;
 
+
       touch-action: auto;
     }
+
 
     .work-page {
       width: 100%;
       height: 100dvh;
       min-height: 0;
+
 
       padding:
         calc(
@@ -420,74 +544,71 @@ const {
           )
         );
 
+
       display: flex;
       align-items: center;
       justify-content: center;
+
 
       overflow: hidden;
       overscroll-behavior: none;
     }
 
-    /*
-     * 画像とキャプションを、
-     * 一つの展示ユニットとして中央へ置く。
-     *
-     * 高さは内容に合わせ、
-     * 画面全体へ引き伸ばさない。
-     */
+
     .work-display {
       display: flex;
       flex-direction: column;
       align-items: center;
 
+
       width: 100%;
       max-width: 100%;
+
 
       max-height: 100%;
       min-height: 0;
     }
 
-    /*
-     * キャプション分の高さを残しつつ、
-     * 画像が画面内へ収まるようにする。
-     */
+
     .work-image-area {
       display: flex;
       align-items: center;
       justify-content: center;
 
+
       width: 100%;
       min-height: 0;
+
 
       flex:
         1
         1
         auto;
 
+
       overflow: hidden;
     }
+
 
     .work-image-area img {
       display: block;
 
+
       width: auto;
       max-width: 100%;
+
 
       height: auto;
       max-height: 100%;
 
+
       object-fit: contain;
+
 
       touch-action: auto;
     }
 
-    /*
-     * キャプション幅は、
-     * JavaScriptで取得した実描画画像幅へ合わせる。
-     *
-     * これにより、
-     * キャプションの右端が画像右端へ揃う。
-     */
+
     .work-caption {
       width:
         min(
@@ -498,15 +619,18 @@ const {
           )
         );
 
+
       flex:
         0
         0
         auto;
 
+
       margin:
         28px
         0
         0;
+
 
       text-align: right;
     }

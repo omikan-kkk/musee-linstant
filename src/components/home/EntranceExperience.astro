@@ -179,7 +179,7 @@ const entranceStyle = [
           !logoSvg ||
           !logoText
         ) {
-          return;
+          return false;
         }
 
         const bodyStyle =
@@ -215,7 +215,7 @@ const entranceStyle = [
           viewBoxWidth <= 0 ||
           renderedWidth <= 0
         ) {
-          return;
+          return false;
         }
 
         const svgUnitToCssPixel =
@@ -230,6 +230,8 @@ const entranceStyle = [
           "--entrance-logo-svg-font-size",
           `${svgFontSize}px`
         );
+
+        return true;
       };
 
     let progress = 0;
@@ -244,6 +246,7 @@ const entranceStyle = [
     let snapFrame = 0;
     let exitStartFrame = 0;
     let logoSizeFrame = 0;
+    let logoRevealFrame = 0;
 
     let wheelEndTimer = 0;
     let exitCompleteTimer = 0;
@@ -252,8 +255,50 @@ const entranceStyle = [
     let isSnapping = false;
     let isExiting = false;
     let isLobbyVisible = false;
+    let areEntranceFontsReady = false;
+    let isEntranceLogoRevealed = false;
 
     let snapTarget: 0 | 1 | null = null;
+
+    /*
+     * 初回だけは、
+     * CMS値から換算したSVG font-sizeが
+     * 実描画へ確定するまでロゴを公開しない。
+     *
+     * サイズ確定後は、Layout側の共通時間
+     * --page-enter-duration（現在1000ms）で
+     * 正しいサイズのロゴだけをフェードインする。
+     */
+    const revealEntranceLogo =
+      () => {
+        if (
+          !logoSvg ||
+          isEntranceLogoRevealed ||
+          logoRevealFrame
+        ) {
+          return;
+        }
+
+        logoRevealFrame =
+          requestAnimationFrame(
+            () => {
+              logoRevealFrame = 0;
+
+              if (
+                !logoSvg ||
+                isEntranceLogoRevealed
+              ) {
+                return;
+              }
+
+              isEntranceLogoRevealed = true;
+
+              logoSvg.classList.add(
+                "is-entrance-logo-ready"
+              );
+            }
+          );
+      };
 
     const scheduleEntranceLogoFontSize =
       () => {
@@ -268,7 +313,16 @@ const entranceStyle = [
             () => {
               logoSizeFrame = 0;
 
-              syncEntranceLogoFontSize();
+              const didSync =
+                syncEntranceLogoFontSize();
+
+              if (
+                didSync &&
+                areEntranceFontsReady &&
+                !isEntranceLogoRevealed
+              ) {
+                revealEntranceLogo();
+              }
             }
           );
       };
@@ -1109,7 +1163,14 @@ const entranceStyle = [
         );
       }
 
+      if (logoRevealFrame) {
+        cancelAnimationFrame(
+          logoRevealFrame
+        );
+      }
+
       logoSizeFrame = 0;
+      logoRevealFrame = 0;
 
       logoResizeObserver?.disconnect();
 
@@ -1164,20 +1225,44 @@ const entranceStyle = [
     };
 
     /*
-     * 初回レイアウトとフォント読み込み後に、
-     * CMSのpx値をSVG座標へ換算する。
+     * 初回ロゴは、
+     *
+     * 1. フォント読み込み完了
+     * 2. SVG実表示幅を使ってCMS値を換算
+     * 3. 換算後font-sizeを実描画へ反映
+     * 4. その後に初めて表示
+     *
+     * の順序を厳守する。
+     *
+     * これによりfallbackサイズのロゴが
+     * 1フレームでも先に見える経路をなくす。
      */
-    requestAnimationFrame(
-      () => {
-        requestAnimationFrame(
-          syncEntranceLogoFontSize
-        );
-      }
-    );
+    const initializeEntranceLogo =
+      async () => {
+        if (document.fonts) {
+          try {
+            await document.fonts.ready;
+          } catch {
+            /*
+             * font loading API側で失敗しても、
+             * 現在利用可能なフォントで
+             * サイズ同期自体は試行する。
+             */
+          }
+        }
 
-    document.fonts?.ready.then(
-      scheduleEntranceLogoFontSize
-    );
+        areEntranceFontsReady = true;
+
+        requestAnimationFrame(
+          () => {
+            requestAnimationFrame(
+              scheduleEntranceLogoFontSize
+            );
+          }
+        );
+      };
+
+    initializeEntranceLogo();
 
     /*
      * 初期状態。
@@ -1388,8 +1473,36 @@ const entranceStyle = [
     height: auto;
     overflow: visible;
 
+    /*
+     * SVG内font-sizeが確定するまでは
+     * 1px・1フレームも公開しない。
+     *
+     * display:noneにはせず、
+     * clientWidthを測定できる状態は維持する。
+     */
+    visibility: hidden;
+    opacity: 0;
+
+    transition:
+      opacity
+      var(
+        --page-enter-duration,
+        1000ms
+      )
+      cubic-bezier(
+        0.22,
+        1,
+        0.36,
+        1
+      );
+
     pointer-events: none;
     user-select: none;
+  }
+
+  .entrance-experience__logo.is-entrance-logo-ready {
+    visibility: visible;
+    opacity: 1;
   }
 
   .entrance-experience__logo-text {
@@ -1478,6 +1591,7 @@ const entranceStyle = [
   ) {
     .entrance-experience__lobby,
     .entrance-experience__logo-visual,
+    .entrance-experience__logo,
     .entrance-experience__veil {
       transition-duration:
         1ms !important;

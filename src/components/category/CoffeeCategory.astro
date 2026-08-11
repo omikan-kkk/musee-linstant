@@ -45,7 +45,10 @@ const sortedItems = [
         {
           sortedItems.map(
             (item) => (
-              <article class="coffee-item">
+              <article
+                class="coffee-item"
+                data-coffee-item
+              >
                 <time
                   class="coffee-date"
                   datetime={item.date}
@@ -109,6 +112,12 @@ const sortedItems = [
         "[data-scroll-root]"
       );
 
+    const coffeeItems = [
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-coffee-item]"
+      ),
+    ];
+
     const brandElements = [
       ...document.querySelectorAll<HTMLElement>(
         "[data-coffee-brand]"
@@ -133,20 +142,16 @@ const sortedItems = [
     const ZOOM_EXIT_SETTLE_MS =
       180;
 
-    /*
-     * Safariの小数座標程度では
-     * Coffeeの再フィットを起こさない。
-     */
-    const VIEWPORT_WIDTH_EPSILON =
-      1;
-
     let layoutFrame = 0;
-    let measureFrame = 0;
-    let applyFrame = 0;
-
     let zoomFrame = 0;
     let zoomExitTimer = 0;
 
+    /*
+     * naturalWidthは、
+     * Coffee全体のscrollWidthではなく、
+     * 実DOM上で測定した
+     * 「最も長い1行目」の幅。
+     */
     let naturalWidth = 0;
     let naturalHeight = 0;
 
@@ -156,30 +161,16 @@ const sortedItems = [
 
     let isZoomed = false;
 
+    /*
+     * 現在、上側と下側へ追加している
+     * 動的な閲覧領域。
+     */
     let currentZoomReserve = 0;
-
-    const getViewportWidth =
-      () =>
-        visualViewport?.width ||
-        window.innerWidth;
 
     const getViewportScale =
       () =>
         visualViewport?.scale ||
         1;
-
-    /*
-     * 最後に通常倍率で
-     * Coffeeフィットの基準とした横幅。
-     *
-     * iPhone Safariでは
-     * アドレスバー等によって高さだけが
-     * 頻繁に変化するため、
-     * 横幅が変わっていなければ
-     * 再フィットしない。
-     */
-    let lastFitViewportWidth =
-      getViewportWidth();
 
     const getScrollTop =
       () =>
@@ -211,7 +202,12 @@ const sortedItems = [
       });
     };
 
-    const getMaximumWidth =
+    /*
+     * 要素の実描画幅をDOMから直接測る。
+     *
+     * scrollWidthには依存しない。
+     */
+    const getMaximumRenderedWidth =
       (
         elements: HTMLElement[]
       ) =>
@@ -222,17 +218,27 @@ const sortedItems = [
           ) =>
             Math.max(
               maximum,
-              element.scrollWidth
+              element
+                .getBoundingClientRect()
+                .width
             ),
           0
         );
 
+    /*
+     * CoffeeSectionが現在実際に持っている
+     * content領域の横幅を取得する。
+     *
+     * visualViewport.widthから推測せず、
+     * Layoutによって最終的に形成された
+     * DOMそのものを基準にする。
+     */
     const getAvailableWidth =
       () => {
         if (!coffeeSection) {
           return Math.max(
             1,
-            getViewportWidth()
+            window.innerWidth
           );
         }
 
@@ -251,16 +257,20 @@ const sortedItems = [
             sectionStyle.paddingRight
           ) || 0;
 
+        const sectionWidth =
+          coffeeSection.clientWidth;
+
         return Math.max(
           1,
-          getViewportWidth() -
+          sectionWidth -
             paddingLeft -
             paddingRight
         );
       };
 
     /*
-     * 最長Brandと最長Nameを測定し、
+     * 最長Brandと最長Nameを
+     * 実DOMから直接測定し、
      * 全行へ同じ列幅を適用する。
      */
     const applyDynamicColumns =
@@ -269,6 +279,9 @@ const sortedItems = [
           return;
         }
 
+        /*
+         * まず自然なmax-contentへ戻す。
+         */
         coffeeList.style.setProperty(
           "--coffee-brand-column",
           "max-content"
@@ -279,13 +292,18 @@ const sortedItems = [
           "max-content"
         );
 
+        /*
+         * ここでDOMレイアウトを確定させる。
+         */
+        coffeeList.getBoundingClientRect();
+
         const maximumBrandWidth =
-          getMaximumWidth(
+          getMaximumRenderedWidth(
             brandElements
           );
 
         const maximumNameWidth =
-          getMaximumWidth(
+          getMaximumRenderedWidth(
             nameElements
           );
 
@@ -302,7 +320,68 @@ const sortedItems = [
             maximumNameWidth
           )}px`
         );
+
+        /*
+         * 最終列幅をDOMへ反映させてから、
+         * 1行目の実幅を測る。
+         */
+        coffeeList.getBoundingClientRect();
       };
+
+    /*
+     * 各Coffeeについて、
+     *
+     * Dateの実描画左端
+     * ↓
+     * Nameの実描画右端
+     *
+     * を直接測る。
+     *
+     * Grid全体のscrollWidthや
+     * max-contentの計算結果を
+     * 縮小率の基準には使わない。
+     */
+    const getLongestFirstRowWidth =
+      () =>
+        coffeeItems.reduce(
+          (
+            maximum,
+            item
+          ) => {
+            const date =
+              item.querySelector<HTMLElement>(
+                ".coffee-date"
+              );
+
+            const name =
+              item.querySelector<HTMLElement>(
+                ".coffee-name"
+              );
+
+            if (
+              !date ||
+              !name
+            ) {
+              return maximum;
+            }
+
+            const dateRect =
+              date.getBoundingClientRect();
+
+            const nameRect =
+              name.getBoundingClientRect();
+
+            const rowWidth =
+              nameRect.right -
+              dateRect.left;
+
+            return Math.max(
+              maximum,
+              rowWidth
+            );
+          },
+          0
+        );
 
     /*
      * 現在のピンチ倍率に必要な
@@ -338,6 +417,9 @@ const sortedItems = [
         );
       };
 
+    /*
+     * 動的な上下領域を反映する。
+     */
     const applyZoomGeometry =
       (
         viewportScale: number
@@ -482,13 +564,6 @@ const sortedItems = [
           );
         }
 
-        /*
-         * ピンチ終了後の通常倍率の横幅を
-         * 新しい基準として記録する。
-         */
-        lastFitViewportWidth =
-          getViewportWidth();
-
         scheduleCoffeeFit();
       };
 
@@ -506,23 +581,79 @@ const sortedItems = [
       };
 
     /*
-     * Phase 3
+     * ==================================================
      *
-     * Phase 2で確定した自然寸法を元に、
-     * Coffee全体へ一度だけ共通scaleを適用する。
+     * Coffee全体のフィット処理
+     *
+     * ==================================================
+     *
+     * 1.
+     * Coffee全体をscale:1へ戻す。
+     *
+     * 2.
+     * Brand / Name列を実DOMから確定。
+     *
+     * 3.
+     * 各Coffeeの1行目を直接測定。
+     *
+     * 4.
+     * 最長1行が表示可能幅へ収まる
+     * 唯一のscaleを算出。
+     *
+     * 5.
+     * CoffeeStage全体へ
+     * 一度だけそのscaleを適用。
+     *
+     * Notes、行間、列間、
+     * Coffee同士の間隔もすべて
+     * 同じCoffeeStageの子孫なので
+     * 完全に同率で縮小される。
      */
-    const applyMeasuredCoffeeFit =
+    const applyCoffeeFit =
       () => {
-        applyFrame = 0;
+        layoutFrame = 0;
 
         if (
           isZoomed ||
           !coffeeSection ||
           !scaleShell ||
-          !coffeeStage
+          !coffeeStage ||
+          !coffeeList
         ) {
           return;
         }
+
+        /*
+         * 実測前は必ず自然倍率へ戻す。
+         */
+        coffeeStage.style.setProperty(
+          "--coffee-stage-scale",
+          "1"
+        );
+
+        /*
+         * transform:scale(1)を
+         * 実DOMへ確定させる。
+         */
+        coffeeStage.getBoundingClientRect();
+
+        applyDynamicColumns();
+
+        /*
+         * ここが今回の核心。
+         *
+         * scrollWidthではなく、
+         * 実際の1行目そのものを直接測る。
+         */
+        naturalWidth =
+          getLongestFirstRowWidth();
+
+        /*
+         * 高さは縮小率を決める基準ではないので、
+         * stageの自然レイアウト高を使用する。
+         */
+        naturalHeight =
+          coffeeStage.scrollHeight;
 
         if (
           naturalWidth <= 0 ||
@@ -531,10 +662,13 @@ const sortedItems = [
           return;
         }
 
+        const availableWidth =
+          getAvailableWidth();
+
         fittedScale =
           Math.min(
             1,
-            getAvailableWidth() /
+            availableWidth /
               naturalWidth
           );
 
@@ -546,6 +680,10 @@ const sortedItems = [
           naturalHeight *
           fittedScale;
 
+        /*
+         * Coffee全体へ適用するscaleは
+         * この一か所だけ。
+         */
         coffeeStage.style.setProperty(
           "--coffee-stage-scale",
           String(
@@ -553,6 +691,10 @@ const sortedItems = [
           )
         );
 
+        /*
+         * shellは見た目上の縮小後寸法だけを
+         * レイアウトへ伝える。
+         */
         scaleShell.style.width =
           `${fittedWidth}px`;
 
@@ -570,94 +712,8 @@ const sortedItems = [
           "--coffee-content-layout-height",
           `${fittedHeight}px`
         );
-
-        /*
-         * このフィットが完走した時点の横幅を
-         * 正式な基準値として保存する。
-         */
-        lastFitViewportWidth =
-          getViewportWidth();
       };
 
-    /*
-     * Phase 2
-     *
-     * Phase 1の変更がレイアウトへ反映された後、
-     * 自然幅・自然高を測定する。
-     */
-    const measureCoffeeLayout =
-      () => {
-        measureFrame = 0;
-
-        if (
-          isZoomed ||
-          !coffeeStage ||
-          !coffeeList
-        ) {
-          return;
-        }
-
-        naturalWidth =
-          Math.max(
-            coffeeStage.scrollWidth,
-            coffeeList.scrollWidth
-          );
-
-        naturalHeight =
-          Math.max(
-            coffeeStage.scrollHeight,
-            coffeeList.scrollHeight
-          );
-
-        if (
-          naturalWidth <= 0 ||
-          naturalHeight <= 0
-        ) {
-          return;
-        }
-
-        applyFrame =
-          requestAnimationFrame(
-            applyMeasuredCoffeeFit
-          );
-      };
-
-    /*
-     * Phase 1
-     *
-     * Coffee全体を自然倍率へ戻し、
-     * Brand / Name列幅を更新する。
-     */
-    const prepareCoffeeLayout =
-      () => {
-        layoutFrame = 0;
-
-        if (
-          isZoomed ||
-          !coffeeSection ||
-          !scaleShell ||
-          !coffeeStage ||
-          !coffeeList
-        ) {
-          return;
-        }
-
-        coffeeStage.style.setProperty(
-          "--coffee-stage-scale",
-          "1"
-        );
-
-        applyDynamicColumns();
-
-        measureFrame =
-          requestAnimationFrame(
-            measureCoffeeLayout
-          );
-      };
-
-    /*
-     * Coffeeフィット処理の入口。
-     */
     const scheduleCoffeeFit =
       () => {
         if (isZoomed) {
@@ -670,39 +726,15 @@ const sortedItems = [
           );
         }
 
-        if (measureFrame) {
-          cancelAnimationFrame(
-            measureFrame
-          );
-        }
-
-        if (applyFrame) {
-          cancelAnimationFrame(
-            applyFrame
-          );
-        }
-
-        layoutFrame = 0;
-        measureFrame = 0;
-        applyFrame = 0;
-
         layoutFrame =
           requestAnimationFrame(
-            prepareCoffeeLayout
+            applyCoffeeFit
           );
       };
 
     /*
-     * viewport変化の処理。
-     *
-     * ピンチ中は従来のZoom処理。
-     *
-     * 通常倍率では、
-     * 横幅が本当に変わった場合だけ
-     * Coffeeを再フィットする。
-     *
-     * iPhone Safariのアドレスバー等による
-     * 高さだけの変化では何もしない。
+     * ピンチ中はCoffee自身のfit倍率を
+     * 変更しない。
      */
     const handleViewportResize =
       () => {
@@ -723,23 +755,6 @@ const sortedItems = [
           return;
         }
 
-        const nextViewportWidth =
-          getViewportWidth();
-
-        const widthChanged =
-          Math.abs(
-            nextViewportWidth -
-              lastFitViewportWidth
-          ) >
-          VIEWPORT_WIDTH_EPSILON;
-
-        if (!widthChanged) {
-          return;
-        }
-
-        lastFitViewportWidth =
-          nextViewportWidth;
-
         scheduleCoffeeFit();
       };
 
@@ -747,18 +762,6 @@ const sortedItems = [
       if (layoutFrame) {
         cancelAnimationFrame(
           layoutFrame
-        );
-      }
-
-      if (measureFrame) {
-        cancelAnimationFrame(
-          measureFrame
-        );
-      }
-
-      if (applyFrame) {
-        cancelAnimationFrame(
-          applyFrame
         );
       }
 
@@ -773,8 +776,6 @@ const sortedItems = [
       );
 
       layoutFrame = 0;
-      measureFrame = 0;
-      applyFrame = 0;
       zoomFrame = 0;
       zoomExitTimer = 0;
 
@@ -800,13 +801,21 @@ const sortedItems = [
     };
 
     /*
-     * 初回だけはviewport変化の有無に関係なく、
-     * 必ず一度フィット処理を完走させる。
+     * 初回。
+     *
+     * DOMとフォントの初期レイアウトを待ってから
+     * Coffeeをフィットする。
      */
-    scheduleCoffeeFit();
+    requestAnimationFrame(
+      () => {
+        requestAnimationFrame(
+          applyCoffeeFit
+        );
+      }
+    );
 
     /*
-     * フォント確定後も同じ処理で再計測する。
+     * フォント確定後も再測定。
      */
     document.fonts?.ready.then(
       scheduleCoffeeFit
@@ -836,18 +845,34 @@ const sortedItems = [
 
 <style>
   .coffee-section {
+    /*
+     * すべてのデバイスで共通。
+     */
+
     --coffee-date-column:
       56px;
 
+    /*
+     * Date列終端 → Brand開始位置。
+     */
     --coffee-date-brand-gap:
       30px;
 
+    /*
+     * 最長Brand終端 → Name開始位置。
+     */
     --coffee-brand-name-gap:
       16px;
 
+    /*
+     * 1行目 → Notes。
+     */
     --coffee-row-gap:
       8px;
 
+    /*
+     * Coffeeコンテンツ同士。
+     */
     --coffee-item-gap:
       36px;
 
@@ -942,6 +967,9 @@ const sortedItems = [
       auto;
   }
 
+  /*
+   * Coffee全体を縮小する唯一の場所。
+   */
   .coffee-stage {
     --coffee-stage-scale:
       1;
@@ -960,6 +988,9 @@ const sortedItems = [
         --site-font-family
       );
 
+    /*
+     * CMSのtype coffee All。
+     */
     font-size:
       var(
         --coffee-list-size,
@@ -1078,6 +1109,10 @@ const sortedItems = [
       5;
   }
 
+  /*
+   * Date / Brand / Name / Notesは
+   * 完全に同じ文字設定を継承する。
+   */
   .coffee-date,
   .coffee-brand,
   .coffee-name,

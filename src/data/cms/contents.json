@@ -1402,5 +1402,22 @@
     "notes": "Lime, Plum, Darjeeling tea",
     "visible": true,
     "order": 4
+  },
+  {
+    "id": "content000113",
+    "categoryId": "category007",
+    "slug": "content000113",
+    "image": "",
+    "title": "ドロップ",
+    "body": "",
+    "author": "沓乃よう",
+    "authorSort": "くつのよう",
+    "titleSort": "どろっぷ",
+    "authorFontSizeOverride": false,
+    "authorFontSize": null,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null,
+    "visible": true,
+    "order": 92
   }
 ]

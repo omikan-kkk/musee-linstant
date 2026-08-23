@@ -1419,5 +1419,19 @@
     "titleFontSize": null,
     "visible": true,
     "order": 92
+  },
+  {
+    "id": "content000114",
+    "categoryId": "category008",
+    "slug": "content000114",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-19",
+    "brand": "Embankment Coffee",
+    "coffeeName": "COLOMBIA Hermides Meneses",
+    "notes": "Pink grapefruit, Cherry, Japanese plum, Honey",
+    "visible": true,
+    "order": 5
   }
 ]

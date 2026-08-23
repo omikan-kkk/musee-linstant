@@ -1433,5 +1433,19 @@
     "notes": "Pink grapefruit, Cherry, Japanese plum, Honey",
     "visible": true,
     "order": 5
+  },
+  {
+    "id": "content000115",
+    "categoryId": "category008",
+    "slug": "content000115",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-23",
+    "brand": "Embankment Coffee",
+    "coffeeName": "BRAZIL Rancho Sao Benedito",
+    "notes": "Ripe cherry, Berries, Almond, Milk chocolate",
+    "visible": true,
+    "order": 6
   }
 ]

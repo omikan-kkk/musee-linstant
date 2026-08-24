@@ -134,9 +134,29 @@ const isGalleryLike = !isBook && !isCoffee;
             </p>
           </div>
 
-          <div class="field">
+          <div
+            class="field brand-field"
+            data-brand-field
+          >
             <label for="coffee-brand">Brand</label>
-            <input id="coffee-brand" type="text" />
+
+            <div class="brand-autocomplete">
+              <input
+                id="coffee-brand"
+                type="text"
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-controls="coffee-brand-suggestions"
+                aria-expanded="false"
+              />
+
+              <div
+                id="coffee-brand-suggestions"
+                class="brand-suggestions"
+                role="listbox"
+                hidden
+              ></div>
+            </div>
           </div>
 
           <div class="field">
@@ -227,6 +247,12 @@ const isGalleryLike = !isBook && !isCoffee;
     const coffeeNameInput = document.querySelector("#coffee-name");
     const coffeeNotesInput = document.querySelector("#coffee-notes");
 
+    const brandField =
+      document.querySelector("[data-brand-field]");
+
+    const coffeeBrandSuggestions =
+      document.querySelector("#coffee-brand-suggestions");
+
     const imageInput = document.querySelector("#image");
     const imagePreview = document.querySelector("#image-preview");
 
@@ -234,6 +260,7 @@ const isGalleryLike = !isBook && !isCoffee;
     const saveStatus = document.querySelector("#save-status");
 
     let selectedImageFile = null;
+    let coffeeBrandOptions = [];
 
     function updateOverrideInputState(
       checkboxInput,
@@ -265,6 +292,240 @@ const isGalleryLike = !isBook && !isCoffee;
         );
       }
     );
+
+    /*
+     * ==================================================
+     *
+     * Coffee Brand Autocomplete
+     *
+     * ==================================================
+     *
+     * 過去に保存されたBrandを
+     * 文字列そのままで候補化する。
+     *
+     * 完全一致のみ重複除外。
+     *
+     * 大文字小文字、
+     * 全角・半角、
+     * スペース数などに差があれば、
+     * すべて別候補として残す。
+     *
+     * 最近保存されたBrandを上に表示する。
+     */
+    function buildCoffeeBrandOptions(contents) {
+      const seen = new Set();
+      const options = [];
+
+      for (
+        let index = contents.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const rawBrand =
+          contents[index]?.brand;
+
+        if (
+          typeof rawBrand !== "string"
+        ) {
+          continue;
+        }
+
+        const brand =
+          rawBrand.trim();
+
+        if (!brand) {
+          continue;
+        }
+
+        /*
+         * 表記は一切正規化しない。
+         *
+         * 完全に同一の文字列だけを
+         * 重複として扱う。
+         */
+        if (seen.has(brand)) {
+          continue;
+        }
+
+        seen.add(brand);
+        options.push(brand);
+      }
+
+      return options;
+    }
+
+    function hideCoffeeBrandSuggestions() {
+      if (
+        !coffeeBrandSuggestions ||
+        !coffeeBrandInput
+      ) {
+        return;
+      }
+
+      coffeeBrandSuggestions.hidden = true;
+
+      coffeeBrandInput.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+    }
+
+    function renderCoffeeBrandSuggestions(
+      query = ""
+    ) {
+      if (
+        !coffeeBrandSuggestions ||
+        !coffeeBrandInput
+      ) {
+        return;
+      }
+
+      coffeeBrandSuggestions.replaceChildren();
+
+      const normalizedQuery =
+        query.toLocaleLowerCase();
+
+      const filteredOptions =
+        normalizedQuery
+          ? coffeeBrandOptions.filter(
+              (brand) =>
+                brand
+                  .toLocaleLowerCase()
+                  .includes(
+                    normalizedQuery
+                  )
+            )
+          : coffeeBrandOptions;
+
+      if (filteredOptions.length === 0) {
+        hideCoffeeBrandSuggestions();
+        return;
+      }
+
+      filteredOptions.forEach(
+        (brand) => {
+          const option =
+            document.createElement(
+              "button"
+            );
+
+          option.type = "button";
+          option.className =
+            "brand-suggestion";
+          option.textContent = brand;
+          option.setAttribute(
+            "role",
+            "option"
+          );
+
+          option.addEventListener(
+            "pointerdown",
+            (event) => {
+              event.preventDefault();
+
+              coffeeBrandInput.value =
+                brand;
+
+              hideCoffeeBrandSuggestions();
+
+              coffeeBrandInput.focus();
+            }
+          );
+
+          coffeeBrandSuggestions.append(
+            option
+          );
+        }
+      );
+
+      coffeeBrandSuggestions.hidden = false;
+
+      coffeeBrandInput.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+    }
+
+    async function loadCoffeeBrandOptions() {
+      if (
+        categoryType !== "coffee" ||
+        !coffeeBrandInput
+      ) {
+        return;
+      }
+
+      try {
+        const currentRes =
+          await authFetch("/contents");
+
+        const currentData =
+          await currentRes.json();
+
+        if (!currentData.ok) {
+          throw new Error(
+            "Could not load Brand options."
+          );
+        }
+
+        coffeeBrandOptions =
+          buildCoffeeBrandOptions(
+            currentData.contents
+          );
+      } catch (error) {
+        console.error(error);
+        coffeeBrandOptions = [];
+      }
+    }
+
+    coffeeBrandInput?.addEventListener(
+      "focus",
+      () => {
+        renderCoffeeBrandSuggestions();
+      }
+    );
+
+    coffeeBrandInput?.addEventListener(
+      "click",
+      () => {
+        renderCoffeeBrandSuggestions();
+      }
+    );
+
+    coffeeBrandInput?.addEventListener(
+      "input",
+      () => {
+        renderCoffeeBrandSuggestions(
+          coffeeBrandInput.value
+        );
+      }
+    );
+
+    coffeeBrandInput?.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape") {
+          hideCoffeeBrandSuggestions();
+        }
+      }
+    );
+
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (
+          !brandField ||
+          brandField.contains(
+            event.target
+          )
+        ) {
+          return;
+        }
+
+        hideCoffeeBrandSuggestions();
+      }
+    );
+
+    loadCoffeeBrandOptions();
 
     function getNextContentId(contents) {
       const maxNumber = contents.reduce((max, content) => {
@@ -572,6 +833,7 @@ const isGalleryLike = !isBook && !isCoffee;
     });
   </script>
 </Layout>
+
 <style>
 .admin{
   max-width:720px;
@@ -688,6 +950,63 @@ textarea{
   color:#999;
   font-size:11px;
   line-height:1.6;
+}
+
+.brand-autocomplete{
+  position:relative;
+}
+
+.brand-suggestions{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  right:0;
+  z-index:100;
+
+  max-height:240px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+
+  border:1px solid #ddd;
+  background:#fff;
+
+  box-shadow:
+    0 8px 24px
+    rgba(0,0,0,.08);
+}
+
+.brand-suggestions[hidden]{
+  display:none;
+}
+
+.brand-suggestion{
+  display:block;
+  width:100%;
+
+  border:0;
+  border-bottom:1px solid #eee;
+
+  background:#fff;
+  color:#111;
+
+  padding:12px;
+
+  text-align:left;
+  font:inherit;
+  font-size:14px;
+  line-height:1.5;
+
+  cursor:pointer;
+}
+
+.brand-suggestion:last-child{
+  border-bottom:0;
+}
+
+.brand-suggestion:hover,
+.brand-suggestion:focus{
+  background:#f7f7f7;
+  outline:none;
 }
 
 img{

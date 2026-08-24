@@ -1346,14 +1346,14 @@
     "id": "__lobby__",
     "categoryId": "__site__",
     "slug": "__lobby__",
-    "image": "/images/contents/__lobby__.jpg",
+    "image": "/images/contents/__lobby__.png",
     "title": "Lobby",
     "body": "",
     "visible": true,
     "order": 0,
     "category": "__site__",
-    "desktopHeightPx": 1251,
-    "desktopHeightVh": 33
+    "desktopHeightPx": 853,
+    "desktopHeightVh": 55
   },
   {
     "id": "content000110",
@@ -1388,5 +1388,64 @@
     "titleFontSize": null,
     "visible": true,
     "order": 91
+  },
+  {
+    "id": "content000112",
+    "categoryId": "category008",
+    "slug": "content000112",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-15",
+    "brand": "Embankment Coffee",
+    "coffeeName": "ETHIOPIA Chelchele",
+    "notes": "Lime, Plum, Darjeeling tea",
+    "visible": true,
+    "order": 4
+  },
+  {
+    "id": "content000113",
+    "categoryId": "category007",
+    "slug": "content000113",
+    "image": "",
+    "title": "ドロップ",
+    "body": "",
+    "author": "沓乃よう",
+    "authorSort": "くつのよう",
+    "titleSort": "どろっぷ",
+    "authorFontSizeOverride": false,
+    "authorFontSize": null,
+    "titleFontSizeOverride": false,
+    "titleFontSize": null,
+    "visible": true,
+    "order": 92
+  },
+  {
+    "id": "content000114",
+    "categoryId": "category008",
+    "slug": "content000114",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-19",
+    "brand": "Embankment Coffee",
+    "coffeeName": "COLOMBIA Hermides Meneses",
+    "notes": "Pink grapefruit, Cherry, Japanese plum, Honey",
+    "visible": true,
+    "order": 5
+  },
+  {
+    "id": "content000115",
+    "categoryId": "category008",
+    "slug": "content000115",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-08-23",
+    "brand": "Embankment Coffee",
+    "coffeeName": "BRAZIL Rancho Sao Benedito",
+    "notes": "Ripe cherry, Berries, Almond, Milk chocolate",
+    "visible": true,
+    "order": 6
   }
 ]

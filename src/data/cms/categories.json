@@ -1,7 +1,7 @@
 [
   {
     "id": "category003",
-    "title": "Bonsaï",
+    "title": "bonsai",
     "slug": "bonsai",
     "type": "gallery",
     "visible": true,
@@ -9,7 +9,7 @@
   },
   {
     "id": "category004",
-    "title": "Expositions",
+    "title": "exhibitions",
     "slug": "expositions",
     "type": "gallery",
     "visible": true,
@@ -17,7 +17,7 @@
   },
   {
     "id": "category007",
-    "title": "Romans",
+    "title": "books",
     "slug": "romans",
     "type": "book",
     "visible": true,
@@ -25,7 +25,7 @@
   },
   {
     "id": "category008",
-    "title": "Café",
+    "title": "coffee",
     "slug": "cafe",
     "type": "coffee",
     "visible": true,

@@ -46,6 +46,10 @@ const categoryType =
 
 const isBookCategory =
   categoryType === "book";
+
+const enableScrollReveal =
+  categoryType === "gallery" ||
+  categoryType === "coffee";
 ---
 
 <Layout
@@ -58,6 +62,9 @@ const isBookCategory =
   }
   documentHorizontalScroll={
     isBookCategory
+  }
+  enableScrollReveal={
+    enableScrollReveal
   }
 >
   {

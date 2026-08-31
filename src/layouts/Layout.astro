@@ -11,6 +11,7 @@ const {
   edgeFadeHorizontal = false,
   lockVerticalScroll = false,
   documentHorizontalScroll = false,
+  enableScrollReveal = false,
 } = Astro.props;
 
 
@@ -40,7 +41,7 @@ const japaneseFontFamilies = {
   "yu-mincho":
     '"Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif',
   "hiragino-mincho":
-    '"Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif',
+    '"Hiragino Mincho ProN", "Yu Mincho", "YuMinincho", serif',
 };
 
 
@@ -95,6 +96,8 @@ const siteFontFamily =
         "has-edge-fade",
       documentHorizontalScroll &&
         "has-document-horizontal-scroll",
+      enableScrollReveal &&
+        "has-scroll-reveal",
     ]}
     style={`
       --site-font-family:${siteFontFamily};
@@ -144,13 +147,6 @@ const siteFontFamily =
             ]}
             data-scroll-root
           >
-            <EdgeFade
-              horizontal={
-                edgeFadeHorizontal
-              }
-            />
-
-
             <div class="fade-content">
               <slot />
             </div>
@@ -163,6 +159,310 @@ const siteFontFamily =
 
 
     <Header />
+
+
+    {
+      enableScrollReveal && (
+        <script>
+          let scrollRevealObserver:
+            IntersectionObserver |
+            null =
+            null;
+
+
+          const cleanupScrollReveal =
+            () => {
+              scrollRevealObserver
+                ?.disconnect();
+
+
+              scrollRevealObserver =
+                null;
+            };
+
+
+          const revealTarget =
+            (
+              target:
+                HTMLElement
+            ) => {
+              if (
+                target.classList.contains(
+                  "is-scroll-revealed"
+                )
+              ) {
+                return;
+              }
+
+
+              target.classList.add(
+                "is-scroll-revealed"
+              );
+
+
+              scrollRevealObserver
+                ?.unobserve(
+                  target
+                );
+            };
+
+
+          const revealTargetWhenReady =
+            (
+              target:
+                HTMLElement
+            ) => {
+              const image =
+                target.querySelector<HTMLImageElement>(
+                  "[data-gallery-image]"
+                );
+
+
+              /*
+               * Coffeeなど、
+               * 画像を持たないReveal対象は
+               * そのまま表示する。
+               */
+              if (!image) {
+                revealTarget(
+                  target
+                );
+
+                return;
+              }
+
+
+              /*
+               * Galleryでは画像とキャプションを
+               * 1作品として同時にRevealする。
+               *
+               * 画像がまだロードされていない場合は、
+               * 実画像のロード完了を待ってから
+               * 作品全体を表示する。
+               */
+              if (image.complete) {
+                revealTarget(
+                  target
+                );
+
+                return;
+              }
+
+
+              const handleImageReady =
+                () => {
+                  revealTarget(
+                    target
+                  );
+                };
+
+
+              image.addEventListener(
+                "load",
+                handleImageReady,
+                {
+                  once: true,
+                }
+              );
+
+
+              /*
+               * 画像取得に失敗した場合でも、
+               * テキストまで永久に非表示に
+               * ならないようにする。
+               */
+              image.addEventListener(
+                "error",
+                handleImageReady,
+                {
+                  once: true,
+                }
+              );
+            };
+
+
+          const setupScrollReveal =
+            () => {
+              cleanupScrollReveal();
+
+
+              if (
+                !document.body
+                  .classList.contains(
+                    "has-scroll-reveal"
+                  )
+              ) {
+                return;
+              }
+
+
+              const targets = [
+                ...document
+                  .querySelectorAll<HTMLElement>(
+                    "[data-scroll-reveal]"
+                  ),
+              ];
+
+
+              if (
+                targets.length ===
+                0
+              ) {
+                return;
+              }
+
+
+              /*
+               * 動きを減らす設定では
+               * アニメーションせず、
+               * 最初からすべて表示する。
+               */
+              if (
+                window.matchMedia(
+                  "(prefers-reduced-motion: reduce)"
+                ).matches
+              ) {
+                targets.forEach(
+                  (
+                    target
+                  ) => {
+                    target.classList.add(
+                      "is-scroll-revealed"
+                    );
+                  }
+                );
+
+
+                return;
+              }
+
+
+              scrollRevealObserver =
+                new IntersectionObserver(
+                  (
+                    entries
+                  ) => {
+                    entries.forEach(
+                      (
+                        entry
+                      ) => {
+                        if (
+                          !entry.isIntersecting
+                        ) {
+                          return;
+                        }
+
+
+                        const target =
+                          entry.target as HTMLElement;
+
+
+                        revealTargetWhenReady(
+                          target
+                        );
+                      }
+                    );
+                  },
+                  {
+                    /*
+                     * 画面最下端へ触れた瞬間ではなく、
+                     * viewport内へ少し入ってから
+                     * Revealを開始する。
+                     */
+                    root: null,
+
+
+                    rootMargin:
+                      "0px 0px -10% 0px",
+
+
+                    threshold:
+                      0.01,
+                  }
+                );
+
+
+              targets.forEach(
+                (
+                  target
+                ) => {
+                  if (
+                    target.classList.contains(
+                      "is-scroll-revealed"
+                    )
+                  ) {
+                    return;
+                  }
+
+
+                  scrollRevealObserver
+                    ?.observe(
+                      target
+                    );
+                }
+              );
+            };
+
+
+          /*
+           * CSSのopacity:0が一度描画された後に
+           * Observerを開始する。
+           *
+           * 最初からviewport内にある作品も
+           * 自然にフェードインする。
+           */
+          requestAnimationFrame(
+            () => {
+              requestAnimationFrame(
+                setupScrollReveal
+              );
+            }
+          );
+
+
+          const handlePageLoad =
+            () => {
+              requestAnimationFrame(
+                () => {
+                  requestAnimationFrame(
+                    setupScrollReveal
+                  );
+                }
+              );
+            };
+
+
+          const handleBeforeSwap =
+            () => {
+              cleanupScrollReveal();
+
+
+              document.removeEventListener(
+                "astro:page-load",
+                handlePageLoad
+              );
+
+
+              document.removeEventListener(
+                "astro:before-swap",
+                handleBeforeSwap
+              );
+            };
+
+
+          document.addEventListener(
+            "astro:page-load",
+            handlePageLoad
+          );
+
+
+          document.addEventListener(
+            "astro:before-swap",
+            handleBeforeSwap
+          );
+        </script>
+      )
+    }
   </body>
 </html>
 
@@ -178,8 +478,7 @@ const siteFontFamily =
    * フェード時間の共通設定。
    *
    * ページ白幕
-   * Gallery一覧画像
-   * Gallery詳細画像
+   * Scroll Reveal
    *
    * すべてこの値を使用する。
    *
@@ -280,6 +579,68 @@ const siteFontFamily =
 
   :global(*) {
     box-sizing: border-box;
+  }
+
+
+  /*
+   * ==================================================
+   *
+   * SCROLL REVEAL
+   *
+   * ==================================================
+   *
+   * Gallery / Coffee一覧専用。
+   *
+   * 初めてviewport内へ入った時だけ
+   * opacity:0 → 1。
+   *
+   * translate等の移動は一切行わない。
+   *
+   * 一度Revealされた要素は
+   * そのページ滞在中ずっと表示されたまま。
+   */
+  :global(
+    body.has-scroll-reveal
+      [data-scroll-reveal]
+  ) {
+    opacity: 0;
+
+
+    transition:
+      opacity
+      var(
+        --page-enter-duration
+      )
+      cubic-bezier(
+        0.22,
+        1,
+        0.36,
+        1
+      );
+  }
+
+
+  :global(
+    body.has-scroll-reveal
+      [data-scroll-reveal].is-scroll-revealed
+  ) {
+    opacity: 1;
+  }
+
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    :global(
+      body.has-scroll-reveal
+        [data-scroll-reveal]
+    ) {
+      opacity: 1;
+
+
+      transition: none;
+    }
   }
 
 
@@ -548,6 +909,18 @@ const siteFontFamily =
   }
 
 
+  /*
+   * Gallery / Coffee等の
+   * 縦スクロール主体。
+   *
+   * 以前ここには上下EdgeFadeを
+   * 重ねていたが、
+   * 今回それだけを撤去する。
+   *
+   * Coffeeのスクロール位置補正が
+   * data-scroll-rootを参照しているため、
+   * スクロール構造自体は維持する。
+   */
   .fade-viewport {
     position: fixed;
     inset: 0;

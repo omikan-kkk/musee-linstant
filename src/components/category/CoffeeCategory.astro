@@ -45,7 +45,10 @@ const sortedItems = [
         {
           sortedItems.map(
             (item) => (
-              <article class="coffee-item">
+              <article
+                class="coffee-item"
+                data-scroll-reveal
+              >
                 <time
                   class="coffee-date"
                   datetime={item.date}

@@ -17,7 +17,11 @@ const hasBody = body !== "";
 
 
 {href ? (
-  <a class="gallery-item" href={href}>
+  <a
+    class="gallery-item"
+    href={href}
+    data-scroll-reveal
+  >
     <div
       class="artwork-frame"
       style={`--artwork-ratio:${THEME.gallery.artworkAspectRatio};`}
@@ -55,7 +59,10 @@ const hasBody = body !== "";
     )}
   </a>
 ) : (
-  <article class="gallery-item">
+  <article
+    class="gallery-item"
+    data-scroll-reveal
+  >
     <div
       class="artwork-frame"
       style={`--artwork-ratio:${THEME.gallery.artworkAspectRatio};`}
@@ -93,81 +100,6 @@ const hasBody = body !== "";
     )}
   </article>
 )}
-
-
-<script>
-  const galleryImages = [
-    ...document.querySelectorAll<HTMLImageElement>(
-      "[data-gallery-image]"
-    ),
-  ];
-
-
-  /*
-   * 画像データそのもののロードが完了したら、
-   * 画像自身だけをlinearでフェードインする。
-   *
-   * img要素そのものへopacityを掛けるため、
-   * アスペクト比・解像度・表示サイズに関係なく
-   * 実画像の位置へ完全に一致する。
-   */
-  const revealGalleryImage =
-    (
-      image: HTMLImageElement
-    ) => {
-      if (
-        image.classList.contains(
-          "is-gallery-image-loaded"
-        )
-      ) {
-        return;
-      }
-
-
-      image.classList.add(
-        "is-gallery-image-loaded"
-      );
-    };
-
-
-  galleryImages.forEach(
-    (image) => {
-      if (image.complete) {
-        /*
-         * キャッシュ済み画像でも
-         * opacity:0の初期状態を
-         * 一度描画してからフェードさせる。
-         */
-        requestAnimationFrame(
-          () => {
-            requestAnimationFrame(
-              () => {
-                revealGalleryImage(
-                  image
-                );
-              }
-            );
-          }
-        );
-
-        return;
-      }
-
-
-      image.addEventListener(
-        "load",
-        () => {
-          revealGalleryImage(
-            image
-          );
-        },
-        {
-          once: true,
-        }
-      );
-    }
-  );
-</script>
 
 
 <style>
@@ -211,26 +143,6 @@ const hasBody = body !== "";
   height:auto;
 
   object-fit:contain;
-
-  /*
-   * Gallery画像自身だけのフェード。
-   *
-   * 時間はLayout.astroの
-   * --page-enter-durationを共有する。
-   */
-  opacity:0;
-
-  transition:
-    opacity
-    var(
-      --page-enter-duration
-    )
-    linear;
-}
-
-
-.artwork-frame img.is-gallery-image-loaded{
-  opacity:1;
 }
 
 

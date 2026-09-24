@@ -1457,5 +1457,19 @@
     "body": "中之島美術館",
     "visible": true,
     "order": 2
+  },
+  {
+    "id": "content000117",
+    "categoryId": "category008",
+    "slug": "content000117",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-09-16",
+    "brand": "ue.",
+    "coffeeName": "Ruli Lot 1504 Soil Project / Rwanda",
+    "notes": "Mandarin oranges, Apricot, Anno sweet potato",
+    "visible": true,
+    "order": 7
   }
 ]

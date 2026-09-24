@@ -1471,5 +1471,19 @@
     "notes": "Mandarin oranges, Apricot, Anno sweet potato",
     "visible": true,
     "order": 7
+  },
+  {
+    "id": "content000118",
+    "categoryId": "category008",
+    "slug": "content000118",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-09-24",
+    "brand": "ue.",
+    "coffeeName": "Anasora/ Ethiopia [Light espresso roast]",
+    "notes": "Red grape, Raspberry, Chocolate",
+    "visible": true,
+    "order": 8
   }
 ]

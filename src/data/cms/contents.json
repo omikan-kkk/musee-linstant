@@ -1485,5 +1485,19 @@
     "notes": "Red grape, Raspberry, Chocolate",
     "visible": true,
     "order": 8
+  },
+  {
+    "id": "content000119",
+    "categoryId": "category008",
+    "slug": "content000119",
+    "image": "",
+    "title": "",
+    "body": "",
+    "date": "2026-09-30",
+    "brand": "Embankment Coffee",
+    "coffeeName": "COLOMBIA Raul Duran",
+    "notes": "Hassaku orange, Apple, Cane sugar",
+    "visible": true,
+    "order": 9
   }
 ]
